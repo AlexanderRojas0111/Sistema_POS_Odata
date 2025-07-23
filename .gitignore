@@ -1,1 +1,25 @@
-.qodo
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+instance/
+.env
+*.db
+
+# VSCode
+.vscode/
+
+# Logs
+debug.log
+error.log
+*.log
+
+# Node/React
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# Mac/Windows
+.DS_Store
+Thumbs.db
