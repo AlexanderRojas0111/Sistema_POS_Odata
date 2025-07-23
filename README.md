@@ -6,8 +6,8 @@ Este es un sistema de gestión de inventario desarrollado en Python (Flask) y Re
 
 - `app/`: Backend Flask
 - `frontend/`: Frontend React
-- `scripts/`: Scripts de migración y carga
-- `data/`: Archivos de datos de ejemplo
+- `scripts/`: Scripts de migración, carga, limpieza y exportación de datos
+- `data/`: Archivos de datos de ejemplo y exportaciones
 - `tests/`: Pruebas automáticas
 - `requirements.txt`: Dependencias Python
 - `Dockerfile`: Imagen para despliegue con Docker
@@ -33,8 +33,10 @@ Este es un sistema de gestión de inventario desarrollado en Python (Flask) y Re
    ```
 4. Ejecuta migraciones y carga de datos:
    ```bash
-   python scripts/migrate_db.py
-   python scripts/load_sample_data.py
+   python -m scripts.migrate_db
+   python -m scripts.load_sample_data
+   python -m scripts.load_sample_users
+   python -m scripts.load_sample_customers_and_sales
    ```
 5. Ejecuta el backend:
    ```bash
@@ -47,6 +49,27 @@ Este es un sistema de gestión de inventario desarrollado en Python (Flask) y Re
    npm install
    npm start
    ```
+
+## Scripts de gestión de base de datos
+
+- **Migración:**
+  - `python -m scripts.migrate_db` — Borra y recrea todas las tablas según los modelos actuales.
+
+- **Carga de datos de ejemplo:**
+  - `python -m scripts.load_sample_data` — Carga productos desde `data/products.csv`.
+  - `python -m scripts.load_sample_users` — Carga usuarios de ejemplo.
+  - `python -m scripts.load_sample_customers_and_sales` — Carga clientes y ventas de ejemplo.
+
+- **Limpieza de datos:**
+  - `python -m scripts.clean_sales` — Elimina todas las ventas.
+  - `python -m scripts.clean_customers` — Elimina todos los clientes.
+  - `python -m scripts.clean_products` — Elimina todos los productos.
+  - `python -m scripts.clean_inventory` — Elimina todos los movimientos de inventario.
+
+- **Exportación de datos:**
+  - `python -m scripts.export_sales_to_csv` — Exporta todas las ventas a `data/exported_sales.csv`.
+  - `python -m scripts.export_products_to_csv` — Exporta todos los productos a `data/exported_products.csv`.
+  - `python -m scripts.export_inventory_to_csv` — Exporta todos los movimientos de inventario a `data/exported_inventory.csv`.
 
 ## Uso con Docker
 
@@ -106,6 +129,7 @@ pytest
 - `POST /api/users/` - Crea un usuario
 - `GET /api/products/` - Lista todos los productos
 - `POST /api/products/` - Crea un producto
+- `GET /api/sales/<sale_id>/pdf` - Descarga la factura/recibo en PDF de una venta
 
 ## Contribuciones
 
@@ -113,4 +137,25 @@ pytest
 
 ## Licencia
 
-MIT
+
+© 2024 O'data Company. Todos los derechos reservados.
+
+**Desarrollador Principal:** Alexander Rojas - Director de Desarrollo y Software
+
+Este proyecto es propiedad de O'data Company. El uso, distribución o modificación de este código requiere autorización explícita por escrito de O'data Company.
+
+Para consultas sobre licenciamiento y permisos, contactar a: [alexrojas8211@gmail.com]
+
+---
+
+### Términos de Uso
+
+- ✅ Uso permitido para revisión y evaluación
+- ❌ Prohibida la redistribución sin autorización
+- ❌ Prohibido el uso comercial sin licencia
+- ❌ Prohibida la modificación sin permiso
+
+---
+
+**Nota:** Si deseas utilizar este proyecto bajo una licencia específica (MIT, Apache 2.0, GPL, etc.), contacta con el equipo de desarrollo de O'data Company.
+
