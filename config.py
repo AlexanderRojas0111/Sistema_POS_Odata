@@ -1,10 +1,27 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from datetime import timedelta
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'tu_clave_secreta')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///instance/inventario.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS', False)
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'otra_clave_secreta')
+    # Configuración básica
+    SECRET_KEY = os.getenv('SECRET_KEY', 'mi_clave_secreta')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Configuración de la base de datos principal
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
+    
+    # Configuración de la base de datos vectorial
+    VECTOR_DATABASE_URL = os.getenv('VECTOR_DATABASE_URL', 'postgresql://localhost/vector_db')
+    
+    # Configuración de Redis
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    
+    # Configuración de JWT
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    
+    # Configuración de la aplicación
+    LOW_STOCK_THRESHOLD = int(os.getenv('LOW_STOCK_THRESHOLD', '5'))
+    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    # Configuración de CORS
+    CORS_HEADERS = 'Content-Type'
