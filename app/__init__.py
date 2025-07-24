@@ -1,49 +1,86 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-from app.database import db
+from flask_migrate import Migrate
 import os
+import redis
+import logging
+from logging.handlers import RotatingFileHandler
 
-def create_app(test_config=None):
+from app.core.database import db, init_db
+from app.core.config import config
+
+def create_app(config_name=None):
+    """Crea y configura la aplicación Flask"""
+    
+    # Crear la aplicación Flask
     app = Flask(__name__, instance_relative_config=True)
     
-    # Asegurar que el directorio instance existe
+    # Asegurar que existe el directorio instance
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
     
-    # Cargar configuración
-    if test_config is None:
-        app.config.from_object('config.Config')
-        # Cargar configuración de .env si existe
-        app.config.from_prefixed_env()
-    else:
-        app.config.update(test_config)
+    # Configurar la aplicación
+    if config_name is None:
+        config_name = os.getenv('FLASK_ENV', 'development')
+    app.config.from_object(config[config_name])
+    
+    # Configurar logging
+    if not app.debug:
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+        file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Aplicación iniciada')
     
     # Inicializar extensiones
     CORS(app)
-    db.init_app(app)
+    init_db(app)
     Migrate(app, db)
     JWTManager(app)
     
-    # Registrar blueprints
-    from app.routes.products import products
-    from app.routes.sales import sales
-    from app.routes.inventory import inventory
-    from app.routes.users import users
-    from app.routes.customers import customers
-    from app.routes.semantic_search import semantic_search
-    from app.routes.agents import agents
+    # Configurar Redis
+    app.redis = redis.from_url(app.config['REDIS_URL'])
     
-    app.register_blueprint(products)
-    app.register_blueprint(sales)
-    app.register_blueprint(inventory)
-    app.register_blueprint(users)
-    app.register_blueprint(customers)
-    app.register_blueprint(semantic_search)
-    app.register_blueprint(agents)
+    # Registrar blueprints
+    from app.api.v1.routes import api_v1
+    from app.api.v2.routes import api_v2
+    
+    app.register_blueprint(api_v1, url_prefix='/api/v1')
+    app.register_blueprint(api_v2, url_prefix='/api/v2')
+    
+    # Registrar manejadores de errores
+    register_error_handlers(app)
     
     return app
+
+def register_error_handlers(app):
+    """Registra los manejadores de errores de la aplicación"""
+    
+    @app.errorhandler(400)
+    def bad_request_error(error):
+        return {'error': 'Bad Request', 'message': str(error)}, 400
+    
+    @app.errorhandler(401)
+    def unauthorized_error(error):
+        return {'error': 'Unauthorized', 'message': 'Authentication required'}, 401
+    
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return {'error': 'Forbidden', 'message': 'Insufficient permissions'}, 403
+    
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return {'error': 'Not Found', 'message': 'Resource not found'}, 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        app.logger.error(f'Server Error: {error}')
+        return {'error': 'Internal Server Error', 'message': 'An internal error occurred'}, 500

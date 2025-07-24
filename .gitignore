@@ -19,16 +19,12 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # Entornos virtuales
 venv/
 env/
 ENV/
 .env
-.venv
-env.bak/
-venv.bak/
 
 # IDEs y editores
 .idea/
@@ -37,64 +33,46 @@ venv.bak/
 *.swo
 *~
 
-# Bases de datos
+# Logs y bases de datos
+*.log
+logs/
+*.sqlite
 *.db
-*.sqlite3
 instance/
 
-# Logs y cache
-*.log
-.cache
-.pytest_cache/
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-.hypothesis/
-
-# Node y React
-node_modules/
-/frontend/build
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Archivos temporales
-*.tmp
-*.bak
-*.swp
-*~.nib
-local.properties
+# Archivos de Docker
+.docker/
+docker-compose.override.yml
 
 # Archivos de sistema
 .DS_Store
 Thumbs.db
 
-# Archivos de configuración sensibles
-config.ini
-secrets.json
-.env*
-!.env.example
+# Archivos de caché
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
 
 # Archivos de datos
-data/*.csv
-!data/sample_*.csv
-exported_*.csv
+data/
+uploads/
 
-# Redis
-dump.rdb
-*.rdb
+# Archivos de configuración local
+.env.local
+.env.*.local
 
-# Documentación generada
-docs/_build/
-site/
+# Archivos de Node.js (frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Archivos de distribución
-dist/
-build/
+# Archivos de producción
+/dist/
+/build/
+
+# Archivos de monitoreo
+prometheus_data/
+grafana_data/
