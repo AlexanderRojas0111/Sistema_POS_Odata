@@ -1,8 +1,8 @@
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any
 import numpy as np
-from app.vector_store.models import ProductEmbedding, DocumentEmbedding
-from app.vector_store.config import get_vector_db
+from app.models import ProductEmbedding, DocumentEmbedding, Product
+from app.database import db
 
 class EmbeddingService:
     def __init__(self):
@@ -27,14 +27,28 @@ class EmbeddingService:
         """Encuentra productos similares basados en una consulta"""
         query_embedding = self.generate_embedding(query)
         
-        db = next(get_vector_db())
-        # Usar la función de similitud coseno de pgvector
-        similar_products = db.query(ProductEmbedding)\
-            .order_by(ProductEmbedding.embedding.cosine_distance(query_embedding))\
-            .limit(limit)\
+        # Convertir el embedding de consulta a un array de NumPy
+        query_vector = np.array(query_embedding)
+        
+        # Obtener todos los productos con sus embeddings
+        products_with_embeddings = db.session.query(Product, ProductEmbedding)\
+            .join(ProductEmbedding)\
             .all()
-            
-        return [p.product.to_dict() for p in similar_products]
+        
+        # Calcular similitud coseno manualmente
+        similarities = []
+        for product, embedding in products_with_embeddings:
+            product_vector = np.array(embedding.embedding)
+            similarity = np.dot(query_vector, product_vector) / (
+                np.linalg.norm(query_vector) * np.linalg.norm(product_vector)
+            )
+            similarities.append((similarity, product))
+        
+        # Ordenar por similitud y tomar los top N
+        similarities.sort(reverse=True, key=lambda x: x[0])
+        top_products = similarities[:limit]
+        
+        return [product.to_dict() for _, product in top_products]
     
     def batch_generate_embeddings(self, products: List[Dict[str, Any]]) -> List[ProductEmbedding]:
         """Genera embeddings para una lista de productos"""

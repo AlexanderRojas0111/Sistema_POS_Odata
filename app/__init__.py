@@ -1,20 +1,33 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
 from app.database import db
 import os
 
 def create_app(test_config=None):
-    app = Flask(__name__)
-    CORS(app)
+    app = Flask(__name__, instance_relative_config=True)
     
+    # Asegurar que el directorio instance existe
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+    
+    # Cargar configuración
     if test_config is None:
         app.config.from_object('config.Config')
+        # Cargar configuración de .env si existe
+        app.config.from_prefixed_env()
     else:
         app.config.update(test_config)
     
-    # Inicializar base de datos principal
+    # Inicializar extensiones
+    CORS(app)
     db.init_app(app)
+    Migrate(app, db)
+    JWTManager(app)
     
     # Registrar blueprints
     from app.routes.products import products
@@ -32,14 +45,5 @@ def create_app(test_config=None):
     app.register_blueprint(customers)
     app.register_blueprint(semantic_search)
     app.register_blueprint(agents)
-    
-    # Crear tablas
-    with app.app_context():
-        db.create_all()
-        
-        # Inicializar base de datos vectorial
-        from app.vector_store.models import ProductEmbedding, DocumentEmbedding
-        from app.vector_store.config import VectorBase, engine
-        VectorBase.metadata.create_all(bind=engine)
     
     return app

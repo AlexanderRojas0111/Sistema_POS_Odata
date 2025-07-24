@@ -1,11 +1,19 @@
 from app import db
 from flask import current_app
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, JSON
+from datetime import datetime
 
 class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    stock = db.Column(db.Integer, default=0)
-    price = db.Column(db.Float, nullable=False)
+    __tablename__ = "products"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(120), nullable=False)
+    stock = Column(Integer, default=0)
+    price = Column(Float, nullable=False)
+    
+    # Agregar relación con ProductEmbedding
+    embeddings = relationship("ProductEmbedding", back_populates="product", lazy="dynamic")
 
     def to_dict(self):
         threshold = current_app.config.get('LOW_STOCK_THRESHOLD', 5)
@@ -23,10 +31,12 @@ class Product(db.Model):
         }
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
-    name = db.Column(db.String(120), nullable=False)
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True)
+    email = Column(String(120), unique=True, nullable=False)
+    password = Column(String(128), nullable=False)
+    name = Column(String(120), nullable=False)
 
     def to_dict(self):
         return {
@@ -36,10 +46,12 @@ class User(db.Model):
         }
 
 class Customer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    email = db.Column(db.String(120), unique=True)
-    phone = db.Column(db.String(30))
+    __tablename__ = "customers"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(120), nullable=False)
+    email = Column(String(120), unique=True)
+    phone = Column(String(30))
 
     def to_dict(self):
         return {
@@ -50,13 +62,15 @@ class Customer(db.Model):
         }
 
 class Sale(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    total = db.Column(db.Float, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    payment_method = db.Column(db.String(30), nullable=False)  # efectivo, tarjeta, transferencia
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
+    __tablename__ = "sales"
+    
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    total = Column(Float, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    payment_method = Column(String(30), nullable=False)  # efectivo, tarjeta, transferencia
+    customer_id = Column(Integer, ForeignKey('customers.id'))
 
     def to_dict(self):
         return {
@@ -70,11 +84,13 @@ class Sale(db.Model):
         }
 
 class Inventory(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    movement_type = db.Column(db.String(50), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    __tablename__ = "inventory"
+    
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    movement_type = Column(String(50), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
     def to_dict(self):
         return {
@@ -84,3 +100,25 @@ class Inventory(db.Model):
             "movement_type": self.movement_type,
             "user_id": self.user_id
         }
+
+class ProductEmbedding(db.Model):
+    __tablename__ = "product_embeddings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"))
+    embedding = Column(JSON)  # Vector de 768 dimensiones (BERT) almacenado como JSON
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Configurar la relación bidireccional
+    product = relationship("Product", back_populates="embeddings")
+
+class DocumentEmbedding(db.Model):
+    __tablename__ = "document_embeddings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String)
+    embedding = Column(JSON)  # Vector almacenado como JSON
+    document_type = Column(String)  # 'manual', 'policy', 'description', etc.
+    created_at = Column(DateTime, default=datetime.utcnow)
+    meta_info = Column(String)  # JSON string con metadatos adicionales

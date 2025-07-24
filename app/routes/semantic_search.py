@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.rag.embeddings import EmbeddingService
-from app.vector_store.models import ProductEmbedding
+from app.models import ProductEmbedding, Product
 from typing import Dict, Any
 
 semantic_search = Blueprint('semantic_search', __name__)

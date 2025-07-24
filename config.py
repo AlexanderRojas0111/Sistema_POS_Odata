@@ -7,7 +7,8 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configuración de la base de datos principal
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'instance', 'app.db'))
     
     # Configuración de la base de datos vectorial
     VECTOR_DATABASE_URL = os.getenv('VECTOR_DATABASE_URL', 'postgresql://localhost/vector_db')

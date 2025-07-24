@@ -1,78 +1,86 @@
 from flask import Blueprint, request, jsonify, send_file
-from app.crud.sales import get_all_sales, create_sale
-from app.models import Sale, Customer, Product, User
+from app.models import Sale, Product
+from app.database import db
 from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-import io
+from io import BytesIO
+from datetime import datetime
 
-sales_bp = Blueprint('sales', __name__)
+sales = Blueprint('sales', __name__)
 
-@sales_bp.route('/', methods=['GET'])
+@sales.route('/api/sales', methods=['GET'])
 def get_sales():
-    sales = get_all_sales()
-    return jsonify([s.to_dict() for s in sales])
+    """Obtiene todas las ventas"""
+    sales = Sale.query.all()
+    return jsonify([sale.to_dict() for sale in sales])
 
-@sales_bp.route('/', methods=['POST'])
-def create_sale_route():
-    data = request.json
-    # Se espera: product_id, quantity, total, user_id, payment_method, customer_id
-    sale = create_sale(data)
+@sales.route('/api/sales/<int:sale_id>', methods=['GET'])
+def get_sale(sale_id):
+    """Obtiene una venta por su ID"""
+    sale = Sale.query.get_or_404(sale_id)
+    return jsonify(sale.to_dict())
+
+@sales.route('/api/sales', methods=['POST'])
+def create_sale():
+    """Crea una nueva venta"""
+    data = request.get_json()
+    
+    # Verificar stock
+    product = Product.query.get_or_404(data['product_id'])
+    if product.stock < data['quantity']:
+        return jsonify({'error': 'Stock insuficiente'}), 400
+    
+    # Calcular total
+    total = product.price * data['quantity']
+    
+    # Crear venta
+    sale = Sale(
+        product_id=data['product_id'],
+        quantity=data['quantity'],
+        total=total,
+        user_id=data['user_id'],
+        payment_method=data['payment_method'],
+        customer_id=data.get('customer_id')
+    )
+    
+    # Actualizar stock
+    product.stock -= data['quantity']
+    
+    db.session.add(sale)
+    db.session.commit()
+    
     return jsonify(sale.to_dict()), 201
 
-@sales_bp.route('/<int:sale_id>/pdf', methods=['GET'])
-def get_sale_pdf(sale_id):
+@sales.route('/api/sales/<int:sale_id>/pdf', methods=['GET'])
+def generate_sale_pdf(sale_id):
+    """Genera un PDF para una venta"""
     sale = Sale.query.get_or_404(sale_id)
-    customer = Customer.query.get(sale.customer_id) if sale.customer_id else None
     product = Product.query.get(sale.product_id)
-    user = User.query.get(sale.user_id)
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
-    elements = []
-    styles = getSampleStyleSheet()
-
-    # Encabezado
-    elements.append(Paragraph('<b>Factura de Venta</b>', styles['Title']))
-    elements.append(Paragraph('Empresa: Tu Empresa S.A.S.', styles['Normal']))
-    elements.append(Spacer(1, 12))
-
-    # Datos de la venta
-    datos_venta = f"""
-    <b>ID Venta:</b> {sale.id}<br/>
-    <b>Cliente:</b> {customer.name if customer else '-'}<br/>
-    <b>Atendido por:</b> {user.name if user else '-'}<br/>
-    <b>Método de pago:</b> {sale.payment_method}<br/>
-    """
-    elements.append(Paragraph(datos_venta, styles['Normal']))
-    elements.append(Spacer(1, 12))
-
-    # Tabla de productos
-    data = [
-        ['Producto', 'Cantidad', 'Precio Unitario', 'Subtotal'],
-        [product.name, str(sale.quantity), f"${product.price:.2f}", f"${sale.total:.2f}"]
-    ]
-    table = Table(data, colWidths=[80*mm, 30*mm, 40*mm, 30*mm])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1976d2')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ]))
-    elements.append(table)
-    elements.append(Spacer(1, 12))
-
-    # Total
-    elements.append(Paragraph(f'<b>TOTAL: ${sale.total:.2f}</b>', styles['Heading2']))
-    elements.append(Spacer(1, 24))
-    elements.append(Paragraph('¡Gracias por su compra!', styles['Italic']))
-
-    doc.build(elements)
+    
+    # Crear PDF en memoria
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    
+    # Título
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(30, 750, f"Factura de Venta #{sale.id}")
+    
+    # Detalles de la venta
+    p.setFont("Helvetica", 12)
+    p.drawString(30, 700, f"Fecha: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+    p.drawString(30, 680, f"Producto: {product.name}")
+    p.drawString(30, 660, f"Cantidad: {sale.quantity}")
+    p.drawString(30, 640, f"Precio unitario: ${product.price:.2f}")
+    p.drawString(30, 620, f"Total: ${sale.total:.2f}")
+    p.drawString(30, 600, f"Método de pago: {sale.payment_method}")
+    
+    p.showPage()
+    p.save()
+    
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f'factura_venta_{sale.id}.pdf', mimetype='application/pdf')
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f'venta_{sale.id}.pdf',
+        mimetype='application/pdf'
+    )
