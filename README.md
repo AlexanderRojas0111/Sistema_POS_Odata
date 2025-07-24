@@ -4,33 +4,34 @@ Este sistema de gestión de inventario incorpora tecnologías avanzadas de IA pa
 
 ## Características Principales
 
-### RAG (Retrieval Augmented Generation)
-- Búsqueda semántica de productos
-- Recomendaciones contextuales
-- Análisis inteligente de inventario
+- **Búsqueda Semántica (RAG)**
+  - Búsqueda inteligente de productos por significado
+  - Recomendaciones contextuales
+  - Análisis de inventario basado en patrones
 
-### A2A (Agent-to-Agent)
-- Automatización de procesos de inventario
-- Monitoreo proactivo de stock
-- Comunicación entre agentes autónomos
+- **Agentes Autónomos (A2A)**
+  - Monitoreo proactivo de stock
+  - Automatización de pedidos
+  - Optimización de inventario
 
-### Sistema de Mensajería
-- Comunicación en tiempo real
-- Estado distribuido
-- Logging centralizado
+- **Comunicación entre Modelos (MCP)**
+  - Intercambio estructurado de información
+  - Coordinación entre componentes de IA
+  - Gestión de contexto inteligente
 
-## Requisitos del Sistema
+- **Funcionalidades Tradicionales**
+  - Gestión de productos
+  - Control de inventario
+  - Registro de ventas
+  - Gestión de usuarios
+  - Generación de reportes
 
-### Software Necesario
+## Requisitos Técnicos
+
 - Python 3.9+
-- PostgreSQL 13+ con extensión pgvector
-- Redis 6+
-- Node.js 14+ (para el frontend)
-
-### Servicios
-- Base de datos PostgreSQL (para vectores)
-- Servidor Redis
-- Servidor web (producción)
+- SQLite (desarrollo) / PostgreSQL (producción)
+- Redis
+- Node.js y npm (para el frontend)
 
 ## Instalación
 
@@ -43,9 +44,9 @@ cd proyecto-inventario-1
 2. Crear y activar entorno virtual:
 ```bash
 python -m venv venv
-# Windows
-.\venv\Scripts\activate
-# Linux/Mac
+# En Windows:
+venv\Scripts\activate
+# En Unix:
 source venv/bin/activate
 ```
 
@@ -56,22 +57,23 @@ pip install -r requirements.txt
 
 4. Configurar variables de entorno:
 Crear archivo `.env` con:
-```env
-FLASK_APP=app
+```
+FLASK_APP=app.main:app
 FLASK_ENV=development
+FLASK_DEBUG=True
 DATABASE_URL=sqlite:///instance/app.db
-VECTOR_DATABASE_URL=postgresql://usuario:contraseña@localhost/vector_db
-REDIS_URL=redis://localhost:6379/0
+SECRET_KEY=tu_clave_secreta
+JWT_SECRET_KEY=tu_jwt_secreto
 ```
 
-5. Configurar base de datos vectorial:
+5. Inicializar la base de datos:
 ```bash
-python scripts/setup_vector_db.py
+flask db upgrade
 ```
 
-6. Verificar Redis:
+6. Cargar datos de ejemplo (opcional):
 ```bash
-python scripts/check_redis.py
+python scripts/load_sample_data.py
 ```
 
 ## Estructura del Proyecto
@@ -79,72 +81,77 @@ python scripts/check_redis.py
 ```
 proyecto-inventario-1/
 ├── app/
-│   ├── agents/         # Agentes autónomos
 │   ├── crud/          # Operaciones CRUD
-│   ├── mcp/           # Protocolo de comunicación
-│   ├── rag/           # Búsqueda semántica
-│   ├── routes/        # Endpoints API
-│   └── vector_store/  # Base de datos vectorial
+│   ├── models/        # Modelos de datos
+│   ├── routes/        # Rutas de la API
+│   ├── rag/           # Módulos de búsqueda semántica
+│   ├── agents/        # Sistema de agentes autónomos
+│   └── mcp/           # Protocolo de comunicación
 ├── frontend/          # Aplicación React
 ├── scripts/          # Scripts de utilidad
-└── tests/            # Pruebas
+└── tests/           # Pruebas unitarias y de integración
 ```
 
-## Uso
+## API Endpoints
 
-### Iniciar el Servidor de Desarrollo
-```bash
-flask run
-```
+### Búsqueda Semántica
+- `GET /api/search/semantic` - Búsqueda semántica de productos
+- `GET /api/search/hybrid` - Búsqueda híbrida (semántica + tradicional)
+- `POST /api/embeddings` - Generación de embeddings
 
-### Ejecutar Pruebas
+### Gestión de Agentes
+- `GET /api/agents` - Listar agentes activos
+- `POST /api/agents/{id}/tasks` - Asignar tareas a agentes
+- `GET /api/agents/status` - Estado del sistema de agentes
+
+### Productos e Inventario
+- `GET /api/products` - Listar productos
+- `POST /api/products` - Crear producto
+- `GET /api/inventory` - Estado del inventario
+- `POST /api/sales` - Registrar venta
+
+## Seguridad
+
+- Autenticación JWT
+- Control de acceso basado en roles
+- Validación de datos con Pydantic
+- Sanitización de entradas
+- Rate limiting
+
+## Monitoreo
+
+- Métricas de rendimiento con Prometheus
+- Trazabilidad con OpenTelemetry
+- Logs de actividad de agentes
+- Alertas automáticas
+
+## Desarrollo
+
+### Ejecutar Tests
 ```bash
 pytest
 ```
 
-### Endpoints API Principales
+### Ejecutar en Desarrollo
+```bash
+flask run
+```
 
-#### Búsqueda Semántica
-- POST `/api/v2/search/semantic`
-- POST `/api/v2/search/hybrid`
-
-#### Gestión de Agentes
-- POST `/api/v2/agents`
-- GET `/api/v2/agents/{id}`
-- POST `/api/v2/agents/{id}/tasks`
-
-## Características de IA
-
-### RAG (Retrieval Augmented Generation)
-El sistema utiliza embeddings para:
-- Búsqueda semántica de productos
-- Recomendaciones basadas en contexto
-- Análisis de patrones de inventario
-
-### Agentes Autónomos (A2A)
-Los agentes pueden:
-- Monitorear niveles de inventario
-- Generar alertas automáticas
-- Optimizar la gestión de stock
-
-## Seguridad
-- Autenticación JWT
-- Validación de datos
-- Sanitización de entradas
-- Logs de auditoría
-
-## Monitoreo
-- Métricas de rendimiento
-- Logs de agentes
-- Estado del sistema en tiempo real
+### Generar Migraciones
+```bash
+flask db migrate -m "Descripción del cambio"
+flask db upgrade
+```
 
 ## Contribuir
+
 1. Fork el repositorio
-2. Crear rama feature (`git checkout -b feature/nueva-caracteristica`)
-3. Commit cambios (`git commit -am 'Agregar nueva característica'`)
-4. Push a la rama (`git push origin feature/nueva-caracteristica`)
+2. Crear rama para feature: `git checkout -b feature/nueva-funcionalidad`
+3. Commit cambios: `git commit -am 'feat: Agregar nueva funcionalidad'`
+4. Push a la rama: `git push origin feature/nueva-funcionalidad`
 5. Crear Pull Request
 
 ## Licencia
-[Especificar la licencia]
+
+[Tipo de Licencia]
 
