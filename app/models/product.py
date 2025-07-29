@@ -11,7 +11,7 @@ class Product(BaseModel):
     description = Column(Text)
     price = Column(Float, nullable=False)
     category = Column(String(50))
-    metadata = Column(JSON)
+    product_metadata = Column(JSON)
     
     # Relaciones
     inventory = relationship('Inventory', back_populates='product', lazy='dynamic')

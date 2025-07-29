@@ -1,6 +1,6 @@
-# Sistema de Gestión de Inventario con IA
+# Sistema POS O'data
 
-Sistema profesional de gestión de inventario que incorpora tecnologías avanzadas de IA para proporcionar funcionalidades inteligentes de búsqueda, automatización y análisis.
+Sistema profesional de punto de venta (POS) que incorpora tecnologías avanzadas de IA para proporcionar funcionalidades inteligentes de búsqueda, automatización y análisis.
 
 ## Características Principales
 
@@ -9,6 +9,7 @@ Sistema profesional de gestión de inventario que incorpora tecnologías avanzad
 - Sistema de ventas y facturación
 - Gestión de usuarios y roles
 - Reportes y análisis
+- Escáner de códigos de barras y QR
 
 ### Características Avanzadas de IA
 - **Búsqueda Semántica (RAG)**
@@ -28,11 +29,24 @@ Sistema profesional de gestión de inventario que incorpora tecnologías avanzad
 
 ## Requisitos Técnicos
 
+### Backend
 - Python 3.9+
 - PostgreSQL 13+ (Producción)
 - Redis 6+
-- Node.js 14+ (Frontend)
+- Flask 3.0.3+
+- SQLAlchemy 2.0.23+
+
+### Frontend
+- Node.js 14+
+- React 18+
+- Material-UI 5+
+- React Router 6+
+- React Query
+- React ZXing (escáner de códigos)
+
+### Infraestructura
 - Docker y Docker Compose (Despliegue)
+- Prometheus y Grafana (Monitoreo)
 
 ## Instalación
 
@@ -40,8 +54,8 @@ Sistema profesional de gestión de inventario que incorpora tecnologías avanzad
 
 1. Clonar el repositorio:
 ```bash
-git clone [URL_DEL_REPOSITORIO]
-cd proyecto-inventario-1
+git clone https://github.com/odata/sistema-pos.git
+cd Sistema_POS_Odata
 ```
 
 2. Crear y activar entorno virtual:
@@ -56,6 +70,9 @@ source venv/bin/activate
 3. Instalar dependencias:
 ```bash
 pip install -r requirements.txt
+cd frontend
+npm install --legacy-peer-deps
+cd ..
 ```
 
 4. Configurar variables de entorno:
@@ -89,7 +106,7 @@ chmod +x deploy.sh
 ## Estructura del Proyecto
 
 ```
-proyecto-inventario-1/
+Sistema_POS_Odata/
 ├── app/
 │   ├── api/            # Endpoints API (v1 y v2)
 │   ├── core/           # Configuración central
@@ -132,6 +149,9 @@ proyecto-inventario-1/
 - Encriptación de datos sensibles
 - Rate limiting
 - Validación de entrada
+- Protección contra XSS y SQL Injection
+- Gestión de sesiones
+- Bloqueo de IP por intentos fallidos
 
 ## Contribuir
 

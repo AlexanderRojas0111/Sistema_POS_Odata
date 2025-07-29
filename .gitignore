@@ -1,4 +1,4 @@
-# Python
+# Archivos de Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,63 +16,75 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Entornos virtuales
-venv/
-env/
-ENV/
 .env
+.venv
+.venv_new/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# IDEs y editores
-.idea/
+# Variables de entorno y configuración sensible
+.env
+.env.local
+.env.production
+.env.staging
+config.ini
+secrets.json
+
+# Bases de datos
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# Logs
+logs/
+*.log
+log/
+
+# Archivos temporales del IDE
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
-
-# Logs y bases de datos
-*.log
-logs/
-*.sqlite
-*.db
-instance/
-
-# Archivos de Docker
-.docker/
-docker-compose.override.yml
-
-# Archivos de sistema
 .DS_Store
 Thumbs.db
 
-# Archivos de caché
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
+# Archivos temporales del proyecto
+temp_config/
+validation_results.json
 
-# Archivos de datos
-data/
-uploads/
-
-# Archivos de configuración local
-.env.local
-.env.*.local
-
-# Archivos de Node.js (frontend)
+# Cache de npm/node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Archivos de producción
-/dist/
-/build/
+# Build del frontend
+frontend/build/
+frontend/node_modules/
 
-# Archivos de monitoreo
-prometheus_data/
-grafana_data/
+# Archivos de prueba y coverage
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
