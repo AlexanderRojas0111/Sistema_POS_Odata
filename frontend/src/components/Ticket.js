@@ -59,7 +59,7 @@ export default function Ticket({ data, onClose }) {
   const handleDownload = async () => {
     setLoading(true);
     try {
-      const doc = new jsPDF();
+    const doc = new jsPDF();
       
       // Configurar fuente
       doc.setFontSize(16);

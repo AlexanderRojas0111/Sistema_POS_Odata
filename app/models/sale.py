@@ -25,7 +25,7 @@ class Sale(BaseModel):
     total_amount = Column(Float, nullable=False)
     payment_method = Column(Enum(PaymentMethod), nullable=False)
     status = Column(Enum(SaleStatus), nullable=False, default=SaleStatus.PENDING)
-    metadata = Column(JSON)  # Para datos adicionales como descuentos, impuestos, etc.
+    sale_metadata = Column(JSON)  # Para datos adicionales como descuentos, impuestos, etc.
     
     # Relaciones
     customer = relationship('Customer', back_populates='sales')

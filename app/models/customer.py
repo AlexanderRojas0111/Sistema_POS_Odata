@@ -12,7 +12,7 @@ class Customer(BaseModel):
     address = Column(String(200))
     tax_id = Column(String(50), unique=True)  # RUC/NIT/RFC según el país
     is_active = Column(Boolean, default=True)
-    metadata = Column(JSON)  # Para datos adicionales como preferencias, historial, etc.
+    customer_metadata = Column(JSON)  # Para datos adicionales como preferencias, historial, etc.
     
     # Relaciones
     sales = relationship('Sale', back_populates='customer', lazy='dynamic')

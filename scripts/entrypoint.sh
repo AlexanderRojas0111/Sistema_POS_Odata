@@ -17,7 +17,10 @@ fi
 # Esperar a que la base de datos esté disponible (si se usa)
 if [ -n "$DATABASE_URL" ]; then
     log "Esperando a que la base de datos esté disponible..."
-    python scripts/wait-for-db.py
+    # Espera usando netcat en vez de script Python
+    until nc -z "$POSTGRES_HOST" "$POSTGRES_PORT"; do
+        sleep 1
+    done
     log "Base de datos disponible!"
 fi
 

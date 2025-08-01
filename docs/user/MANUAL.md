@@ -177,7 +177,7 @@ El sistema automáticamente:
 3. Vea el resumen:
    - Total de ventas del día
    - Número de transacciones
-   - Productos más vendidos
+- Productos más vendidos
    - Métodos de pago utilizados
 
 ### Reporte Mensual
@@ -197,7 +197,7 @@ El sistema automáticamente:
    - Productos más vendidos
    - Productos con menor rotación
    - Margen de ganancia por producto
-   - Predicciones de demanda
+- Predicciones de demanda
 
 ### Exportar Reportes
 
