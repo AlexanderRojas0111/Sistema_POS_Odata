@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 import os
 import redis
 import logging
+import datetime
 from logging.handlers import RotatingFileHandler
 
 from app.core.database import db, init_db
@@ -56,10 +57,35 @@ def create_app(config_name=None):
     app.register_blueprint(api_v1, url_prefix='/api/v1')
     app.register_blueprint(api_v2, url_prefix='/api/v2')
     
+    # Registrar endpoints básicos
+    register_basic_routes(app)
+    
     # Registrar manejadores de errores
     register_error_handlers(app)
     
     return app
+
+def register_basic_routes(app):
+    """Registra las rutas básicas de la aplicación"""
+    
+    @app.route('/health')
+    def health_check():
+        """Endpoint de health check para monitoreo"""
+        return {
+            'status': 'healthy',
+            'version': '1.0.0',
+            'environment': app.config.get('ENV', 'development'),
+            'timestamp': datetime.datetime.utcnow().isoformat()
+        }
+    
+    @app.route('/')
+    def index():
+        """Endpoint raíz de la aplicación"""
+        return {
+            'message': 'POS O\'data API',
+            'version': '1.0.0',
+            'docs': '/api/v1/docs' if app.config.get('ENV') == 'development' else None
+        }
 
 def register_error_handlers(app):
     """Registra los manejadores de errores de la aplicación"""
