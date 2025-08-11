@@ -1,11 +1,13 @@
-from sqlalchemy import Column, String, Boolean, JSON
+from sqlalchemy import Column, String, Boolean, JSON, Integer, DateTime
 from sqlalchemy.orm import relationship
-from app.models.base import BaseModel
+from datetime import datetime
+from app.core.database import db
 
-class Customer(BaseModel):
+class Customer(db.Model):
     """Modelo para clientes"""
     __tablename__ = 'customers'
 
+    id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
     email = Column(String(120), unique=True)
     phone = Column(String(20))
@@ -13,6 +15,8 @@ class Customer(BaseModel):
     tax_id = Column(String(50), unique=True)  # RUC/NIT/RFC según el país
     is_active = Column(Boolean, default=True)
     customer_metadata = Column(JSON)  # Para datos adicionales como preferencias, historial, etc.
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relaciones
     sales = relationship('Sale', back_populates='customer', lazy='dynamic')

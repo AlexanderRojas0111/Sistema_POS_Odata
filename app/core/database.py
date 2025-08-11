@@ -1,12 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import declarative_base
 from contextlib import contextmanager
 
 # Instancia de SQLAlchemy
 db = SQLAlchemy()
-
-# Base declarativa para modelos
-Base = declarative_base()
 
 @contextmanager
 def db_session():

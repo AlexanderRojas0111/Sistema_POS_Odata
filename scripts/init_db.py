@@ -4,7 +4,7 @@ from app.models.user import User, UserRole
 
 def init_db():
     """Inicializa la base de datos con datos básicos"""
-    app = create_app('production')
+    app = create_app('development')
     
     with app.app_context():
         # Crear todas las tablas

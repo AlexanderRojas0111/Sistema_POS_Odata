@@ -1,5 +1,5 @@
-# Sistema POS Odata - Requirements Optimizados
-# Dependencias esenciales para producción
+# Sistema POS Odata - Requirements de Producción
+# Dependencias mínimas para producción (sin herramientas de desarrollo)
 
 # Core Flask Framework
 Flask==3.1.1
@@ -59,13 +59,6 @@ rich==14.1.0
 # Monitoring & Logging
 prometheus_client==0.22.1
 psutil==7.0.0
-
-# Development & Testing (Opcional para producción)
-pytest==8.4.1
-pytest-cov==6.2.1
-coverage==7.10.3
-black==25.1.0
-flake8==7.3.0
 
 # Vector Database Support
 pgvector==0.4.1

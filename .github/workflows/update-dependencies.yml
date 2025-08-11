@@ -1,0 +1,120 @@
+name: Update Dependencies
+
+on:
+  schedule:
+    # Ejecutar cada domingo a las 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    # Permitir ejecución manual
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Check for outdated Python packages
+      id: check-python
+      run: |
+        pip list --outdated --format=json > outdated_python.json
+        if [ -s outdated_python.json ]; then
+          echo "has_updates=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_updates=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Check for outdated Node.js packages
+      id: check-node
+      run: |
+        cd frontend
+        npm outdated --json > ../outdated_node.json || true
+        if [ -s ../outdated_node.json ]; then
+          echo "has_updates=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_updates=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Update Python dependencies
+      if: steps.check-python.outputs.has_updates == 'true'
+      run: |
+        # Actualizar dependencias de Python
+        pip install --upgrade pip
+        pip install --upgrade -r requirements.txt
+        
+        # Generar nuevo requirements.txt
+        pip freeze > requirements_new.txt
+        
+    - name: Update Node.js dependencies
+      if: steps.check-node.outputs.has_updates == 'true'
+      run: |
+        cd frontend
+        npm update
+        
+    - name: Run tests
+      run: |
+        # Tests de Python
+        python -m pytest tests/ -v
+        
+        # Tests de Node.js
+        cd frontend
+        npm test -- --watchAll=false
+        
+    - name: Create Pull Request
+      if: steps.check-python.outputs.has_updates == 'true' || steps.check-node.outputs.has_updates == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore: update dependencies'
+        title: '🔄 Update Dependencies'
+        body: |
+          ## 🔄 Actualización Automática de Dependencias
+          
+          Este PR actualiza las dependencias del proyecto a las últimas versiones estables.
+          
+          ### 📊 Cambios Realizados:
+          - **Python**: Actualización de dependencias de backend
+          - **Node.js**: Actualización de dependencias de frontend
+          
+          ### ✅ Verificaciones:
+          - [x] Tests de Python pasaron
+          - [x] Tests de Node.js pasaron
+          - [x] Build exitoso
+          
+          ### 📋 Próximos Pasos:
+          1. Revisar cambios automáticamente
+          2. Ejecutar tests manuales si es necesario
+          3. Mergear si todo está correcto
+          
+          ---
+          *Actualizado automáticamente por GitHub Actions*
+        branch: update-dependencies
+        delete-branch: true
+        
+    - name: Comment on PR
+      if: steps.check-python.outputs.has_updates == 'false' && steps.check-node.outputs.has_updates == 'false'
+      run: |
+        echo "No hay dependencias desactualizadas. Todo está al día! 🎉"

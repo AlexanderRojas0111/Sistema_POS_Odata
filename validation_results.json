@@ -1,0 +1,30 @@
+{
+  "ux_ui": {
+    "package_json": true,
+    "posbox_component": true,
+    "product_scanner": true,
+    "ticket_component": true,
+    "navbar_component": true,
+    "theme_configuration": true,
+    "responsive_design": true
+  },
+  "testing": {
+    "frontend_tests": true,
+    "api_integration_tests": true,
+    "performance_tests": true,
+    "test_coverage": true
+  },
+  "documentation": {
+    "user_manual": true,
+    "api_documentation": true,
+    "technical_docs": true,
+    "code_comments": true
+  },
+  "optimization": {
+    "security_manager": true,
+    "cache_manager": true,
+    "input_validation": true,
+    "error_handling": true,
+    "performance_optimization": true
+  }
+}

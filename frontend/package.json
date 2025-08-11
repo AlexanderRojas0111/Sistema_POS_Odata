@@ -1,38 +1,45 @@
 {
   "name": "sistema-pos-frontend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
+  "description": "Sistema POS Odata - Frontend con React y Material-UI",
+  "keywords": ["pos", "inventory", "sales", "react", "material-ui"],
+  "author": "Odata Team",
+  "license": "MIT",
   "dependencies": {
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.14.19",
-    "@mui/material": "^5.14.20",
-    "@mui/x-data-grid": "^6.18.2",
-    "@mui/x-date-pickers": "^6.18.2",
-    "@reduxjs/toolkit": "^1.9.7",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.6.2",
-    "date-fns": "^2.30.0",
+    "@emotion/react": "^11.12.1",
+    "@emotion/styled": "^11.12.0",
+    "@mui/icons-material": "^7.3.1",
+    "@mui/material": "^7.3.1",
+    "@mui/x-data-grid": "^8.10.0",
+    "@mui/x-date-pickers": "^8.10.0",
+    "@reduxjs/toolkit": "^2.8.2",
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "axios": "^1.7.9",
+    "date-fns": "^4.1.0",
     "jspdf": "^3.0.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-query": "^3.39.3",
-    "react-redux": "^8.1.3",
-    "react-router-dom": "^6.20.1",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.8.0",
     "react-scripts": "5.0.1",
     "react-zxing": "^2.0.0",
-    "recharts": "^2.8.0",
-    "web-vitals": "^2.1.4"
+    "recharts": "^3.1.2",
+    "web-vitals": "^5.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint src --ext .js,.jsx",
-    "lint:fix": "eslint src --ext .js,.jsx --fix"
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,json,css,md}",
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js"
   },
   "eslintConfig": {
     "extends": [
@@ -53,9 +60,27 @@
     ]
   },
   "devDependencies": {
-    "eslint": "^8.55.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0"
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:5000",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/odata/sistema-pos-frontend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/odata/sistema-pos-frontend/issues"
+  },
+  "homepage": "https://github.com/odata/sistema-pos-frontend#readme"
 }

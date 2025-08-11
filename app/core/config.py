@@ -55,7 +55,7 @@ class DevelopmentConfig(Config):
     TESTING = False
     ENV = 'development'
     
-    # Base de datos local
+    # Base de datos local (PostgreSQL para desarrollo)
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'postgresql://postgres:postgres@localhost:5432/pos_odata_dev'
     
