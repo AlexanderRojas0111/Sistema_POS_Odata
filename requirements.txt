@@ -63,7 +63,7 @@ psutil==7.0.0
 # Development & Testing (Opcional para producción)
 pytest==8.4.1
 pytest-cov==6.2.1
-coverage==7.10.3
+coverage==7.10.4
 black==25.1.0
 flake8==7.3.0
 
