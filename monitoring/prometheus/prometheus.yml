@@ -1,0 +1,259 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  
+  # Etiquetas externas para identificar el entorno
+  external_labels:
+    environment: "production"
+    datacenter: "odata-dc1"
+    service: "pos-system"
+
+# Configuración de reglas de alertas
+rule_files:
+  - "alerts/*.yml"
+
+# Configuración de alerting
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Configuración de almacenamiento
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 30d
+    retention.size: 10GB
+
+# Configuración de compresión WAL
+wal:
+  retention.period: 12h
+
+# Configuración de consultas
+query:
+  timeout: 2m
+  max_concurrency: 20
+
+# Configuración de administración
+admin:
+  listen_address: "0.0.0.0:9090"
+
+# Configuración de logs
+log:
+  level: info
+  format: json
+
+# Configuración web
+web:
+  listen_address: "0.0.0.0:9090"
+  read_timeout: 5m
+  max_connections: 512
+
+# Configuración de scraping
+scrape_configs:
+  # Sistema POS Odata - Backend Flask
+  - job_name: 'flask_app'
+    static_configs:
+      - targets: ['app:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    
+    # Relabeling para agregar metadatos
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'flask-app'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Base de Datos PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['db:5432']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    
+    # Relabeling para PostgreSQL
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'postgres'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Redis Cache
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    
+    # Relabeling para Redis
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'redis'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Nginx
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/status'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    
+    # Relabeling para Nginx
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'nginx'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Node Exporter (métricas del sistema)
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    
+    # Relabeling para Node Exporter
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'node-exporter'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Prometheus (auto-monitoreo)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    
+    # Relabeling para Prometheus
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'prometheus'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Grafana (opcional)
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    
+    # Relabeling para Grafana
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'grafana'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    
+    # Relabeling para Alertmanager
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'alertmanager'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+
+  # Sistema POS Odata - Métricas de negocio personalizadas
+  - job_name: 'pos_business_metrics'
+    static_configs:
+      - targets: ['app:5000']
+    metrics_path: '/metrics/business'
+    scrape_interval: 1m
+    scrape_timeout: 30s
+    
+    # Relabeling para métricas de negocio
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'pos-business'
+      - source_labels: [__address__]
+        target_label: environment
+        replacement: 'production'
+      - source_labels: [__address__]
+        target_label: business_unit
+        replacement: 'retail'
+
+# Configuración de remote write (opcional para escalabilidad)
+remote_write:
+  - url: "http://remote-write-endpoint:9201/write"
+    remote_timeout: 30s
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: '.*'
+        action: keep
+
+# Configuración de remote read (opcional para escalabilidad)
+remote_read:
+  - url: "http://remote-read-endpoint:9201/read"
+    read_recent: true

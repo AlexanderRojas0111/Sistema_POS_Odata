@@ -10,43 +10,66 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
+        'pool_size': 20,
+        'max_overflow': 30,
+        'pool_timeout': 30,
     }
     
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    JWT_TOKEN_LOCATION = ['headers']
+    JWT_HEADER_NAME = 'Authorization'
+    JWT_HEADER_TYPE = 'Bearer'
     
     # Redis Configuration
     REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/0'
     
-    # CORS Configuration
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
+    # CORS Configuration - Más restrictivo por defecto
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    CORS_SUPPORTS_CREDENTIALS = True
+    CORS_EXPOSE_HEADERS = ['Content-Type', 'Authorization']
     
     # Rate Limiting
     RATELIMIT_ENABLED = True
     RATELIMIT_STORAGE_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/0'
+    RATELIMIT_DEFAULT = "200 per day;50 per hour;10 per minute"
+    RATELIMIT_STRATEGY = "fixed-window"
     
     # Logging
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
     LOG_FILE = os.environ.get('LOG_FILE', 'logs/app.log')
     
     # Security
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Strict'
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
     
-    # File Upload
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+    # File Upload - Límites más estrictos
+    MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # 8MB máximo
     UPLOAD_FOLDER = 'uploads'
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
     
     # Pagination
     ITEMS_PER_PAGE = 20
+    MAX_ITEMS_PER_PAGE = 100
     
     # Cache
     CACHE_TYPE = 'redis'
     CACHE_REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/0'
     CACHE_DEFAULT_TIMEOUT = 300
+    CACHE_KEY_PREFIX = 'pos_odata_'
+    
+    # Security Headers
+    SECURITY_HEADERS = {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    }
 
 class DevelopmentConfig(Config):
     """Configuración para desarrollo"""
@@ -57,19 +80,24 @@ class DevelopmentConfig(Config):
     
     # Base de datos local (PostgreSQL para desarrollo)
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://postgres:postgres@localhost:5432/pos_odata_dev'
+        'postgresql://postgres:postgres@localhost:5432/inventory_db'
     
     # Logging detallado
     LOG_LEVEL = 'DEBUG'
     
-    # CORS permisivo para desarrollo
-    CORS_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000', '*']
+    # CORS permisivo para desarrollo pero más seguro
+    CORS_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5000']
+    CORS_SUPPORTS_CREDENTIALS = True
     
-    # Security relajado para desarrollo
-    SESSION_COOKIE_SECURE = False
+    # Security relajado para desarrollo pero no completamente
+    SESSION_COOKIE_SECURE = False  # HTTP en desarrollo
+    SESSION_COOKIE_SAMESITE = 'Lax'  # Más permisivo en desarrollo
     
     # Auto-reload
     TEMPLATES_AUTO_RELOAD = True
+    
+    # Rate limiting más permisivo en desarrollo
+    RATELIMIT_DEFAULT = "1000 per day;200 per hour;50 per minute"
 
 class TestingConfig(Config):
     """Configuración para testing"""

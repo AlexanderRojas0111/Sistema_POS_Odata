@@ -1,0 +1,163 @@
+{
+  "timestamp": "25.2",
+  "python_version": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+  "python_compatible": true,
+  "python_message": "Python 3.13.7 ✓",
+  "critical_dependencies": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "results": [
+      {
+        "status": true,
+        "message": "Flask 3.1.1 ✓"
+      },
+      {
+        "status": true,
+        "message": "Flask-SQLAlchemy 3.1.1 ✓"
+      },
+      {
+        "status": true,
+        "message": "Flask-JWT-Extended 4.7.1 ✓"
+      },
+      {
+        "status": true,
+        "message": "psycopg2-binary 2.9.10 ✓"
+      },
+      {
+        "status": true,
+        "message": "SQLAlchemy 2.0.43 ✓"
+      },
+      {
+        "status": true,
+        "message": "redis 6.4.0 ✓"
+      },
+      {
+        "status": true,
+        "message": "celery 5.5.3 ✓"
+      },
+      {
+        "status": true,
+        "message": "pydantic 2.11.7 ✓"
+      },
+      {
+        "status": true,
+        "message": "bcrypt 4.3.0 ✓"
+      },
+      {
+        "status": true,
+        "message": "PyJWT 2.10.1 ✓"
+      },
+      {
+        "status": true,
+        "message": "requests 2.32.4 ✓"
+      },
+      {
+        "status": true,
+        "message": "python-dotenv 1.1.1 ✓"
+      }
+    ]
+  },
+  "optional_dependencies": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "results": [
+      {
+        "status": true,
+        "message": "torch 2.8.0 ✓"
+      },
+      {
+        "status": true,
+        "message": "transformers 4.55.3 ✓"
+      },
+      {
+        "status": true,
+        "message": "langchain 0.3.27 ✓"
+      },
+      {
+        "status": true,
+        "message": "sentence-transformers 5.1.0 ✓"
+      },
+      {
+        "status": true,
+        "message": "scikit-learn 1.7.1 ✓"
+      },
+      {
+        "status": true,
+        "message": "numpy 2.3.2 ✓"
+      },
+      {
+        "status": true,
+        "message": "pandas 2.3.2 ✓"
+      },
+      {
+        "status": true,
+        "message": "prometheus_client 0.22.1 ✓"
+      },
+      {
+        "status": true,
+        "message": "psutil 7.0.0 ✓"
+      }
+    ]
+  },
+  "import_tests": [
+    {
+      "status": true,
+      "message": "Import Flask ✓"
+    },
+    {
+      "status": true,
+      "message": "Import Flask-SQLAlchemy ✓"
+    },
+    {
+      "status": true,
+      "message": "Import Flask-JWT-Extended ✓"
+    },
+    {
+      "status": true,
+      "message": "Import psycopg2-binary ✓"
+    },
+    {
+      "status": true,
+      "message": "Import SQLAlchemy ✓"
+    },
+    {
+      "status": true,
+      "message": "Import redis ✓"
+    },
+    {
+      "status": true,
+      "message": "Import celery ✓"
+    },
+    {
+      "status": true,
+      "message": "Import pydantic ✓"
+    },
+    {
+      "status": true,
+      "message": "Import bcrypt ✓"
+    },
+    {
+      "status": true,
+      "message": "Import PyJWT ✓"
+    },
+    {
+      "status": true,
+      "message": "Import requests ✓"
+    },
+    {
+      "status": true,
+      "message": "Import python-dotenv ✓"
+    }
+  ],
+  "database": {
+    "status": true,
+    "message": "Database driver psycopg2 ✓"
+  },
+  "redis": {
+    "status": true,
+    "message": "Redis driver ✓"
+  },
+  "overall_status": true
+}

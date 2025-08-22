@@ -1,5 +1,6 @@
-# Sistema POS Odata - Requirements Optimizados
-# Dependencias esenciales para producción
+# Sistema POS Odata - Requirements Principales
+# Dependencias esenciales para el funcionamiento del sistema
+# Python 3.13+ compatible
 
 # Core Flask Framework
 Flask==3.1.1
@@ -8,8 +9,9 @@ Flask-Migrate==4.1.0
 Flask-JWT-Extended==4.7.1
 Flask-CORS==6.0.1
 Flask-Bcrypt==1.0.1
+Flask-Limiter==3.5.0
 
-# Database
+# Database & ORM
 psycopg2-binary==2.9.10
 SQLAlchemy==2.0.42
 alembic==1.16.4
@@ -22,7 +24,6 @@ celery==5.5.3
 bcrypt==4.3.0
 cryptography==45.0.6
 PyJWT==2.10.1
-python-jose==3.5.0
 passlib==1.7.4
 
 # Data Validation & Serialization
@@ -32,43 +33,31 @@ marshmallow==4.0.0
 # HTTP & API
 requests==2.32.4
 httpx==0.28.1
-aiohttp==3.12.15
 
 # AI & Machine Learning (Core)
-langchain==0.3.27
-langchain-core==0.3.74
-transformers==4.55.0
-sentence-transformers==5.1.0
-torch==2.8.0
-scikit-learn==1.6.1
-numpy==2.0.2
-pandas==2.3.1
+# AI/ML Dependencies (Comentado para despliegue rápido - descomentar si se necesita)
+# langchain==0.3.27
+# langchain-core==0.3.74
+# transformers==4.55.0
+# sentence-transformers==5.1.0
+# torch==2.8.0
+# scikit-learn==1.7.1
+# numpy==2.3.2
+# pandas==2.3.2
 
-# Hugging Face Ecosystem
-huggingface-hub==0.34.4
-tokenizers==0.21.4
-safetensors==0.6.2
+# Hugging Face Ecosystem (Comentado para despliegue rápido)
+# huggingface-hub==0.34.4
+# tokenizers==0.21.4
 
 # Utilities
 python-dotenv==1.1.1
 python-dateutil==2.9.0.post0
 pytz==2025.2
 click==8.1.8
-rich==14.1.0
 
 # Monitoring & Logging
 prometheus_client==0.22.1
 psutil==7.0.0
-
-# Development & Testing (Opcional para producción)
-pytest==8.4.1
-pytest-cov==6.2.1
-coverage==7.10.3
-black==25.1.0
-flake8==7.3.0
-
-# Vector Database Support
-pgvector==0.4.1
 
 # Image Processing
 Pillow==11.3.0

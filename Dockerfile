@@ -1,4 +1,4 @@
-# Etapa de construcción
+# Etapa de construcción optimizada
 FROM python:3.12-slim-bookworm AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -7,15 +7,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     DEBIAN_FRONTEND=noninteractive
 
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     curl \
- && rm -rf /var/lib/apt/lists/* \
- && apt-get clean
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 WORKDIR /build
 
+# Instalar dependencias Python
 COPY requirements.txt .
 RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -U pip setuptools wheel && \

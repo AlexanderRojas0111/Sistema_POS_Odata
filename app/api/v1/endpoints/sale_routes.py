@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.crud.sales import sales_crud
 from app.schemas import SaleCreate, SaleUpdate, SaleResponse
 from app.core.database import db
+from app.core.rate_limiter import rate_limit_10_per_minute
 
 bp = Blueprint('sales', __name__, url_prefix='/sales')
 
@@ -32,6 +33,7 @@ def get_sale(sale_id):
 
 @bp.route('/', methods=['POST'])
 @jwt_required()
+@rate_limit_10_per_minute
 def create_sale():
     """Crear una nueva venta"""
     try:

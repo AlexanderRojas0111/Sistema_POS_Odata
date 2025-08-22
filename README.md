@@ -1,263 +1,183 @@
-# 🚀 Sistema POS O'data
+# 🏪 Sistema POS Odata - Versión Producción v2.0
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-3.1.1-green.svg)](https://flask.palletsprojects.com)
-[![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-blue.svg)](https://postgresql.org)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+Sistema de Punto de Venta (POS) empresarial optimizado, robusto y listo para producción. Arquitectura de microservicios con Flask y PostgreSQL.
 
-Sistema profesional de punto de venta (POS) que incorpora tecnologías avanzadas de **Inteligencia Artificial** para proporcionar funcionalidades inteligentes de búsqueda, automatización y análisis predictivo.
+## ✅ Características Principales
 
-## ✨ Características Principales
+- **Backend Optimizado**: Flask + SQLAlchemy + PostgreSQL 15
+- **Arquitectura de Servicios**: SOLID principles y clean code
+- **Seguridad Avanzada**: JWT + Rate Limiting + Security Headers
+- **Cache Inteligente**: Redis con TTL y invalidación automática
+- **Monitoreo**: Health checks y logging estructurado
+- **Containerización**: Docker multi-stage optimizado
+- **Listo para Producción**: Configuración hardened y escalable
 
-### 🛒 Funcionalidades Tradicionales
-- **Gestión completa de productos e inventario**
-- **Sistema de ventas y facturación avanzado**
-- **Gestión de usuarios y roles granulares**
-- **Reportes y análisis en tiempo real**
-- **Escáner de códigos de barras y QR**
-- **Dashboard interactivo con métricas**
+## 🛠️ Requisitos del Sistema
 
-### 🤖 Características Avanzadas de IA
-- **🔍 Búsqueda Semántica (RAG)**
-  - Búsqueda inteligente por significado y contexto
-  - Recomendaciones personalizadas de productos
-  - Análisis de patrones de compra
-  - Clasificación automática de productos
+### Mínimos
+- **Python**: 3.13.0+
+- **RAM**: 4GB mínimo
+- **Disco**: 10GB libre
+- **Sistema Operativo**: Windows 10+, Linux, macOS
 
-- **🤖 Sistema de Agentes Inteligentes (A2A)**
-  - Monitoreo automático de stock con alertas predictivas
-  - Optimización automática de inventario
-  - Análisis de tendencias de ventas
-  - Recomendaciones de reabastecimiento
+### Recomendados
+- **RAM**: 16GB
+- **Disco**: 50GB SSD
+- **CPU**: 4+ cores
+- **Docker** + Docker Compose
 
-- **🔗 Protocolo de Comunicación (MCP)**
-  - Integración inteligente entre módulos del sistema
-  - Gestión avanzada de contexto y memoria
-  - Comunicación estructurada entre agentes
-  - Orquestación de tareas complejas
+## 📦 Instalación Rápida
 
-## 🛠️ Stack Tecnológico
+### 1. Clonar el Repositorio
+```bash
+git clone https://github.com/odata/sistema-pos-odata.git
+cd sistema-pos-odata
+```
 
-### Backend
-- **Python 3.9+** - Lenguaje principal
-- **Flask 3.1.1** - Framework web
-- **SQLAlchemy 2.0.42** - ORM
-- **PostgreSQL 13+** - Base de datos principal
-- **Redis 6.4.0** - Cache y sesiones
-- **LangChain 0.3.27** - Framework de IA
-- **PyTorch 2.8.0** - Machine Learning
-- **Transformers 4.55.0** - Modelos de IA
+### 2. Despliegue Automático (RECOMENDADO)
+```bash
+# Despliegue completo en producción
+python scripts/deploy_system.py --environment production
 
-### Frontend
-- **React 19.1.1** - Framework UI
-- **Material-UI 7.3.1** - Componentes
-- **Redux Toolkit 2.8.2** - Gestión de estado
-- **React Router 7.8.0** - Navegación
-- **React Query 3.39.3** - Gestión de datos
-- **TypeScript 5.7.2** - Tipado estático
+# Despliegue en desarrollo
+python scripts/deploy_system.py --environment development
+```
 
-### Infraestructura
-- **Docker & Docker Compose** - Containerización
-- **Prometheus & Grafana** - Monitoreo
-- **Nginx** - Proxy reverso
-- **Celery** - Tareas asíncronas
+### 3. Instalación Manual
+```bash
+# Instalar dependencias de producción
+python scripts/install_dependencies.py production
 
-## 🚀 Instalación Rápida
+# Instalar dependencias de desarrollo
+python scripts/install_dependencies.py dev
+```
 
-### Opción 1: Docker (Recomendado)
+## 🔍 Validación del Sistema
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/odata/sistema-pos.git
-cd Sistema_POS_Odata
+# Verificar estado del sistema
+python scripts/validate_dependencies.py
 
-# 2. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus configuraciones
+# Verificar servicios Docker
+docker-compose ps
+```
 
-# 3. Ejecutar con Docker
+## 🐳 Despliegue con Docker
+
+```bash
+# Iniciar todos los servicios
 docker-compose up -d
 
-# 4. Acceder al sistema
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:5000
-# Grafana: http://localhost:3001
+# Ver estado
+docker-compose ps
+
+# Ver logs
+docker-compose logs -f
 ```
 
-### Opción 2: Desarrollo Local
+## 🌍 Configuración
 
+### Variables de Entorno
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/odata/sistema-pos.git
-cd Sistema_POS_Odata
+# Copiar archivo de ejemplo
+cp env.example .env
 
-# 2. Crear entorno virtual
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Unix/Mac
-source venv/bin/activate
-
-# 3. Instalar dependencias
-pip install -r requirements.txt
-
-# 4. Configurar frontend
-cd frontend
-npm install
-cd ..
-
-# 5. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus configuraciones
-
-# 6. Inicializar base de datos
-flask db upgrade
-python scripts/init_db.py
-
-# 7. Ejecutar el sistema
-# Terminal 1: Backend
-python app/main.py
-
-# Terminal 2: Frontend
-cd frontend
-npm start
+# Configurar variables principales
+FLASK_ENV=production
+DATABASE_URL=postgresql://user:password@host:5432/db_name
+REDIS_URL=redis://host:6379/0
+SECRET_KEY=your-secret-key-here
+JWT_SECRET_KEY=your-jwt-secret-here
 ```
+
+### Generar Claves Seguras
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+python -c "import secrets; print(secrets.token_urlsafe(64))"
+```
+
+## 📊 Monitoreo
+
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000 (admin/admin)
+- **API**: http://localhost:5000
 
 ## 📁 Estructura del Proyecto
 
 ```
 Sistema_POS_Odata/
-├── 📁 app/                    # Backend Flask
-│   ├── 📁 api/               # Endpoints API (v1 y v2)
-│   ├── 📁 core/              # Configuración central
-│   ├── 📁 models/            # Modelos de datos
-│   ├── 📁 services/          # Lógica de negocio
-│   ├── 📁 agents/            # Agentes de IA
-│   └── 📁 utils/             # Utilidades
-├── 📁 frontend/              # Aplicación React
-│   ├── 📁 src/
-│   │   ├── 📁 components/    # Componentes React
-│   │   ├── 📁 pages/         # Páginas
-│   │   └── 📁 services/      # Servicios API
-├── 📁 docs/                  # Documentación
-├── 📁 scripts/               # Scripts de utilidad
-├── 📁 tests/                 # Pruebas automatizadas
-├── 📁 monitoring/            # Configuración de monitoreo
-└── 📁 nginx/                 # Configuración de proxy
+├── app/                    # Aplicación principal Flask
+├── frontend/              # Frontend React
+├── scripts/               # Scripts de automatización
+├── docker-compose.yml     # Configuración Docker
+├── requirements.txt       # Dependencias principales
+├── requirements.production.txt  # Dependencias de producción
+├── requirements.dev.txt   # Herramientas de desarrollo
+└── env.example           # Variables de entorno
 ```
 
-## 🔌 API Endpoints
+## 🚨 Solución de Problemas
 
-### API v1 (Tradicional)
-```http
-GET    /api/v1/products          # Listar productos
-POST   /api/v1/products          # Crear producto
-PUT    /api/v1/products/{id}     # Actualizar producto
-DELETE /api/v1/products/{id}     # Eliminar producto
-GET    /api/v1/inventory         # Estado del inventario
-POST   /api/v1/sales             # Registrar venta
-GET    /api/v1/reports/sales     # Reportes de ventas
-```
+### Problemas Comunes
 
-### API v2 (Inteligencia Artificial)
-```http
-GET    /api/v2/search/semantic   # Búsqueda semántica
-GET    /api/v2/search/hybrid     # Búsqueda híbrida
-GET    /api/v2/agents/status     # Estado de agentes
-POST   /api/v2/agents/trigger    # Activar agente
-GET    /api/v2/analytics/trends  # Análisis de tendencias
-```
-
-## 📊 Monitoreo y Métricas
-
-### Dashboards Disponibles
-- **Grafana**: `http://localhost:3001` - Métricas y alertas
-- **Prometheus**: `http://localhost:9090` - Datos de monitoreo
-- **Sistema**: `http://localhost:3000` - Dashboard principal
-
-### Métricas Clave
-- Rendimiento de la aplicación
-- Uso de recursos del sistema
-- Métricas de base de datos
-- Latencia de API
-- Errores y excepciones
-
-## 🔒 Seguridad
-
-- **🔐 Autenticación JWT** con refresh tokens
-- **👥 Roles y permisos granulares**
-- **🔒 Encriptación AES-256** de datos sensibles
-- **🛡️ Rate limiting** y protección DDoS
-- **✅ Validación estricta** de entrada
-- **🚫 Protección contra XSS** y SQL Injection
-- **⏰ Gestión de sesiones** con expiración
-- **🚪 Bloqueo de IP** por intentos fallidos
-- **📝 Auditoría completa** de acciones
-
-## 🧪 Testing
-
+#### 1. Puerto 5000 ocupado
 ```bash
-# Ejecutar todas las pruebas
-pytest
-
-# Con cobertura
-pytest --cov=app
-
-# Pruebas específicas
-pytest tests/test_api.py
-pytest tests/test_frontend_components.py
+# Cambiar puerto en .env
+FLASK_RUN_PORT=5001
 ```
 
-## 📈 Roadmap
+#### 2. Dependencias no encontradas
+```bash
+# Reinstalar dependencias
+pip install -r requirements.txt --force-reinstall
+```
 
-### Versión 2.1 (Próxima)
-- [ ] Integración con WhatsApp Business API
-- [ ] Sistema de notificaciones push
-- [ ] Análisis predictivo avanzado
-- [ ] Integración con proveedores
+#### 3. Error de base de datos
+```bash
+# Verificar servicios
+docker-compose ps db
+docker-compose logs db
+```
 
-### Versión 2.2
-- [ ] App móvil nativa
-- [ ] Reconocimiento de voz
-- [ ] Integración con contabilidad
-- [ ] Módulo de CRM
+## 📋 Checklist de Despliegue
 
-## 🤝 Contribuir
+- [ ] Verificar Python 3.13+
+- [ ] Tener Docker instalado
+- [ ] Configurar variables de entorno
+- [ ] Generar claves secretas
+- [ ] Ejecutar script de despliegue
+- [ ] Verificar servicios corriendo
+- [ ] Probar endpoints de la API
 
-1. **Fork** el repositorio
-2. **Crear rama** feature: `git checkout -b feature/nueva-funcionalidad`
-3. **Commit** cambios: `git commit -am 'feat: Agregar nueva funcionalidad'`
-4. **Push** a la rama: `git push origin feature/nueva-funcionalidad`
-5. **Crear Pull Request**
+## 📚 Documentación
 
-### Guías de Contribución
-- Seguir convenciones de commit (Conventional Commits)
-- Incluir tests para nuevas funcionalidades
-- Actualizar documentación cuando sea necesario
-- Revisar código antes de enviar PR
+- [Guía de Despliegue](DEPLOYMENT_README.md) - Instrucciones detalladas
+- [API Documentation](docs/technical/API_DOCUMENTATION.md) - Documentación de la API
+- [User Manual](docs/user/MANUAL.md) - Manual de usuario
 
-## 📞 Soporte
+## 🆘 Soporte
 
-- **📧 Email**: soporte@odata.com
-- **💬 Discord**: [Servidor Odata](https://discord.gg/odata)
-- **📖 Documentación**: [docs.odata.com](https://docs.odata.com)
-- **🐛 Issues**: [GitHub Issues](https://github.com/odata/sistema-pos/issues)
+- **Issues**: [GitHub Issues](https://github.com/odata/sistema-pos-odata/issues)
+- **Wiki**: [Documentación del Proyecto](https://github.com/odata/sistema-pos-odata/wiki)
+- **Discussions**: [Comunidad](https://github.com/odata/sistema-pos-odata/discussions)
 
-## 📄 Licencia
+## 📝 Scripts Disponibles
 
-Este proyecto está licenciado bajo los términos de la **Licencia MIT** - ver el archivo [LICENSE](LICENSE) para más detalles.
+- `scripts/validate_dependencies.py` - Validación del sistema
+- `scripts/install_dependencies.py` - Instalación automática
+- `scripts/deploy_system.py` - Despliegue completo
+- `scripts/health_check.py` - Verificación de salud
 
-## 🙏 Agradecimientos
+## 🎉 ¡SISTEMA LISTO!
 
-- **Flask** - Framework web elegante
-- **React** - Biblioteca para interfaces de usuario
-- **Material-UI** - Componentes de diseño
-- **LangChain** - Framework de IA
-- **PostgreSQL** - Base de datos robusta
+El Sistema POS Odata está **completamente preparado** para ser desplegado.
+
+### 🚀 Comando de Despliegue Rápido
+```bash
+python scripts/deploy_system.py --environment production
+```
 
 ---
 
-**Desarrollado con ❤️ por el equipo de Odata**
+**¡El sistema está listo para funcionar en producción! 🎯**
 

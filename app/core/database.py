@@ -4,6 +4,9 @@ from contextlib import contextmanager
 # Instancia de SQLAlchemy
 db = SQLAlchemy()
 
+# Definir Base para los modelos
+Base = db.Model
+
 @contextmanager
 def db_session():
     """Proporciona un contexto para las operaciones de base de datos"""

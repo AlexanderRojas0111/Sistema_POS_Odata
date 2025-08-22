@@ -8,6 +8,16 @@ import logging
 import datetime
 from logging.handlers import RotatingFileHandler
 
+# Imports condicionales para flask-limiter
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    FLASK_LIMITER_AVAILABLE = True
+except ImportError:
+    FLASK_LIMITER_AVAILABLE = False
+    Limiter = None
+    get_remote_address = None
+
 from app.core.database import db, init_db
 from app.core.config import config
 
@@ -42,13 +52,47 @@ def create_app(config_name=None):
         app.logger.info('Aplicación iniciada')
     
     # Inicializar extensiones
-    CORS(app)
+    CORS(app, 
+          origins=app.config['CORS_ORIGINS'],
+          supports_credentials=app.config['CORS_SUPPORTS_CREDENTIALS'],
+          expose_headers=app.config['CORS_EXPOSE_HEADERS'])
+    
     init_db(app)
     Migrate(app, db)
     JWTManager(app)
     
+    # Configurar Rate Limiting solo si está disponible
+    if FLASK_LIMITER_AVAILABLE and app.config.get('RATELIMIT_ENABLED', False):
+        try:
+            limiter = Limiter(
+                app=app,
+                key_func=get_remote_address,
+                default_limits=app.config.get('RATELIMIT_DEFAULT', '200 per day;50 per hour;10 per minute').split(';'),
+                storage_uri=app.config.get('RATELIMIT_STORAGE_URL', app.config.get('REDIS_URL')),
+                strategy=app.config.get('RATELIMIT_STRATEGY', 'fixed-window')
+            )
+            app.limiter = limiter
+            app.logger.info('Rate limiting configurado correctamente')
+        except Exception as e:
+            app.logger.warning(f'No se pudo configurar rate limiting: {e}')
+            app.limiter = None
+    else:
+        app.limiter = None
+        if not FLASK_LIMITER_AVAILABLE:
+            app.logger.warning('Flask-Limiter no está disponible. Rate limiting deshabilitado.')
+        else:
+            app.logger.info('Rate limiting deshabilitado por configuración')
+    
     # Configurar Redis
     app.redis = redis.from_url(app.config['REDIS_URL'])
+    
+    # Inicializar Cache Manager
+    from app.core.cache import init_cache
+    init_cache(app)
+    
+    # Inicializar Security Manager
+    from app.core.security import init_security
+    init_security(app)
     
     # Registrar blueprints
     from app.api.v1.routes import api_v1
@@ -62,6 +106,9 @@ def create_app(config_name=None):
     
     # Registrar manejadores de errores
     register_error_handlers(app)
+    
+    # Configurar headers de seguridad
+    setup_security_headers(app)
     
     return app
 
@@ -110,3 +157,12 @@ def register_error_handlers(app):
     def internal_error(error):
         app.logger.error(f'Server Error: {error}')
         return {'error': 'Internal Server Error', 'message': 'An internal error occurred'}, 500
+
+def setup_security_headers(app):
+    """Configura headers de seguridad en todas las respuestas"""
+    
+    @app.after_request
+    def add_security_headers(response):
+        for header, value in app.config['SECURITY_HEADERS'].items():
+            response.headers[header] = value
+        return response
