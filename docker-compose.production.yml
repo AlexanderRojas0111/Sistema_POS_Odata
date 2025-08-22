@@ -70,7 +70,7 @@ services:
       retries: 3
       start_period: 40s
 
-    volumes:
+volumes:
   postgres_data:
     driver: local
   redis_data:
