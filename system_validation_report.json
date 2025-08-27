@@ -1,0 +1,185 @@
+{
+  "overall_status": "BUENO",
+  "status_emoji": "\ud83d\udfe1",
+  "success_rate": 96.3,
+  "total_tests": 27,
+  "tests_passed": 26,
+  "tests_failed": 1,
+  "warnings": 2,
+  "details": [
+    {
+      "test": "Python Version",
+      "status": "PASS",
+      "details": "Python 3.13.4",
+      "timestamp": "2025-08-26 21:38:00"
+    },
+    {
+      "test": "Package flask",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:00"
+    },
+    {
+      "test": "Package flask_sqlalchemy",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:00"
+    },
+    {
+      "test": "Package flask_jwt_extended",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:00"
+    },
+    {
+      "test": "Package scikit-learn",
+      "status": "FAIL",
+      "details": "Paquete scikit-learn no instalado",
+      "timestamp": "2025-08-26 21:38:00"
+    },
+    {
+      "test": "Package numpy",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "Package redis",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "Package psycopg2",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File app/__init__.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File app/core/config.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File app/core/database.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File app/models/user.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File app/models/product.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File app/api/v1/routes.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File app/api/v2/routes.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File requirements.txt",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File run_server.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "File README.md",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "Secret Key",
+      "status": "PASS",
+      "details": "SECRET_KEY configurado",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "JWT Secret Key",
+      "status": "PASS",
+      "details": "JWT_SECRET_KEY configurado",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "Database Connection",
+      "status": "PASS",
+      "details": "SQLite - 7 tablas encontradas",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "Security Audit",
+      "status": "WARNING",
+      "details": "Auditor\u00eda con advertencias",
+      "timestamp": "2025-08-26 21:38:01"
+    },
+    {
+      "test": "Test Server Start",
+      "status": "PASS",
+      "details": "Servidor iniciado en puerto 5000",
+      "timestamp": "2025-08-26 21:38:06"
+    },
+    {
+      "test": "API Root endpoint",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-26 21:38:10"
+    },
+    {
+      "test": "API Health check",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-26 21:38:12"
+    },
+    {
+      "test": "API API v1 info",
+      "status": "WARNING",
+      "details": "Status: 404",
+      "timestamp": "2025-08-26 21:38:14"
+    },
+    {
+      "test": "API API v2 info",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-26 21:38:16"
+    },
+    {
+      "test": "API AI health check",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-26 21:38:18"
+    },
+    {
+      "test": "AI Service",
+      "status": "PASS",
+      "details": "Documentos: 0",
+      "timestamp": "2025-08-26 21:38:21"
+    }
+  ]
+}

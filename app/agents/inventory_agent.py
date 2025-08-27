@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from .base_agent import BaseAgent
 from app.models import Product, Inventory
-from app.database import db
+from app.core.database import db
 from app.rag.embeddings import EmbeddingService
 
 class InventoryAgent(BaseAgent):

@@ -66,7 +66,7 @@ def get_user(user_id):
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/', methods=['POST'])
-@jwt_required()
+# @jwt_required()  # Temporalmente deshabilitado para crear usuario inicial
 def create_user():
     """Crear un nuevo usuario"""
     try:

@@ -1,12 +1,16 @@
-# Git
-.git
-.gitignore
-.gitattributes
+# ========================================================================
+# Sistema POS O'data - Docker Ignore
+# ========================================================================
+# Archivos y directorios que no deben incluirse en la imagen Docker
+# ========================================================================
 
-# Python
+# ========================================================================
+# ARCHIVOS DE DESARROLLO
+# ========================================================================
+*.pyc
+*.pyo
+*.pyd
 __pycache__/
-*.py[cod]
-*$py.class
 *.so
 .Python
 build/
@@ -25,81 +29,134 @@ wheels/
 .installed.cfg
 *.egg
 
-# Entornos virtuales
+# ========================================================================
+# ENTORNOS VIRTUALES
+# ========================================================================
 venv/
-env/
+venv_*/
 ENV/
-.env
+env/
 .venv/
-.venv_*/
+.ENV/
 
-# IDEs y editores
-.idea/
+# ========================================================================
+# ARCHIVOS DE CONFIGURACIÓN LOCAL
+# ========================================================================
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
+# ========================================================================
+# BASES DE DATOS LOCALES
+# ========================================================================
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# ========================================================================
+# LOGS Y ARCHIVOS TEMPORALES
+# ========================================================================
+logs/
+*.log
+*.tmp
+*.temp
+.cache/
+
+# ========================================================================
+# ARCHIVOS DE TESTING
+# ========================================================================
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+.nyc_output/
+coverage/
+
+# ========================================================================
+# ARCHIVOS DE DESARROLLO
+# ========================================================================
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
-
-# Logs y bases de datos
-*.log
-logs/
-*.sqlite
-*.db
-instance/
-
-# Archivos de Docker
-.docker/
-docker-compose.override.yml
-
-# Archivos de sistema
 .DS_Store
 Thumbs.db
 
-# Archivos de caché
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
+# ========================================================================
+# CONTROL DE VERSIONES
+# ========================================================================
+.git/
+.gitignore
+.gitattributes
 
-# Archivos de datos y uploads
-data/
-uploads/
-
-# Archivos de desarrollo
-*.env.local
-*.env.*.local
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Archivos de documentación
+# ========================================================================
+# DOCUMENTACIÓN Y ARCHIVOS README
+# ========================================================================
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
 docs/
-Documentacion/
+*.md
 
-# Archivos temporales
-*.tmp
-*.temp
-*.bak
-*.swp
-*~.nib
+# ========================================================================
+# ARCHIVOS DE CI/CD
+# ========================================================================
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+.travis.yml
 
-# Archivos de configuración local
-.env.local
-.env.*.local
+# ========================================================================
+# ARCHIVOS DE DOCKER
+# ========================================================================
+Dockerfile*
+docker-compose*.yml
+.dockerignore
 
-# Archivos de prueba
-tests/
-test/
-testing/
-coverage/
+# ========================================================================
+# ARCHIVOS DE BACKUP Y AUDITORÍA
+# ========================================================================
+backups/
+*.backup
+security_audit_report.json
 
-# Archivos de frontend (se construyen por separado)
+# ========================================================================
+# ARCHIVOS DE FRONTEND (si están en el mismo repo)
+# ========================================================================
 frontend/node_modules/
 frontend/build/
-frontend/coverage/
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local 
+frontend/dist/
+frontend/.next/
+
+# ========================================================================
+# ARCHIVOS DE MONITOREO
+# ========================================================================
+monitoring/
+prometheus_data/
+grafana_data/
+
+# ========================================================================
+# ARCHIVOS DE SCRIPTS DE DESARROLLO
+# ========================================================================
+scripts/test_*.py
+scripts/demo_*.py
+scripts/setup_*.py
+scripts/security_audit.py
+
+# ========================================================================
+# UPLOADS Y MEDIA (para desarrollo)
+# ========================================================================
+uploads/
+media/
+static/uploads/
+
+# ========================================================================
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# ========================================================================
+add_arepas_with_auth.py
+*.exe
+vs_community.exe

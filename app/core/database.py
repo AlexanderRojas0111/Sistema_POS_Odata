@@ -26,11 +26,9 @@ def init_db(app):
     
     with app.app_context():
         # Importar modelos aquí para evitar importaciones circulares
-        from app.models.user import User
-        from app.models.product import Product
-        from app.models.inventory import Inventory
-        from app.models.sale import Sale
-        from app.models.customer import Customer
-        
-        # Crear todas las tablas
-        db.create_all() 
+        try:
+            from app.models import User, Product, Inventory, Sale, Customer
+            # Crear todas las tablas
+            db.create_all()
+        except ImportError as e:
+            app.logger.warning(f"Error importando modelos: {e}. Las tablas se crearán cuando se importen los modelos.") 

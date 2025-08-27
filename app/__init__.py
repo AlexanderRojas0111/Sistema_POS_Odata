@@ -1,3 +1,14 @@
+"""
+Sistema POS O'data - Aplicación Flask Principal
+===============================================
+
+Sistema de Punto de Venta con funcionalidades avanzadas de IA
+para búsqueda semántica y recomendaciones inteligentes.
+
+Autor: Sistema POS Odata
+Versión: 2.0.0
+"""
+
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -7,6 +18,7 @@ import redis
 import logging
 import datetime
 from logging.handlers import RotatingFileHandler
+from typing import Optional
 
 # Imports condicionales para flask-limiter
 try:
@@ -20,6 +32,10 @@ except ImportError:
 
 from app.core.database import db, init_db
 from app.core.config import config
+
+# Constantes de la aplicación
+APP_VERSION = "2.0.0"
+API_TITLE = "POS O'data API"
 
 def create_app(config_name=None):
     """Crea y configura la aplicación Flask"""
@@ -61,18 +77,29 @@ def create_app(config_name=None):
     Migrate(app, db)
     JWTManager(app)
     
-    # Configurar Rate Limiting solo si está disponible
-    if FLASK_LIMITER_AVAILABLE and app.config.get('RATELIMIT_ENABLED', False):
+    # Configurar Rate Limiting solo si está disponible y habilitado
+    rate_limiting_enabled = app.config.get('RATELIMIT_ENABLED', False)
+    
+    if FLASK_LIMITER_AVAILABLE and rate_limiting_enabled:
         try:
-            limiter = Limiter(
-                app=app,
-                key_func=get_remote_address,
-                default_limits=app.config.get('RATELIMIT_DEFAULT', '200 per day;50 per hour;10 per minute').split(';'),
-                storage_uri=app.config.get('RATELIMIT_STORAGE_URL', app.config.get('REDIS_URL')),
-                strategy=app.config.get('RATELIMIT_STRATEGY', 'fixed-window')
-            )
-            app.limiter = limiter
-            app.logger.info('Rate limiting configurado correctamente')
+            # Usar MockRedis si el Redis real no está disponible
+            storage_uri = None
+            if hasattr(app, 'redis') and hasattr(app.redis, '_data'):
+                # Es MockRedis, no usar storage_uri
+                app.logger.info('Usando MockRedis - Rate limiting básico deshabilitado')
+                app.limiter = None
+            else:
+                # Redis real disponible
+                storage_uri = app.config.get('RATELIMIT_STORAGE_URL', app.config.get('REDIS_URL'))
+                limiter = Limiter(
+                    app=app,
+                    key_func=get_remote_address,
+                    default_limits=app.config.get('RATELIMIT_DEFAULT', '200 per day;50 per hour;10 per minute').split(';'),
+                    storage_uri=storage_uri,
+                    strategy=app.config.get('RATELIMIT_STRATEGY', 'fixed-window')
+                )
+                app.limiter = limiter
+                app.logger.info('Rate limiting configurado correctamente')
         except Exception as e:
             app.logger.warning(f'No se pudo configurar rate limiting: {e}')
             app.limiter = None
@@ -80,19 +107,60 @@ def create_app(config_name=None):
         app.limiter = None
         if not FLASK_LIMITER_AVAILABLE:
             app.logger.warning('Flask-Limiter no está disponible. Rate limiting deshabilitado.')
-        else:
+        elif not rate_limiting_enabled:
             app.logger.info('Rate limiting deshabilitado por configuración')
+        else:
+            app.logger.info('Rate limiting deshabilitado')
     
-    # Configurar Redis
-    app.redis = redis.from_url(app.config['REDIS_URL'])
+    # Configurar Redis con manejo de errores
+    try:
+        app.redis = redis.from_url(app.config['REDIS_URL'])
+        # Probar conexión
+        app.redis.ping()
+        app.logger.info('Redis conectado correctamente')
+    except Exception as e:
+        app.logger.warning(f'Redis no disponible: {e}. Usando modo sin cache.')
+        # Crear un mock de Redis para desarrollo
+        class MockRedis:
+            def __init__(self):
+                self._data = {}
+            
+            def ping(self): return True
+            def get(self, key): return self._data.get(key)
+            def set(self, key, value, ex=None): 
+                self._data[key] = value
+                return True
+            def setex(self, key, time, value):
+                self._data[key] = value
+                return True
+            def incr(self, key):
+                current = int(self._data.get(key, 0))
+                self._data[key] = str(current + 1)
+                return current + 1
+            def delete(self, *keys): 
+                for key in keys:
+                    self._data.pop(key, None)
+                return len(keys)
+            def exists(self, key): return key in self._data
+            def flushdb(self): 
+                self._data.clear()
+                return True
+            def keys(self, pattern): 
+                # Implementación simple de pattern matching
+                import fnmatch
+                return [k for k in self._data.keys() if fnmatch.fnmatch(k, pattern.replace('*', '*'))]
+        app.redis = MockRedis()
     
     # Inicializar Cache Manager
     from app.core.cache import init_cache
     init_cache(app)
     
-    # Inicializar Security Manager
-    from app.core.security import init_security
-    init_security(app)
+    # Inicializar Security Manager con manejo de errores
+    try:
+        from app.core.security import init_security
+        init_security(app)
+    except Exception as e:
+        app.logger.warning(f'Error inicializando SecurityManager: {e}. Continuando sin funciones avanzadas de seguridad.')
     
     # Registrar blueprints
     from app.api.v1.routes import api_v1

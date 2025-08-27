@@ -1,0 +1,60 @@
+# ========================================================================
+# Sistema POS O'data - Dependencias de Desarrollo
+# ========================================================================
+# Versión: 2.0.0
+# Descripción: Dependencias adicionales para desarrollo y testing
+# Uso: pip install -r requirements-dev.txt
+# ========================================================================
+
+# Incluir dependencias de producción
+-r requirements.txt
+
+# ========================================================================
+# DEVELOPMENT TOOLS - Herramientas de desarrollo
+# ========================================================================
+black==24.10.0                 # Formateo de código
+flake8==7.1.1                  # Linting
+isort==5.13.2                  # Ordenamiento de imports
+mypy==1.13.0                   # Type checking
+pre-commit==4.0.1              # Git hooks
+
+# ========================================================================
+# TESTING EXTENDED - Testing avanzado
+# ========================================================================
+pytest-cov==6.0.0              # Cobertura de tests
+pytest-mock==3.14.0            # Mocking para tests
+pytest-asyncio==0.25.0         # Testing asíncrono
+factory-boy==3.4.0             # Factory para tests
+faker==33.1.0                  # Datos falsos para tests
+
+# ========================================================================
+# DOCUMENTATION - Documentación
+# ========================================================================
+sphinx==8.1.3                  # Generador de documentación
+sphinx-rtd-theme==3.0.2        # Tema para documentación
+mkdocs==1.6.1                  # Documentación alternativa
+mkdocs-material==9.5.50        # Tema Material para MkDocs
+
+# ========================================================================
+# DEBUGGING & PROFILING - Debug y profiling
+# ========================================================================
+pdb++==0.10.3                  # Debugger mejorado
+memory-profiler==0.62.0        # Profiling de memoria
+py-spy==0.4.0                  # Profiler de Python
+
+# ========================================================================
+# JUPYTER & NOTEBOOKS - Análisis y desarrollo interactivo
+# ========================================================================
+jupyter==1.1.1                 # Jupyter notebooks
+ipython==8.31.0                # Shell interactivo mejorado
+matplotlib==3.10.0             # Gráficos
+seaborn==0.13.2                # Gráficos estadísticos
+
+# ========================================================================
+# AI/ML EXTENDED - Dependencias ML adicionales (opcionales)
+# ========================================================================
+# pandas==2.3.2                # Análisis de datos
+# transformers==4.55.0         # Modelos de transformers
+# sentence-transformers==5.1.0 # Embeddings de oraciones
+# langchain==0.3.27            # Framework LLM
+# langchain-core==0.3.74       # Core de LangChain

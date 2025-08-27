@@ -78,9 +78,15 @@ class DevelopmentConfig(Config):
     TESTING = False
     ENV = 'development'
     
-    # Base de datos local (PostgreSQL para desarrollo)
+    # Base de datos local (SQLite para desarrollo rápido)
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://postgres:postgres@localhost:5432/inventory_db'
+        'sqlite:///pos_odata_dev.db'
+    
+    # Configuración específica para SQLite en desarrollo
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+    }
     
     # Logging detallado
     LOG_LEVEL = 'DEBUG'
@@ -98,6 +104,9 @@ class DevelopmentConfig(Config):
     
     # Rate limiting más permisivo en desarrollo
     RATELIMIT_DEFAULT = "1000 per day;200 per hour;50 per minute"
+    
+    # Deshabilitar Rate limiting en desarrollo para evitar problemas con Redis
+    RATELIMIT_ENABLED = False
 
 class TestingConfig(Config):
     """Configuración para testing"""
@@ -109,6 +118,12 @@ class TestingConfig(Config):
     # Base de datos en memoria para tests
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     
+    # Configuración específica para SQLite
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+    }
+    
     # Deshabilitar CSRF para tests
     WTF_CSRF_ENABLED = False
     
@@ -117,6 +132,12 @@ class TestingConfig(Config):
     
     # Cache deshabilitado para tests
     CACHE_TYPE = 'null'
+    
+    # Redis deshabilitado para tests
+    REDIS_URL = 'redis://localhost:6379/0'  # Se usará MockRedis automáticamente
+    
+    # Rate limiting deshabilitado para tests
+    RATELIMIT_ENABLED = False
 
 class StagingConfig(Config):
     """Configuración para staging"""

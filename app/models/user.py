@@ -6,9 +6,9 @@ from datetime import datetime
 from app.core.database import db
 
 class UserRole(enum.Enum):
-    ADMIN = "admin"
-    MANAGER = "manager"
-    EMPLOYEE = "employee"
+    ADMIN = "ADMIN"
+    MANAGER = "MANAGER"
+    EMPLOYEE = "EMPLOYEE"
 
 class User(db.Model):
     """Modelo para usuarios"""

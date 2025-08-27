@@ -1,69 +1,88 @@
-# Sistema POS Odata - Requirements Principales
-# Dependencias esenciales para el funcionamiento del sistema
-# Python 3.13+ compatible
+# ========================================================================
+# Sistema POS O'data - Dependencias de Producción
+# ========================================================================
+# Versión: 2.0.0
+# Python: 3.11+
+# Fecha: 2025-01-26
+# Descripción: Sistema POS con IA para búsqueda semántica y recomendaciones
+# ========================================================================
 
-# Core Flask Framework
-Flask==3.1.1
-Flask-SQLAlchemy==3.1.1
-Flask-Migrate==4.1.0
-Flask-JWT-Extended==4.7.1
-Flask-CORS==6.0.1
-Flask-Bcrypt==1.0.1
-Flask-Limiter==3.5.0
+# ========================================================================
+# CORE FRAMEWORK - Flask y extensiones principales
+# ========================================================================
+Flask==3.1.1                   # Framework web principal
+Flask-SQLAlchemy==3.1.1        # ORM para Flask
+Flask-Migrate==4.1.0           # Migraciones de base de datos
+Flask-JWT-Extended==4.7.1      # Autenticación JWT
+Flask-CORS==6.0.1              # Manejo de CORS
+Flask-Bcrypt==1.0.1            # Hashing de contraseñas
+Flask-Limiter==3.5.0           # Rate limiting
 
-# Database & ORM
-psycopg2-binary==2.9.10
-SQLAlchemy==2.0.42
-alembic==1.16.4
+# ========================================================================
+# DATABASE - Base de datos y ORM
+# ========================================================================
+psycopg2-binary==2.9.10        # Driver PostgreSQL
+SQLAlchemy==2.0.42             # ORM principal
+alembic==1.16.4                # Migraciones de esquema
 
-# Cache & Message Queue
-redis==6.4.0
-celery==5.5.3
+# ========================================================================
+# CACHE & MESSAGING - Redis y Celery
+# ========================================================================
+redis==6.4.0                   # Cache y almacenamiento en memoria
+celery==5.5.3                  # Cola de tareas asíncronas
 
-# Security & Authentication
-bcrypt==4.3.0
-cryptography==45.0.6
-PyJWT==2.10.1
-passlib==1.7.4
+# ========================================================================
+# SECURITY - Seguridad y autenticación
+# ========================================================================
+bcrypt==4.3.0                  # Hashing de contraseñas
+cryptography==45.0.6           # Criptografía
+PyJWT==2.10.1                  # JSON Web Tokens
+passlib==1.7.4                 # Utilidades de contraseñas
 
-# Data Validation & Serialization
-pydantic==2.11.7
-marshmallow==4.0.0
+# ========================================================================
+# DATA PROCESSING - Validación y serialización
+# ========================================================================
+pydantic==2.11.7               # Validación de datos
+marshmallow==4.0.0             # Serialización/deserialización
 
-# HTTP & API
-requests==2.32.4
-httpx==0.28.1
+# ========================================================================
+# HTTP & API - Clientes HTTP y utilidades de API
+# ========================================================================
+requests==2.32.4               # Cliente HTTP síncrono
+httpx==0.28.1                  # Cliente HTTP asíncrono
 
-# AI & Machine Learning (Core)
-# AI/ML Dependencies (Comentado para despliegue rápido - descomentar si se necesita)
-# langchain==0.3.27
-# langchain-core==0.3.74
-# transformers==4.55.0
-# sentence-transformers==5.1.0
-# torch==2.8.0
-# scikit-learn==1.7.1
-# numpy==2.3.2
-# pandas==2.3.2
+# ========================================================================
+# ARTIFICIAL INTELLIGENCE - ML y procesamiento de texto
+# ========================================================================
+scikit-learn==1.7.1            # Machine learning core
+numpy==2.3.2                   # Computación numérica
+scipy==1.16.1                  # Computación científica
+joblib==1.5.1                  # Paralelización y serialización
+threadpoolctl==3.6.0           # Control de threads para ML
 
-# Hugging Face Ecosystem (Comentado para despliegue rápido)
-# huggingface-hub==0.34.4
-# tokenizers==0.21.4
+# ========================================================================
+# UTILITIES - Utilidades generales
+# ========================================================================
+python-dotenv==1.1.1           # Variables de entorno
+python-dateutil==2.9.0.post0   # Utilidades de fecha
+pytz==2025.2                   # Zonas horarias
+click==8.1.8                   # CLI framework
 
-# Utilities
-python-dotenv==1.1.1
-python-dateutil==2.9.0.post0
-pytz==2025.2
-click==8.1.8
+# ========================================================================
+# MONITORING - Monitoreo y métricas
+# ========================================================================
+prometheus_client==0.22.1      # Métricas de Prometheus
+psutil==7.0.0                  # Información del sistema
 
-# Monitoring & Logging
-prometheus_client==0.22.1
-psutil==7.0.0
+# ========================================================================
+# MEDIA & DATA - Procesamiento de archivos
+# ========================================================================
+Pillow==11.3.0                 # Procesamiento de imágenes
+orjson==3.11.1                 # JSON rápido
+PyYAML==6.0.2                  # Procesamiento YAML
 
-# Image Processing
-Pillow==11.3.0
-
-# JSON Processing
-orjson==3.11.1
-
-# YAML Processing
-PyYAML==6.0.2
+# ========================================================================
+# TESTING - Dependencias de pruebas
+# ========================================================================
+pytest==8.3.4                  # Framework de testing
+pytest-flask==1.3.0            # Testing específico para Flask

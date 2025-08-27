@@ -1,0 +1,200 @@
+# ========================================================================
+# Sistema POS O'data - Docker Compose para Desarrollo
+# ========================================================================
+# Versión: 2.0.0
+# Descripción: Configuración completa para desarrollo local
+# Uso: docker-compose up -d
+# ========================================================================
+
+version: '3.8'
+
+services:
+  # ========================================================================
+  # APLICACIÓN PRINCIPAL - Flask Backend
+  # ========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: pos-odata-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pos_odata_dev
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=your-secret-key-here
+      - JWT_SECRET_KEY=your-jwt-secret-key-here
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - db
+      - redis
+    networks:
+      - pos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================================================
+  # BASE DE DATOS - PostgreSQL
+  # ========================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: pos-odata-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=pos_odata_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - pos-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ========================================================================
+  # CACHE Y SESIONES - Redis
+  # ========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: pos-odata-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - pos-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================================================
+  # FRONTEND - React Application
+  # ========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: pos-odata-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api/v1
+      - REACT_APP_AI_API_URL=http://localhost:5000/api/v2
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - app
+    networks:
+      - pos-network
+
+  # ========================================================================
+  # WORKER - Celery para tareas asíncronas
+  # ========================================================================
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: pos-odata-worker
+    restart: unless-stopped
+    command: celery -A app.celery worker --loglevel=info
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pos_odata_dev
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - pos-network
+
+  # ========================================================================
+  # MONITOREO - Prometheus
+  # ========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: pos-odata-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - pos-network
+
+  # ========================================================================
+  # VISUALIZACIÓN - Grafana
+  # ========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pos-odata-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - pos-network
+
+# ========================================================================
+# VOLÚMENES PERSISTENTES
+# ========================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# ========================================================================
+# RED PERSONALIZADA
+# ========================================================================
+networks:
+  pos-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
