@@ -9,7 +9,7 @@ Flask-Limiter==3.5.0
 
 # Base de datos y ORM
 psycopg2-binary==2.9.10
-SQLAlchemy==2.0.42
+SQLAlchemy==2.0.43
 alembic==1.16.4
 
 # Tareas asíncronas y caché
