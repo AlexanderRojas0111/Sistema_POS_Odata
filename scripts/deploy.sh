@@ -58,3 +58,7 @@ echo "🔍 Verificando estado de los servicios..."
 docker compose -f $COMPOSE_FILE ps
 
 echo "✅ Despliegue en $ENVIRONMENT completado exitosamente."
+
+# Limpiar imágenes Docker no utilizadas para ahorrar espacio
+echo "🧹 Limpiando imágenes Docker antiguas..."
+docker image prune -af
