@@ -122,14 +122,14 @@ backup_config_files() {
         --exclude='logs/*' \
         --exclude='uploads/*' \
         --exclude='instance/*' \
-        . 2>/dev/null || true
+        . > /dev/null 2> >(tee -a /var/log/backup-error.log >&2)
     
     if [ -f "$config_backup" ]; then
         log "Backup de configuración completado: $config_backup"
         local config_size=$(du -h "$config_backup" | cut -f1)
         log "Tamaño del backup de configuración: $config_size"
     else
-        log "ADVERTENCIA: No se pudo crear backup de configuración"
+        log "ERROR: No se pudo crear backup de configuración. Revisa /var/log/backup-error.log"
     fi
 }
 
@@ -141,14 +141,14 @@ backup_logs() {
     log "Creando backup de logs..."
     
     # Crear backup de logs (solo los últimos 7 días)
-    find /app/logs -name "*.log" -mtime -7 -exec tar -czf "$logs_backup" {} + 2>/dev/null || true
+    find /app/logs -name "*.log" -mtime -7 -print0 | xargs -0 tar -czf "$logs_backup" > /dev/null 2> >(tee -a /var/log/backup-error.log >&2)
     
     if [ -f "$logs_backup" ]; then
         log "Backup de logs completado: $logs_backup"
         local logs_size=$(du -h "$logs_backup" | cut -f1)
         log "Tamaño del backup de logs: $logs_size"
     else
-        log "ADVERTENCIA: No se pudo crear backup de logs"
+        log "ADVERTENCIA: No se pudo crear backup de logs o no se encontraron logs recientes. Revisa /var/log/backup-error.log"
     fi
 }
 

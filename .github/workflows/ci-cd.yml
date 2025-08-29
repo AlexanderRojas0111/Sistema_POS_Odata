@@ -106,34 +106,34 @@ jobs:
         test-type: ['unit', 'integration']
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
-        
+      uses: actions/checkout@v4
+      
       - name: Configurar Python
         uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          
+      with:
+        python-version: ${{ matrix.python-version }}
+        
       - name: Instalar dependencias
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
           pip install -r requirements.dev.txt
-          
+        
       - name: Ejecutar pruebas unitarias
         if: matrix.test-type == 'unit'
-        run: |
+      run: |
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
-          
+        
       - name: Ejecutar pruebas de integración
         if: matrix.test-type == 'integration'
-        run: |
+      run: |
           pytest tests/test_api_integration.py -v
           
       - name: Subir cobertura
         uses: codecov/codecov-action@v4
         if: matrix.test-type == 'unit'
-        with:
-          file: ./coverage.xml
+      with:
+        file: ./coverage.xml
           flags: backend
           name: backend-coverage
 
@@ -142,38 +142,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
-        
+      uses: actions/checkout@v4
+      
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
-        with:
+      uses: actions/setup-node@v4
+      with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-          
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
       - name: Instalar dependencias
-        run: |
-          cd frontend
+      run: |
+        cd frontend
           npm ci --legacy-peer-deps
-          
+        
       - name: Linting
-        run: |
-          cd frontend
-          npm run lint
-          
+      run: |
+        cd frontend
+        npm run lint
+        
       - name: Pruebas unitarias
-        run: |
-          cd frontend
+      run: |
+        cd frontend
           npm test -- --watchAll=false --coverage
-          
+        
       - name: Build de producción
-        run: |
-          cd frontend
-          npm run build
-          
+      run: |
+        cd frontend
+        npm run build
+
       - name: Analizar bundle
-        run: |
-          cd frontend
+      run: |
+        cd frontend
           npm run analyze
 
   # ===== CONSTRUCCIÓN Y EMPAQUETADO =====
@@ -189,14 +189,14 @@ jobs:
       frontend-image: ${{ steps.meta-frontend.outputs.tags }}
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
-        
+      uses: actions/checkout@v4
+      
       - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        
+      uses: docker/setup-buildx-action@v3
+      
       - name: Login a GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
+      uses: docker/login-action@v3
+      with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -228,9 +228,9 @@ jobs:
             type=raw,value=staging,enable={{branch=='staging'}}
             
       - name: Construir y subir Backend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
+      uses: docker/build-push-action@v5
+      with:
+        context: .
           file: ./Dockerfile
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
@@ -243,11 +243,11 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          push: true
+        push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
   # ===== DESPLIEGUE EN STAGING =====
   deploy-staging:
@@ -267,39 +267,16 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
-          script: |
-            set -e
-            echo "🚀 Iniciando despliegue en STAGING..."
-            
-            # Navegar al directorio del proyecto
-            cd /opt/pos-odata
-            
-            # Crear backup antes del despliegue
-            echo "📦 Creando backup..."
-            docker compose -f docker-compose.production.yml run --rm backup || echo "⚠️ Backup falló, continuando..."
-            
-            # Actualizar imágenes
-            echo "🔄 Actualizando imágenes..."
-            docker compose -f docker-compose.production.yml pull
-            
-            # Desplegar
-            echo "🚀 Desplegando servicios..."
-            docker compose -f docker-compose.production.yml up -d
-            
-            # Esperar que los servicios estén listos
-            echo "⏳ Esperando que los servicios estén listos..."
-            sleep 30
-            
+          script: |            
+            # Desplegar usando el script
+            GITHUB_REPOSITORY=${{ github.repository }} ./scripts/deploy.sh staging
+
             # Verificar health checks
             echo "🔍 Verificando health checks..."
-            docker compose -f docker-compose.production.yml ps
-            
-            # Verificar endpoints
-            echo "🔍 Verificando endpoints..."
-            curl -f http://localhost/health || echo "⚠️ Health check falló"
-            curl -f http://localhost:5000/health || echo "⚠️ Backend health check falló"
-            
-            echo "✅ Despliegue en STAGING completado"
+            # Asumiendo que Nginx/proxy en staging escucha en el puerto 80 y redirige a la app
+            curl -f http://localhost/health || (echo "❌ Health check público de Staging falló" && exit 1)
+            curl -f http://localhost:5000/health || (echo "❌ Health check del backend de Staging falló" && exit 1)
+            echo "✅ Verificación de endpoints en STAGING completada."
             
       - name: Notificar despliegue
         uses: 8398a7/action-slack@v3
@@ -350,50 +327,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
-          script: |
-            set -e
-            echo "🚀 Iniciando despliegue en PRODUCCIÓN..."
-            
-            # Navegar al directorio del proyecto
-            cd /opt/pos-odata
-            
-            # Crear backup crítico antes del despliegue
-            echo "📦 Creando backup crítico..."
-            docker compose -f docker-compose.production.yml run --rm backup
-            
-            # Verificar espacio en disco
-            echo "💾 Verificando espacio en disco..."
-            df -h
-            
-            # Actualizar imágenes
-            echo "🔄 Actualizando imágenes..."
-            docker compose -f docker-compose.production.yml pull
-            
-            # Desplegar con rollback automático
-            echo "🚀 Desplegando servicios..."
-            if docker compose -f docker-compose.production.yml up -d; then
-              echo "✅ Despliegue exitoso"
-              
-              # Esperar que los servicios estén listos
-              echo "⏳ Esperando que los servicios estén listos..."
-              sleep 45
-              
-              # Verificar health checks
-              echo "🔍 Verificando health checks..."
-              docker compose -f docker-compose.production.yml ps
-              
-              # Verificar endpoints críticos
-              echo "🔍 Verificando endpoints críticos..."
-              curl -f https://pos.odata.com/health || exit 1
-              curl -f https://pos.odata.com/api/v1/health || exit 1
-              
-              echo "✅ Despliegue en PRODUCCIÓN completado exitosamente"
-            else
-              echo "❌ Despliegue falló, iniciando rollback..."
-              docker compose -f docker-compose.production.yml up -d
-              echo "🔄 Rollback completado"
-              exit 1
-            fi
+          script: |            
+            GITHUB_REPOSITORY=${{ github.repository }} ./scripts/deploy.sh production
+            # Verificar endpoints críticos post-despliegue
+            echo "🔍 Verificando endpoints críticos..."
+            curl -f https://pos.odata.com/health || (echo "❌ Health check público falló" && exit 1)
+            curl -f https://pos.odata.com/api/v1/health || (echo "❌ Health check de API falló" && exit 1)
+            echo "✅ Verificación de endpoints completada."
             
       - name: Notificar despliegue
         uses: 8398a7/action-slack@v3
@@ -419,13 +359,13 @@ jobs:
           echo "✅ Métricas verificadas"
           
       - name: Verificar logs
-        run: |
+      run: |
           echo "📝 Verificando logs..."
           # Aquí podrías verificar logs de errores
           echo "✅ Logs verificados"
-          
+        
       - name: Generar reporte de despliegue
-        run: |
+      run: |
           echo "📊 Generando reporte de despliegue..."
           echo "## Reporte de Despliegue" >> deployment-report.md
           echo "- Fecha: $(date)" >> deployment-report.md

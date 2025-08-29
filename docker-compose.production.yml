@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     container_name: pos-odata-db
     environment:
-      - POSTGRES_DB=pos_db_production
-      - POSTGRES_USER=pos_user
-      - POSTGRES_PASSWORD=4QRju1YLSF_gHOW9oRnxxg
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-production-db.sql/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -18,7 +18,7 @@ services:
       - pos-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pos_user -d pos_db_production"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -27,7 +27,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: pos-odata-redis
-    command: redis-server --requirepass 4QRju1YLSF_gHOW9oRnxxg
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
     volumes:
@@ -43,17 +43,17 @@ services:
 
   # Aplicación Flask
   app:
-    build: .
+    image: ${APP_IMAGE_NAME}:${APP_IMAGE_TAG:-latest}
     container_name: pos-odata-app
     ports:
       - "5000:5000"
     environment:
       - FLASK_APP=app.main:app
       - FLASK_ENV=production
-      - DATABASE_URL=postgresql://pos_user:4QRju1YLSF_gHOW9oRnxxg@db:5432/pos_db_production
-      - REDIS_URL=redis://:4QRju1YLSF_gHOW9oRnxxg@redis:6379/0
-      - SECRET_KEY=TnrtknC2t6wlh_Be0CV59rumtGFZDszklYC8KW-PBFw
-      - JWT_SECRET_KEY=f0aAvmIIAgDUxGj2fNMcajVTHM_-bDeU3h91nrYCi3AURHJws0z4rLlJWC7rkVE9GCyLGLgVoix67KM3N1yqag
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - db
       - redis
