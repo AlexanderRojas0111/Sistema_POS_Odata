@@ -4,4 +4,4 @@ pytest-cov
 flake8 # Linter de código
 
 # Depurador mejorado
-pdbpp==1.1.0 # Actualizado para resolver conflicto con flake8
+pdbpp==1.2.0 # Actualizado para ser compatible con Python 3.13

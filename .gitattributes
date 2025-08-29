@@ -1,0 +1,18 @@
+# Configuración de finales de línea para el proyecto Sistema POS Odata
+
+# Por defecto, Git intentará adivinar si un archivo es de texto y normalizará
+# sus finales de línea a LF (estilo Unix) en el repositorio.
+* text=auto
+
+# Forzar explícitamente finales de línea LF para archivos que se ejecutan
+# en entornos Linux, como los runners de GitHub Actions y los servidores de despliegue.
+# Esto previene errores sutiles en scripts.
+*.sh      text eol=lf
+*.py      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+
+# Marcar archivos comunes como binarios para que Git no los modifique.
+*.png     binary
+*.jpg     binary
+*.ico     binary

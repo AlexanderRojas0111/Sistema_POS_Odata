@@ -122,12 +122,12 @@ jobs:
       - name: Ejecutar pruebas unitarias
         if: matrix.test-type == 'unit'
         run: |
-          pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+          python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
         
       - name: Ejecutar pruebas de integración
         if: matrix.test-type == 'integration'
         run: |
-          pytest tests/test_api_integration.py -v
+          python -m pytest tests/test_api_integration.py -v
           
       - name: Subir cobertura
         if: matrix.test-type == 'unit'
