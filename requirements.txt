@@ -54,7 +54,7 @@ httpx==0.28.1                  # Cliente HTTP asíncrono
 # ========================================================================
 # ARTIFICIAL INTELLIGENCE - ML y procesamiento de texto
 # ========================================================================
-scikit-learn==1.7.1            # Machine learning core
+scikit-learn==1.5.1            # Machine learning core
 scipy==1.16.1                  # Computación científica
 joblib==1.5.1                  # Paralelización y serialización
 threadpoolctl==3.6.0           # Control de threads para ML
