@@ -34,16 +34,7 @@ httpx==0.28.1
 scikit-learn==1.5.1
 pandas==2.2.2
 # La siguiente línea causaba el error y debe ser eliminada.
-# scipy==1.16.1
 
 # Otros
 gunicorn
 python-dotenv
-
-# Dependencias para desarrollo y pruebas
-pytest
-pytest-cov
-flake8
-
-# Depurador mejorado
-pdbpp==0.10.3 # Corregido desde pdb++

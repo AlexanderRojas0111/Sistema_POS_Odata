@@ -1,7 +1,7 @@
 # Dependencias para desarrollo y pruebas
 pytest
 pytest-cov
-flake8
+flake8 # Linter de código
 
 # Depurador mejorado
-pdbpp==0.10.3 # Corregido desde pdb++
+pdbpp==1.1.0 # Actualizado para resolver conflicto con flake8
