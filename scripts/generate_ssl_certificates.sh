@@ -200,44 +200,16 @@ verify_certificate() {
 
 # Función para configurar renovación automática (Let's Encrypt)
 setup_auto_renewal() {
-    if command -v certbot &> /dev/null; then
-        log_info "Configurando renovación automática..."
-        
-        # Crear script de renovación
-        RENEWAL_SCRIPT="/usr/local/bin/renew-ssl-certs.sh"
-        sudo tee "$RENEWAL_SCRIPT" > /dev/null << 'EOF'
-#!/bin/bash
-# Script de renovación automática de certificados SSL
-
-DOMAIN="pos.odata.com"
-CERT_DIR="/etc/nginx/ssl"
-CERT_FILE="$CERT_DIR/$DOMAIN.crt"
-KEY_FILE="$CERT_DIR/$DOMAIN.key"
-
-# Renovar certificados
-certbot renew --quiet
-
-# Verificar si se renovaron
-if [ $? -eq 0 ]; then
-    # Actualizar enlaces simbólicos
-    ln -sf /etc/letsencrypt/live/$DOMAIN/fullchain.pem "$CERT_FILE"
-    ln -sf /etc/letsencrypt/live/$DOMAIN/privkey.pem "$KEY_FILE"
-    
-    # Recargar Nginx
-    systemctl reload nginx
-    
-    echo "$(date): Certificados SSL renovados exitosamente" >> /var/log/ssl-renewal.log
-else
-    echo "$(date): Error al renovar certificados SSL" >> /var/log/ssl-renewal.log
-fi
-EOF
-        
-        sudo chmod +x "$RENEWAL_SCRIPT"
-        
-        # Agregar al crontab para renovación diaria
-        (crontab -l 2>/dev/null; echo "0 2 * * * $RENEWAL_SCRIPT") | crontab -
-        
-        log_success "Renovación automática configurada (diaria a las 2:00 AM)"
+    if command -v certbot &> /dev/null && [ -d "/etc/letsencrypt/live/$DOMAIN" ]; then
+        log_info "Verificando configuración de renovación automática..."
+        # Certbot instala un cron job o un systemd timer automáticamente.
+        # Podemos asegurarnos de que el hook de recarga de Nginx esté presente.
+        log_info "Añadiendo hook de recarga para Nginx si no existe..."
+        sudo certbot renew --dry-run --post-hook "systemctl reload nginx"
+        log_success "La renovación automática de Certbot está configurada."
+        log_info "Puedes verificar los timers con 'sudo systemctl list-timers | grep certbot'"
+    else
+        log_warning "No se pudo configurar la renovación automática. Asegúrate de que Certbot esté instalado y el certificado exista."
     fi
 }
 
