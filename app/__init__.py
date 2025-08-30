@@ -1,12 +1,12 @@
 """
-Sistema POS O'data - Aplicación Flask Principal
+Sistema POS O'data - Aplicacion Flask Principal
 ===============================================
 
 Sistema de Punto de Venta con funcionalidades avanzadas de IA
-para búsqueda semántica y recomendaciones inteligentes.
+para busqueda semantica y recomendaciones inteligentes.
 
 Autor: Sistema POS Odata
-Versión: 2.0.0
+Version: 2.0.0
 """
 
 from flask import Flask
@@ -33,14 +33,14 @@ except ImportError:
 from app.core.database import db, init_db
 from app.core.config import config
 
-# Constantes de la aplicación
+# Constantes de la aplicacion
 APP_VERSION = "2.0.0"
 API_TITLE = "POS O'data API"
 
 def create_app(config_name=None):
-    """Crea y configura la aplicación Flask"""
+    """Crea y configura la aplicacion Flask"""
     
-    # Crear la aplicación Flask
+    # Crear la aplicacion Flask
     app = Flask(__name__, instance_relative_config=True)
     
     # Asegurar que existe el directorio instance
@@ -49,7 +49,7 @@ def create_app(config_name=None):
     except OSError:
         pass
     
-    # Configurar la aplicación
+    # Configurar la aplicacion
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
     app.config.from_object(config[config_name])
@@ -65,7 +65,7 @@ def create_app(config_name=None):
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
         app.logger.setLevel(logging.INFO)
-        app.logger.info('Aplicación iniciada')
+        app.logger.info('Aplicacion iniciada')
     
     # Inicializar extensiones
     CORS(app, 
@@ -77,16 +77,16 @@ def create_app(config_name=None):
     Migrate(app, db)
     JWTManager(app)
     
-    # Configurar Rate Limiting solo si está disponible y habilitado
+    # Configurar Rate Limiting solo si esta disponible y habilitado
     rate_limiting_enabled = app.config.get('RATELIMIT_ENABLED', False)
     
     if FLASK_LIMITER_AVAILABLE and rate_limiting_enabled:
         try:
-            # Usar MockRedis si el Redis real no está disponible
+            # Usar MockRedis si el Redis real no esta disponible
             storage_uri = None
             if hasattr(app, 'redis') and hasattr(app.redis, '_data'):
                 # Es MockRedis, no usar storage_uri
-                app.logger.info('Usando MockRedis - Rate limiting básico deshabilitado')
+                app.logger.info('Usando MockRedis - Rate limiting basico deshabilitado')
                 app.limiter = None
             else:
                 # Redis real disponible
@@ -106,16 +106,16 @@ def create_app(config_name=None):
     else:
         app.limiter = None
         if not FLASK_LIMITER_AVAILABLE:
-            app.logger.warning('Flask-Limiter no está disponible. Rate limiting deshabilitado.')
+            app.logger.warning('Flask-Limiter no esta disponible. Rate limiting deshabilitado.')
         elif not rate_limiting_enabled:
-            app.logger.info('Rate limiting deshabilitado por configuración')
+            app.logger.info('Rate limiting deshabilitado por configuracion')
         else:
             app.logger.info('Rate limiting deshabilitado')
     
     # Configurar Redis con manejo de errores
     try:
         app.redis = redis.from_url(app.config['REDIS_URL'])
-        # Probar conexión
+        # Probar conexion
         app.redis.ping()
         app.logger.info('Redis conectado correctamente')
     except Exception as e:
@@ -146,7 +146,7 @@ def create_app(config_name=None):
                 self._data.clear()
                 return True
             def keys(self, pattern): 
-                # Implementación simple de pattern matching
+                # Implementacion simple de pattern matching
                 import fnmatch
                 return [k for k in self._data.keys() if fnmatch.fnmatch(k, pattern.replace('*', '*'))]
         app.redis = MockRedis()
@@ -169,7 +169,7 @@ def create_app(config_name=None):
     app.register_blueprint(api_v1, url_prefix='/api/v1')
     app.register_blueprint(api_v2, url_prefix='/api/v2')
     
-    # Registrar endpoints básicos
+    # Registrar endpoints basicos
     register_basic_routes(app)
     
     # Registrar manejadores de errores
@@ -181,7 +181,7 @@ def create_app(config_name=None):
     return app
 
 def register_basic_routes(app):
-    """Registra las rutas básicas de la aplicación"""
+    """Registra las rutas basicas de la aplicacion"""
     
     @app.route('/health')
     def health_check():
@@ -195,7 +195,7 @@ def register_basic_routes(app):
     
     @app.route('/')
     def index():
-        """Endpoint raíz de la aplicación"""
+        """Endpoint raiz de la aplicacion"""
         return {
             'message': 'POS O\'data API',
             'version': '1.0.0',
@@ -203,7 +203,7 @@ def register_basic_routes(app):
         }
 
 def register_error_handlers(app):
-    """Registra los manejadores de errores de la aplicación"""
+    """Registra los manejadores de errores de la aplicacion"""
     
     @app.errorhandler(400)
     def bad_request_error(error):

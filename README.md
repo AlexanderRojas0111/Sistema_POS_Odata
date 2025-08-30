@@ -1,273 +1,302 @@
-# 🛍️ Sistema POS O'data v2.0.0
+# 🏪 Sistema POS O'data v2.0.0
 
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-3.1.1-green.svg)](https://flask.palletsprojects.com/)
-[![AI Powered](https://img.shields.io/badge/AI-Powered-purple.svg)](https://scikit-learn.org/)
+[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-3.x-lightgrey.svg)](https://www.sqlite.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
 
-> **Sistema de Punto de Venta inteligente con IA para búsqueda semántica y recomendaciones automáticas**
+**Sistema de Punto de Venta (POS) moderno y robusto con funcionalidades de Inteligencia Artificial, desarrollado con Flask y React.**
 
-Un sistema POS moderno y robusto diseñado para pequeñas y medianas empresas, con funcionalidades avanzadas de inteligencia artificial que mejoran la experiencia del usuario y optimizan las operaciones comerciales.
+## 🚀 **CARACTERÍSTICAS PRINCIPALES**
 
----
+### **🔧 Backend (Flask)**
+- ✅ **API RESTful** con versionado (v1 y v2)
+- ✅ **Autenticación JWT** con roles y permisos
+- ✅ **Base de datos SQLite** con SQLAlchemy ORM
+- ✅ **Funcionalidades de IA** con scikit-learn y TF-IDF
+- ✅ **Búsqueda semántica** de productos
+- ✅ **Recomendaciones inteligentes**
+- ✅ **Validación de datos** con Marshmallow/Pydantic
+- ✅ **Manejo de errores** robusto
+- ✅ **Logging** estructurado
+- ✅ **Rate limiting** y seguridad CORS
 
-## ✨ Características Principales
+### **🎨 Frontend (React)**
+- ✅ **Material-UI** para interfaz moderna
+- ✅ **Responsive design** para móviles y tablets
+- ✅ **Navegación intuitiva** entre módulos
+- ✅ **Gestión de productos** con CRUD completo
+- ✅ **Sistema de ventas** con carrito de compras
+- ✅ **Gestión de usuarios** y roles
+- ✅ **Dashboard** con métricas en tiempo real
+- ✅ **Búsqueda avanzada** con IA
 
-### 🚀 **Funcionalidades Core**
-- **Gestión Completa de Inventario** - Control de productos, stock y movimientos
-- **Sistema de Ventas Avanzado** - Procesamiento de transacciones con múltiples formas de pago
-- **Gestión de Usuarios y Permisos** - Sistema de roles (Admin, Manager, Employee)
-- **Reportes y Analytics** - Dashboards interactivos y métricas en tiempo real
+### **🤖 Inteligencia Artificial**
+- ✅ **Búsqueda semántica** de productos
+- ✅ **Recomendaciones** basadas en historial
+- ✅ **Clasificación automática** de categorías
+- ✅ **Análisis de sentimientos** en comentarios
+- ✅ **Predicción de demanda** de productos
+- ✅ **Optimización de inventario**
 
-### 🤖 **Inteligencia Artificial**
-- **Búsqueda Semántica** - Encuentra productos usando lenguaje natural
-- **Recomendaciones Inteligentes** - Sugerencias automáticas basadas en similitud
-- **Autocompletado Predictivo** - Sugerencias de búsqueda en tiempo real
-- **Análisis de Texto con TF-IDF** - Procesamiento avanzado de contenido
+### **🧪 Testing & Calidad**
+- ✅ **Framework de pruebas** completo con pytest
+- ✅ **Pruebas automatizadas** de backend, frontend y BD
+- ✅ **Pruebas de integración** end-to-end
+- ✅ **Pruebas de rendimiento** (< 500ms)
+- ✅ **Cobertura de código** > 80%
+- ✅ **CI/CD** ready para GitHub Actions
 
-### 🔒 **Seguridad y Performance**
-- **Autenticación JWT** - Sistema de tokens seguro
-- **Rate Limiting** - Protección contra ataques DDoS
-- **Encriptación de Datos** - Protección de información sensible
-- **Cache Inteligente** - Optimización de rendimiento con Redis
-
----
-
-## 🏗️ Arquitectura del Sistema
+## 🏗️ **ARQUITECTURA DEL SISTEMA**
 
 ```
-Sistema POS O'data/
-├── 🎯 API v1/          # Funcionalidades básicas del POS
-├── 🤖 API v2/          # Funcionalidades avanzadas con IA
-├── 🗄️ Base de Datos/   # PostgreSQL/SQLite
-├── ⚡ Cache/           # Redis para optimización
-├── 🔐 Seguridad/       # JWT + Rate Limiting
-└── 📊 Monitoreo/       # Prometheus + Grafana
+Sistema_POS_Odata/
+├── app/                    # Backend Flask
+│   ├── api/               # APIs v1 y v2
+│   ├── core/              # Configuración y seguridad
+│   ├── models/            # Modelos de base de datos
+│   ├── services/          # Lógica de negocio
+│   └── utils/             # Utilidades y helpers
+├── frontend/              # Frontend React
+│   ├── src/               # Código fuente
+│   ├── components/        # Componentes reutilizables
+│   └── pages/             # Páginas principales
+├── tests/                 # Framework de pruebas
+│   ├── backend/           # Pruebas del backend
+│   ├── frontend/          # Pruebas del frontend
+│   ├── database/          # Pruebas de BD
+│   ├── integration/       # Pruebas de integración
+│   └── performance/       # Pruebas de rendimiento
+├── docs/                  # Documentación
+├── scripts/               # Scripts de despliegue
+└── requirements.txt       # Dependencias Python
 ```
 
-### 📊 **Stack Tecnológico**
+## 🚀 **INSTALACIÓN Y DESPLIEGUE**
 
-| Categoría | Tecnología | Versión | Propósito |
-|-----------|------------|---------|-----------|
-| **Backend** | Flask | 3.1.1 | Framework web principal |
-| **Base de Datos** | PostgreSQL/SQLite | 2.0.42 | Almacenamiento de datos |
-| **Cache** | Redis | 6.4.0 | Cache y sesiones |
-| **IA/ML** | scikit-learn | 1.7.1 | Machine Learning |
-| **Autenticación** | JWT | 4.7.1 | Seguridad y tokens |
-| **Frontend** | React | 18.2.0 | Interfaz de usuario |
-
----
-
-## 🚀 Instalación y Configuración
-
-### 📋 **Prerrequisitos**
-- Python 3.11+
+### **Requisitos Previos**
+- Python 3.13+
 - Node.js 18+
-- PostgreSQL 13+ (opcional, SQLite incluido)
-- Redis 6+ (opcional, MockRedis incluido)
+- npm o yarn
+- Git
 
-### 🔧 **Instalación Rápida**
-
-1. **Clonar el repositorio**
+### **1. Clonar el Repositorio**
 ```bash
-git clone https://github.com/tu-usuario/sistema-pos-odata.git
-cd sistema-pos-odata
+git clone https://github.com/tu-usuario/Sistema_POS_Odata.git
+cd Sistema_POS_Odata
 ```
 
-2. **Configurar entorno virtual**
+### **2. Configurar Backend**
 ```bash
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-```
+# Crear entorno virtual
+python -m venv venv_pos
+venv_pos\Scripts\activate  # Windows
+source venv_pos/bin/activate  # Linux/Mac
 
-3. **Instalar dependencias**
-```bash
-# Producción
+# Instalar dependencias
 pip install -r requirements.txt
 
-# Desarrollo (incluye herramientas adicionales)
-pip install -r requirements-dev.txt
+# Configurar variables de entorno
+copy env.example .env
+# Editar .env con tus configuraciones
+
+# Inicializar base de datos
+python -c "from app import create_app; app = create_app(); app.app_context().push(); from app.models import db; db.create_all()"
 ```
 
-4. **Configurar variables de entorno**
+### **3. Configurar Frontend**
 ```bash
-cp env.example .env
-# Editar .env con tu configuración
+cd frontend
+npm install
+npm start
 ```
 
-5. **Inicializar base de datos**
+### **4. Ejecutar el Sistema**
 ```bash
-python scripts/init_db.py
+# Terminal 1: Backend
+python run_server_8000.py
+
+# Terminal 2: Frontend
+cd frontend
+npm start
 ```
 
-6. **Ejecutar el servidor**
+## 🌐 **ACCESO AL SISTEMA**
+
+- **Backend API:** http://127.0.0.1:8000
+- **Frontend:** http://localhost:3000
+- **Documentación API:** http://127.0.0.1:8000/docs
+- **Health Check:** http://127.0.0.1:8000/health
+
+## 🧪 **EJECUTAR PRUEBAS**
+
+### **Ejecutar Todas las Pruebas**
 ```bash
-python run_server.py
+python run_tests.py --all
 ```
 
-🎉 **¡Listo!** El sistema estará disponible en `http://localhost:5000`
-
----
-
-## 🎮 Uso del Sistema
-
-### 🌐 **Endpoints Principales**
-
-#### **API v1 - Funcionalidades Básicas**
-```http
-GET    /api/v1/products/         # Listar productos
-POST   /api/v1/products/         # Crear producto
-GET    /api/v1/sales/            # Listar ventas
-POST   /api/v1/sales/            # Crear venta
-POST   /api/v1/auth/login        # Iniciar sesión
-```
-
-#### **API v2 - Funcionalidades con IA**
-```http
-POST   /api/v2/ai/search/semantic           # Búsqueda semántica
-GET    /api/v2/ai/products/{id}/recommendations  # Recomendaciones
-GET    /api/v2/ai/search/suggestions        # Autocompletado
-GET    /api/v2/ai/stats                     # Estadísticas de IA
-```
-
-### 🤖 **Ejemplos de IA en Acción**
-
-**Búsqueda Semántica:**
+### **Pruebas por Categoría**
 ```bash
-curl -X POST http://localhost:5000/api/v2/ai/search/semantic \
-  -H "Content-Type: application/json" \
-  -d '{"query": "comida con carne y queso", "limit": 5}'
+# Solo backend
+python run_tests.py --backend
+
+# Solo frontend
+python run_tests.py --frontend
+
+# Solo base de datos
+python run_tests.py --database
+
+# Solo integración
+python run_tests.py --integration
+
+# Solo rendimiento
+python run_tests.py --performance
 ```
 
-**Recomendaciones:**
+### **Con Cobertura y Reportes**
 ```bash
-curl http://localhost:5000/api/v2/ai/products/1/recommendations?limit=3
+python run_tests.py --coverage --html
 ```
 
----
+## 📊 **ENDPOINTS DE LA API**
 
-## 🧪 Testing
+### **API v1 - Funcionalidades Básicas**
+- `GET /api/v1/productos/` - Listar productos
+- `POST /api/v1/productos/` - Crear producto
+- `GET /api/v1/ventas/` - Listar ventas
+- `POST /api/v1/ventas/` - Crear venta
+- `GET /api/v1/usuarios/` - Listar usuarios
+- `POST /api/v1/usuarios/` - Crear usuario
 
-### **Ejecutar Tests**
-```bash
-# Tests básicos
-pytest
+### **API v2 - Funcionalidades de IA**
+- `GET /api/v2/` - Información de la API
+- `POST /api/v2/ai/search` - Búsqueda semántica
+- `POST /api/v2/ai/recommendations` - Recomendaciones
+- `POST /api/v2/ai/embeddings` - Generar embeddings
 
-# Tests con cobertura
-pytest --cov=app tests/
+### **Endpoints del Sistema**
+- `GET /health` - Estado del sistema
+- `GET /docs` - Documentación de la API
 
-# Tests específicos
-pytest tests/test_ai_functionality.py -v
-```
+## 🔐 **AUTENTICACIÓN Y SEGURIDAD**
 
-### **Tests de IA**
-```bash
-# Probar funcionalidades de IA
-python scripts/test_ai_features.py
-```
+### **Roles de Usuario**
+- **ADMIN:** Acceso completo al sistema
+- **MANAGER:** Gestión de productos y ventas
+- **EMPLOYEE:** Operaciones básicas de venta
+- **CASHIER:** Solo ventas y consultas
 
----
+### **Seguridad Implementada**
+- ✅ **JWT Tokens** con expiración
+- ✅ **Bcrypt** para hash de contraseñas
+- ✅ **Rate Limiting** para prevenir abusos
+- ✅ **CORS** configurado para frontend
+- ✅ **Headers de seguridad** (HSTS, CSP, etc.)
+- ✅ **Validación de entrada** robusta
 
-## 📦 Despliegue
+## 📈 **MÉTRICAS Y MONITOREO**
 
-### 🐳 **Docker (Recomendado)**
-```bash
-# Construir imagen
-docker build -t pos-odata:latest .
+### **Rendimiento**
+- **Backend:** < 500ms por request
+- **Frontend:** < 3000ms de carga
+- **Base de datos:** < 100ms por consulta
 
-# Ejecutar con docker-compose
-docker-compose up -d
-```
+### **Calidad del Código**
+- **Cobertura:** > 80%
+- **Pruebas:** 100% de funcionalidades críticas
+- **Documentación:** 100% de APIs documentadas
 
-### ☁️ **Despliegue en la Nube**
-- **Heroku**: `git push heroku main`
-- **AWS**: Ver `docs/deployment/aws.md`
-- **Google Cloud**: Ver `docs/deployment/gcp.md`
+## 🛠️ **TECNOLOGÍAS UTILIZADAS**
 
----
+### **Backend**
+- **Flask 3.1.1** - Framework web
+- **SQLAlchemy 2.0.42** - ORM
+- **Flask-JWT-Extended** - Autenticación
+- **Marshmallow** - Serialización
+- **scikit-learn** - Machine Learning
+- **NumPy/SciPy** - Computación científica
 
-## 📊 Funcionalidades de IA
+### **Frontend**
+- **React 18.2.0** - Biblioteca de UI
+- **Material-UI** - Componentes de diseño
+- **React Router** - Navegación
+- **Axios** - Cliente HTTP
+- **React Hook Form** - Formularios
 
-### 🔍 **Motor de Búsqueda Semántica**
-- **Algoritmo**: TF-IDF + Cosine Similarity
-- **Dimensionalidad**: Reducción con TruncatedSVD
-- **Performance**: <1ms por consulta
-- **Precisión**: 95%+ en productos similares
+### **Base de Datos**
+- **SQLite** - Base de datos local
+- **Alembic** - Migraciones
+- **SQLAlchemy** - ORM y consultas
 
-### 🎯 **Sistema de Recomendaciones**
-- **Método**: Filtrado colaborativo basado en contenido
-- **Métricas**: Similitud coseno entre embeddings
-- **Actualización**: Tiempo real con nuevos productos
+### **Testing**
+- **pytest** - Framework de pruebas
+- **Playwright** - Testing de frontend
+- **pytest-cov** - Cobertura de código
 
-### 📈 **Métricas de IA**
-- **Vocabulario**: 97 términos únicos
-- **Documentos**: 18 productos indexados
-- **Tiempo de respuesta**: 0.8ms promedio
-- **Memoria utilizada**: 15MB
+## 📚 **DOCUMENTACIÓN ADICIONAL**
 
----
+- [Guía de Usuario](docs/USER_GUIDE.md)
+- [Manual de Desarrollador](docs/DEVELOPER_GUIDE.md)
+- [API Reference](docs/API_REFERENCE.md)
+- [Guía de Despliegue](docs/DEPLOYMENT_GUIDE.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-## 🤝 Contribución
+## 🤝 **CONTRIBUCIÓN**
 
-¡Las contribuciones son bienvenidas! Por favor lee nuestro [CONTRIBUTING.md](CONTRIBUTING.md) para detalles.
-
-### **Proceso de Contribución**
 1. Fork el proyecto
 2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
----
+### **Estándares de Código**
+- Seguir PEP 8 para Python
+- Usar ESLint para JavaScript/React
+- Escribir pruebas para nuevas funcionalidades
+- Mantener cobertura de código > 80%
 
-## 📄 Licencia
+## 📄 **LICENCIA**
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
 
----
+## 👥 **AUTORES**
 
-## 👥 Equipo
+- **Desarrollador Principal:** [Tu Nombre]
+- **Contribuidores:** [Lista de contribuidores]
 
-- **Desarrollador Principal**: Sistema POS Odata Team
-- **IA/ML**: Implementación con scikit-learn
-- **Frontend**: React + Material-UI
-- **DevOps**: Docker + CI/CD
+## 🙏 **AGRADECIMIENTOS**
 
----
+- Flask y su comunidad
+- React y Material-UI
+- scikit-learn y la comunidad de ML
+- Todos los contribuidores del proyecto
 
-## 📞 Soporte
+## 📞 **SOPORTE**
 
-- **Documentación**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/tu-usuario/sistema-pos-odata/issues)
-- **Email**: soporte@pos-odata.com
-- **Wiki**: [GitHub Wiki](https://github.com/tu-usuario/sistema-pos-odata/wiki)
+- **Issues:** [GitHub Issues](https://github.com/tu-usuario/Sistema_POS_Odata/issues)
+- **Discusiones:** [GitHub Discussions](https://github.com/tu-usuario/Sistema_POS_Odata/discussions)
+- **Email:** tu-email@ejemplo.com
 
----
+## 🔄 **ROADMAP**
 
-## 🎯 Roadmap
-
-### **v2.1.0** (Próxima versión)
-- [ ] Integración con pagos en línea
+### **v2.1.0 (Próxima versión)**
+- [ ] Dashboard avanzado con gráficos
+- [ ] Sistema de notificaciones en tiempo real
+- [ ] Integración con pasarelas de pago
 - [ ] App móvil nativa
+
+### **v2.2.0**
+- [ ] Machine Learning avanzado
 - [ ] Análisis predictivo de ventas
 - [ ] Integración con redes sociales
-
-### **v3.0.0** (Futuro)
-- [ ] Microservicios
-- [ ] GraphQL API
-- [ ] Machine Learning avanzado
-- [ ] Multi-tenant
+- [ ] Sistema de fidelización
 
 ---
 
-<div align="center">
+**⭐ Si este proyecto te gusta, dale una estrella en GitHub!**
 
-**⭐ Si te gusta este proyecto, ¡dale una estrella! ⭐**
-
-[![GitHub stars](https://img.shields.io/github/stars/tu-usuario/sistema-pos-odata.svg?style=social&label=Star)](https://github.com/tu-usuario/sistema-pos-odata)
-
-</div>
+**🔄 Última actualización:** Agosto 2025  
+**🚀 Versión:** 2.0.0  
+**🐍 Python:** 3.13+  
+**⚛️ React:** 18.2.0

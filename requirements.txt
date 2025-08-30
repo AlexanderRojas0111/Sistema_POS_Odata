@@ -2,7 +2,7 @@
 # Sistema POS O'data - Dependencias de Producción
 # ========================================================================
 # Versión: 2.0.0
-# Python: 3.11+
+# Python: 3.13+
 # Fecha: 2025-01-26
 # Descripción: Sistema POS con IA para búsqueda semántica y recomendaciones
 # ========================================================================
@@ -73,6 +73,11 @@ click==8.1.8                   # CLI framework
 # ========================================================================
 prometheus_client==0.22.1      # Métricas de Prometheus
 psutil==7.0.0                  # Información del sistema
+
+# ========================================================================
+# PRODUCTION SERVER - Servidor WSGI para producción
+# ========================================================================
+waitress==3.0.2                # Servidor WSGI compatible con Windows
 
 # ========================================================================
 # MEDIA & DATA - Procesamiento de archivos

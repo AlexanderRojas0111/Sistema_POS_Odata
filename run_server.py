@@ -1,43 +1,63 @@
 #!/usr/bin/env python3
 """
-Script para ejecutar el servidor POS en modo producción
+Servidor de desarrollo para Sistema POS O'data
+Compatible con Windows y Linux
 """
 
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+import logging
+from pathlib import Path
 
-def run_production_server():
-    """Ejecutar servidor en modo producción"""
-    from app import create_app
-    
-    # Configurar variables de entorno para producción
-    os.environ['FLASK_ENV'] = 'development'  # Usar development con SQLite por simplicidad
-    
-    # Crear aplicación
-    app = create_app('development')
-    
-    print("🚀 INICIANDO SERVIDOR POS ODATA")
-    print("=" * 50)
-    print(f"🌐 URL: http://localhost:5000")
-    print(f"📊 Health Check: http://localhost:5000/health")
-    print(f"🔧 API: http://localhost:5000/api/v1/")
-    print(f"📖 Documentación: Disponible en endpoints individuales")
-    print("=" * 50)
-    print("✅ Servidor listo - Presiona Ctrl+C para detener")
-    print()
-    
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+def main():
+    """Función principal del servidor"""
     try:
+        # Verificar que estamos en el directorio correcto
+        if not Path('app').exists():
+            logger.error("Directorio 'app' no encontrado. Ejecuta desde la raíz del proyecto.")
+            sys.exit(1)
+        
+        # Importar la aplicación
+        from app import create_app
+        
+        # Crear la aplicación Flask
+        app = create_app('development')
+        
+        # Configuración del servidor
+        host = os.environ.get('FLASK_HOST', '127.0.0.1')
+        port = int(os.environ.get('FLASK_PORT', 5000))
+        debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
+        
+        logger.info("🚀 INICIANDO SERVIDOR POS ODATA")
+        logger.info("=" * 50)
+        logger.info(f"🌐 Host: {host}")
+        logger.info(f"🔌 Puerto: {port}")
+        logger.info(f"🐛 Debug: {debug}")
+        logger.info(f"📁 Directorio: {os.getcwd()}")
+        logger.info("=" * 50)
+        
+        # Iniciar servidor
         app.run(
-            host='0.0.0.0',
-            port=5000,
-            debug=False,
-            threaded=True
+            host=host,
+            port=port,
+            debug=debug,
+            use_reloader=debug
         )
-    except KeyboardInterrupt:
-        print("\n🛑 Servidor detenido por el usuario")
+        
+    except ImportError as e:
+        logger.error(f"Error importando la aplicación: {e}")
+        logger.error("Asegúrate de que todas las dependencias estén instaladas")
+        sys.exit(1)
     except Exception as e:
-        print(f"❌ Error ejecutando servidor: {e}")
+        logger.error(f"Error inesperado: {e}")
+        sys.exit(1)
 
-if __name__ == '__main__':
-    run_production_server()
+if __name__ == "__main__":
+    main()

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class SecurityManager:
     """Gestor de seguridad del sistema"""
     
-    def __init__(self, redis_client: redis.Redis):
+    def __init__(self, redis_client: Optional[redis.Redis] = None):
         self.redis = redis_client
         self.rate_limit_window = 60  # segundos
         self.max_requests_per_window = 100

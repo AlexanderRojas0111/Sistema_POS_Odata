@@ -15,6 +15,10 @@ class Config:
         'pool_timeout': 30,
     }
     
+    # Puerto del servidor
+    SERVER_PORT = int(os.environ.get('SERVER_PORT', 8000))
+    SERVER_HOST = os.environ.get('SERVER_HOST', '127.0.0.1')
+    
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
@@ -81,6 +85,10 @@ class DevelopmentConfig(Config):
     # Base de datos local (SQLite para desarrollo rápido)
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///pos_odata_dev.db'
+    
+    # Puerto del servidor para desarrollo
+    SERVER_PORT = int(os.environ.get('SERVER_PORT', 8000))
+    SERVER_HOST = os.environ.get('SERVER_HOST', '127.0.0.1')
     
     # Configuración específica para SQLite en desarrollo
     SQLALCHEMY_ENGINE_OPTIONS = {
