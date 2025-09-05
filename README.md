@@ -76,7 +76,7 @@ Sistema_POS_Odata/
 ## 🚀 **INSTALACIÓN Y DESPLIEGUE**
 
 ### **Requisitos Previos**
-- Python 3.13+
+- Python 3.13+ (recomendado 3.13.4)
 - Node.js 18+
 - npm o yarn
 - Git

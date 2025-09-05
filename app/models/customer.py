@@ -31,6 +31,17 @@ class Customer(db.Model):
 
     def to_dict(self):
         """Convierte el modelo a un diccionario con datos adicionales"""
-        data = super().to_dict()
-        data['total_purchases'] = self.total_purchases
+        data = {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'phone': self.phone,
+            'address': self.address,
+            'tax_id': self.tax_id,
+            'is_active': self.is_active,
+            'customer_metadata': self.customer_metadata,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'total_purchases': self.total_purchases
+        }
         return data 

@@ -1,453 +1,256 @@
-name: Sistema POS Odata - CI/CD Pipeline
+name: CI/CD Pipeline - O'Data POS v2.0.0
 
 on:
   push:
-    branches: [develop, main, staging]
-    tags: ['v*']
+    branches: [ main, develop ]
   pull_request:
-    branches: [develop, main]
+    branches: [ main, develop ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Ambiente a desplegar'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-        - staging
-        - production
-      force_deploy:
-        description: 'Forzar despliegue'
-        required: false
-        default: false
-        type: boolean
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
   PYTHON_VERSION: '3.13'
-  NODE_VERSION: '20'
+  NODE_VERSION: '18'
 
 jobs:
-  # ===== VALIDACIÓN Y PRUEBAS =====
-  validate-dependencies:
-    name: 🔍 Validar Dependencias
+  # Job de Backend
+  backend:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-        
-      - name: Configurar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          
-      - name: Instalar dependencias
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
-      - name: Validar dependencias del sistema
-        run: python scripts/validate_dependencies.py
-        
-      - name: Verificar estructura del proyecto
-        run: |
-          echo "Verificando estructura del proyecto..."
-          test -f app/__init__.py
-          test -f docker-compose.yml
-          test -f requirements.txt
-          echo "✅ Estructura del proyecto válida"
-
-  security-scan:
-    name: 🛡️ Escaneo de Seguridad
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-        
-      - name: Escanear código Python
-        uses: python-security/safety@v1
-        with:
-          requirements: requirements.txt
-          
-      - name: Escanear dependencias Node.js
-        run: |
-          cd frontend
-          npm ci --only=production --legacy-peer-deps
-          npm audit --audit-level=high
-          
-      - name: Escanear secretos en código
-        uses: gitleaks/gitleaks-action@v2
+    
+    services:
+      postgres:
+        image: postgres:15
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Escanear vulnerabilidades con Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          
-      - name: Subir resultados de seguridad
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: odata_pos_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
-  backend-tests:
-    name: 🧪 Pruebas Backend
-    runs-on: ubuntu-latest
-    needs: validate-dependencies
-    strategy:
-      matrix:
-        python-version: ['3.13']
-        test-type: ['unit', 'integration']
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-        
-      - name: Configurar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          
-      - name: Instalar dependencias
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements.dev.txt
-          
-      - name: Ejecutar pruebas unitarias
-        if: matrix.test-type == 'unit'
-        run: |
-          pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
-          
-      - name: Ejecutar pruebas de integración
-        if: matrix.test-type == 'integration'
-        run: |
-          pytest tests/test_api_integration.py -v
-          
-      - name: Subir cobertura
-        uses: codecov/codecov-action@v4
-        if: matrix.test-type == 'unit'
-        with:
-          file: ./coverage.xml
-          flags: backend
-          name: backend-coverage
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-  frontend-tests:
-    name: 🎨 Pruebas Frontend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-        
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-          
-      - name: Instalar dependencias
-        run: |
-          cd frontend
-          npm ci --legacy-peer-deps
-          
-      - name: Linting
-        run: |
-          cd frontend
-          npm run lint
-          
-      - name: Pruebas unitarias
-        run: |
-          cd frontend
-          npm test -- --watchAll=false --coverage
-          
-      - name: Build de producción
-        run: |
-          cd frontend
-          npm run build
-          
-      - name: Analizar bundle
-        run: |
-          cd frontend
-          npm run analyze
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-  # ===== CONSTRUCCIÓN Y EMPAQUETADO =====
-  build-images:
-    name: 🏗️ Construir Imágenes Docker
-    runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests, security-scan]
-    permissions:
-      packages: write
-      contents: read
-    outputs:
-      backend-image: ${{ steps.meta-backend.outputs.tags }}
-      frontend-image: ${{ steps.meta-frontend.outputs.tags }}
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-        
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        
-      - name: Login a GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Meta tags para Backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=develop,enable={{branch=='develop'}}
-            type=raw,value=staging,enable={{branch=='staging'}}
-            
-      - name: Meta tags para Frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=develop,enable={{branch=='develop'}}
-            type=raw,value=staging,enable={{branch=='staging'}}
-            
-      - name: Construir y subir Backend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
-      - name: Construir y subir Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
-  # ===== DESPLIEGUE EN STAGING =====
-  deploy-staging:
-    name: 🚀 Desplegar en Staging
-    runs-on: ubuntu-latest
-    needs: [build-images]
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || github.event_name == 'workflow_dispatch'
-    environment: staging
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-        
-      - name: Desplegar via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || '22' }}
-          script: |
-            set -e
-            echo "🚀 Iniciando despliegue en STAGING..."
-            
-            # Navegar al directorio del proyecto
-            cd /opt/pos-odata
-            
-            # Crear backup antes del despliegue
-            echo "📦 Creando backup..."
-            docker compose -f docker-compose.production.yml run --rm backup || echo "⚠️ Backup falló, continuando..."
-            
-            # Actualizar imágenes
-            echo "🔄 Actualizando imágenes..."
-            docker compose -f docker-compose.production.yml pull
-            
-            # Desplegar
-            echo "🚀 Desplegando servicios..."
-            docker compose -f docker-compose.production.yml up -d
-            
-            # Esperar que los servicios estén listos
-            echo "⏳ Esperando que los servicios estén listos..."
-            sleep 30
-            
-            # Verificar health checks
-            echo "🔍 Verificando health checks..."
-            docker compose -f docker-compose.production.yml ps
-            
-            # Verificar endpoints
-            echo "🔍 Verificando endpoints..."
-            curl -f http://localhost/health || echo "⚠️ Health check falló"
-            curl -f http://localhost:5000/health || echo "⚠️ Backend health check falló"
-            
-            echo "✅ Despliegue en STAGING completado"
-            
-      - name: Notificar despliegue
-        uses: 8398a7/action-slack@v3
-        if: always()
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          text: 'Despliegue en STAGING: ${{ job.status }}'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
 
-  # ===== DESPLIEGUE EN PRODUCCIÓN =====
-  deploy-production:
-    name: 🚀 Desplegar en Producción
-    runs-on: ubuntu-latest
-    needs: [build-images]
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
-    environment: production
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-        
-      - name: Aprobar despliegue en producción
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: comments } = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            
-            const hasApproval = comments.some(comment => 
-              comment.user.type === 'User' && 
-              comment.body.includes('/approve') &&
-              ['OWNER', 'COLLABORATOR'].includes(comment.author_association)
-            );
-            
-            if (!hasApproval) {
-              core.setFailed('Se requiere aprobación para desplegar en producción');
-            }
-        if: github.event_name == 'workflow_dispatch'
-        
-      - name: Desplegar via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || '22' }}
-          script: |
-            set -e
-            echo "🚀 Iniciando despliegue en PRODUCCIÓN..."
-            
-            # Navegar al directorio del proyecto
-            cd /opt/pos-odata
-            
-            # Crear backup crítico antes del despliegue
-            echo "📦 Creando backup crítico..."
-            docker compose -f docker-compose.production.yml run --rm backup
-            
-            # Verificar espacio en disco
-            echo "💾 Verificando espacio en disco..."
-            df -h
-            
-            # Actualizar imágenes
-            echo "🔄 Actualizando imágenes..."
-            docker compose -f docker-compose.production.yml pull
-            
-            # Desplegar con rollback automático
-            echo "🚀 Desplegando servicios..."
-            if docker compose -f docker-compose.production.yml up -d; then
-              echo "✅ Despliegue exitoso"
-              
-              # Esperar que los servicios estén listos
-              echo "⏳ Esperando que los servicios estén listos..."
-              sleep 45
-              
-              # Verificar health checks
-              echo "🔍 Verificando health checks..."
-              docker compose -f docker-compose.production.yml ps
-              
-              # Verificar endpoints críticos
-              echo "🔍 Verificando endpoints críticos..."
-              curl -f https://pos.odata.com/health || exit 1
-              curl -f https://pos.odata.com/api/v1/health || exit 1
-              
-              echo "✅ Despliegue en PRODUCCIÓN completado exitosamente"
-            else
-              echo "❌ Despliegue falló, iniciando rollback..."
-              docker compose -f docker-compose.production.yml up -d
-              echo "🔄 Rollback completado"
-              exit 1
-            fi
-            
-      - name: Notificar despliegue
-        uses: 8398a7/action-slack@v3
-        if: always()
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          text: 'Despliegue en PRODUCCIÓN: ${{ job.status }}'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: Run linting
+      run: |
+        flake8 app/ tests/
+        black --check app/ tests/
+        isort --check-only app/ tests/
 
-  # ===== POST-DESPLIEGUE =====
-  post-deployment-checks:
-    name: 🔍 Verificaciones Post-Despliegue
-    runs-on: ubuntu-latest
-    needs: [deploy-staging, deploy-production]
-    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
-    steps:
-      - name: Verificar métricas de Prometheus
-        run: |
-          echo "🔍 Verificando métricas de Prometheus..."
-          # Aquí podrías hacer curl a endpoints de métricas
-          echo "✅ Métricas verificadas"
-          
-      - name: Verificar logs
-        run: |
-          echo "📝 Verificando logs..."
-          # Aquí podrías verificar logs de errores
-          echo "✅ Logs verificados"
-          
-      - name: Generar reporte de despliegue
-        run: |
-          echo "📊 Generando reporte de despliegue..."
-          echo "## Reporte de Despliegue" >> deployment-report.md
-          echo "- Fecha: $(date)" >> deployment-report.md
-          echo "- Commit: ${{ github.sha }}" >> deployment-report.md
-          echo "- Branch: ${{ github.ref }}" >> deployment-report.md
-          echo "- Ambiente: ${{ needs.deploy-staging.result == 'success' && 'staging' || 'production' }}" >> deployment-report.md
-          
-      - name: Subir reporte
-        uses: actions/upload-artifact@v4
-        with:
-          name: deployment-report
-          path: deployment-report.md
+    - name: Run security checks
+      run: |
+        bandit -r app/ -f json -o bandit-report.json || true
+        safety check --json --output safety-report.json || true
 
-  # ===== LIMPIEZA =====
-  cleanup:
-    name: 🧹 Limpieza
+    - name: Run tests with coverage
+      env:
+        FLASK_ENV: testing
+        DATABASE_TYPE: postgresql
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: odata_pos_test
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+      run: |
+        pytest tests/ --cov=app --cov-report=xml --cov-report=html
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          coverage.xml
+          htmlcov/
+          bandit-report.json
+          safety-report.json
+
+  # Job de Frontend
+  frontend:
     runs-on: ubuntu-latest
-    needs: [post-deployment-checks]
-    if: always()
+    needs: backend
+
     steps:
-      - name: Limpiar imágenes Docker antiguas
-        run: |
-          echo "🧹 Limpiando imágenes Docker antiguas..."
-          # Esto se ejecutaría en el servidor de destino
-          echo "✅ Limpieza completada"
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Cache Node.js dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run linting
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Run tests
+      run: |
+        cd frontend
+        npm test -- --coverage --watchAll=false
+
+    - name: Build application
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/build/
+
+  # Job de E2E Testing
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install Playwright
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Run E2E tests
+      run: |
+        cd frontend
+        npm run test:e2e
+
+    - name: Upload E2E test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-test-results
+        path: frontend/test-results/
+
+  # Job de Security Testing
+  security-tests:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-scan-results
+        path: trivy-results.sarif
+
+  # Job de Performance Testing
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run performance tests
+      run: |
+        python scripts/performance_tests.py
+
+    - name: Upload performance test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-test-results
+        path: performance-results/
+
+  # Job de Integration Testing
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run integration tests
+      run: |
+        python scripts/integration_tests.py
+
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: integration-test-results
+        path: integration-results/

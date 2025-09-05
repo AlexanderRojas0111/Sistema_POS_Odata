@@ -38,6 +38,21 @@ class Sale(db.Model):
 
     def __repr__(self):
         return f'<Sale {self.invoice_number}: ${self.total_amount}>'
+    
+    def to_dict(self):
+        """Convierte el modelo a diccionario"""
+        return {
+            'id': self.id,
+            'invoice_number': self.invoice_number,
+            'customer_id': self.customer_id,
+            'user_id': self.user_id,
+            'total_amount': float(self.total_amount),
+            'payment_method': self.payment_method.value if self.payment_method else None,
+            'status': self.status.value if self.status else None,
+            'sale_metadata': self.sale_metadata,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
 
 class SaleItem(db.Model):
     """Modelo para items de venta"""

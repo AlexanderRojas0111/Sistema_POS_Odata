@@ -15,7 +15,7 @@ from app.models.inventory import Inventory
 from app.core.database import db
 from app.services.inventory.stock_service import StockService
 from app.services.inventory.inventory_service import InventoryService
-from app.schemas import SaleCreate, SaleResponse
+from app.schemas import SaleCreate, SaleResponseSchema
 import logging
 
 logger = logging.getLogger(__name__)

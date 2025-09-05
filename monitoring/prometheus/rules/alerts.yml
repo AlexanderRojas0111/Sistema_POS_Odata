@@ -1,0 +1,226 @@
+groups:
+  - name: OData_POS_System_Alerts
+    rules:
+      # Alertas de disponibilidad del sistema
+      - alert: OData_POS_Backend_Down
+        expr: up{job="odata-pos-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "odata-pos-backend"
+        annotations:
+          summary: "O'Data POS Backend está caído"
+          description: "El backend del sistema POS no responde desde hace más de 1 minuto"
+
+      - alert: OData_POS_Frontend_Down
+        expr: up{job="odata-pos-frontend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: "odata-pos-frontend"
+        annotations:
+          summary: "O'Data POS Frontend está caído"
+          description: "El frontend del sistema POS no responde desde hace más de 2 minutos"
+
+      - alert: Redis_Down
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "redis"
+        annotations:
+          summary: "Redis está caído"
+          description: "El servidor Redis no responde desde hace más de 1 minuto"
+
+      - alert: PostgreSQL_Down
+        expr: up{job="postgresql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "postgresql"
+        annotations:
+          summary: "PostgreSQL está caído"
+          description: "La base de datos PostgreSQL no responde desde hace más de 1 minuto"
+
+      # Alertas de rendimiento
+      - alert: High_Response_Time
+        expr: http_request_duration_seconds{quantile="0.95"} > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: "odata-pos-backend"
+        annotations:
+          summary: "Tiempo de respuesta alto"
+          description: "El 95% de las requests tardan más de 2 segundos"
+
+      - alert: High_Error_Rate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: "odata-pos-backend"
+        annotations:
+          summary: "Tasa de errores alta"
+          description: "Más del 10% de las requests están fallando"
+
+      - alert: High_CPU_Usage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: "node-exporter"
+        annotations:
+          summary: "Uso de CPU alto"
+          description: "El uso de CPU está por encima del 80%"
+
+      - alert: High_Memory_Usage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: "node-exporter"
+        annotations:
+          summary: "Uso de memoria alto"
+          description: "El uso de memoria está por encima del 85%"
+
+      - alert: High_Disk_Usage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: "node-exporter"
+        annotations:
+          summary: "Uso de disco alto"
+          description: "El uso de disco está por encima del 85%"
+
+      # Alertas de base de datos
+      - alert: Database_Connections_High
+        expr: pg_stat_database_numbackends > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: "postgresql"
+        annotations:
+          summary: "Muchas conexiones de base de datos"
+          description: "Hay más de 80 conexiones activas a la base de datos"
+
+      - alert: Database_Slow_Queries
+        expr: rate(pg_stat_activity_max_tx_duration{datname!=""}[5m]) > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: "postgresql"
+        annotations:
+          summary: "Queries lentas en la base de datos"
+          description: "Hay transacciones que duran más de 30 segundos"
+
+      # Alertas de Redis
+      - alert: Redis_Memory_High
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: "redis"
+        annotations:
+          summary: "Uso de memoria de Redis alto"
+          description: "Redis está usando más del 80% de su memoria disponible"
+
+      - alert: Redis_Connected_Clients_High
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: "redis"
+        annotations:
+          summary: "Muchos clientes conectados a Redis"
+          description: "Hay más de 100 clientes conectados a Redis"
+
+      # Alertas de negocio
+      - alert: Low_Sales_Volume
+        expr: increase(sales_total_amount[1h]) < 1000
+        for: 1h
+        labels:
+          severity: info
+          service: "odata-pos-backend"
+        annotations:
+          summary: "Volumen de ventas bajo"
+          description: "Las ventas en la última hora están por debajo de $1000"
+
+      - alert: High_Inventory_Alerts
+        expr: inventory_low_stock_count > 10
+        for: 1h
+        labels:
+          severity: warning
+          service: "odata-pos-backend"
+        annotations:
+          summary: "Muchos productos con stock bajo"
+          description: "Hay más de 10 productos con stock bajo"
+
+      # Alertas de seguridad
+      - alert: High_Failed_Login_Attempts
+        expr: rate(failed_login_attempts_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: "odata-pos-backend"
+        annotations:
+          summary: "Muchos intentos de login fallidos"
+          description: "Hay más de 10 intentos de login fallidos por minuto"
+
+      - alert: High_API_Errors
+        expr: rate(api_errors_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: "odata-pos-backend"
+        annotations:
+          summary: "Muchos errores de API"
+          description: "Hay más de 5 errores de API por minuto"
+
+      # Alertas de infraestructura
+      - alert: Service_Restart_Frequency
+        expr: increase(process_start_time_seconds[1h]) > 5
+        for: 1h
+        labels:
+          severity: warning
+          service: "odata-pos-backend"
+        annotations:
+          summary: "Muchos reinicios del servicio"
+          description: "El servicio se ha reiniciado más de 5 veces en la última hora"
+
+      - alert: High_Network_Errors
+        expr: rate(node_network_receive_errs_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: "node-exporter"
+        annotations:
+          summary: "Muchos errores de red"
+          description: "Hay más de 0.1 errores de red por segundo"
+
+  - name: OData_POS_Recording_Rules
+    rules:
+      # Reglas de grabación para métricas calculadas
+      - record: job:http_requests_total:rate5m
+        expr: rate(http_requests_total[5m])
+
+      - record: job:http_request_duration_seconds:p95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+      - record: job:http_request_duration_seconds:p99
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
+
+      - record: job:database_connections_utilization
+        expr: (pg_stat_database_numbackends / pg_settings_max_connections) * 100
+
+      - record: job:redis_memory_utilization
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) * 100
+
+      - record: job:system_cpu_utilization
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      - record: job:system_memory_utilization
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100
+
+      - record: job:system_disk_utilization
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100

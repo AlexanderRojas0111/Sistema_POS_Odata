@@ -40,4 +40,16 @@ class User(db.Model):
 
     def has_role(self, role):
         """Verifica si el usuario tiene un rol específico"""
-        return self.role == role 
+        return self.role == role
+    
+    def to_dict(self):
+        """Convertir usuario a diccionario"""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'role': self.role.value if self.role else None,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        } 

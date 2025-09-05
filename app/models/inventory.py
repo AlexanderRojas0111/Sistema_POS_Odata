@@ -29,4 +29,18 @@ class Inventory(db.Model):
     user = relationship('User', back_populates='inventory_changes')
 
     def __repr__(self):
-        return f'<Inventory {self.action_type.value}: {self.quantity} of Product {self.product_id}>' 
+        return f'<Inventory {self.action_type.value}: {self.quantity} of Product {self.product_id}>'
+    
+    def to_dict(self):
+        """Convertir inventario a diccionario"""
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'user_id': self.user_id,
+            'quantity': self.quantity,
+            'action_type': self.action_type.value if self.action_type else None,
+            'reference': self.reference,
+            'notes': self.notes,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        } 

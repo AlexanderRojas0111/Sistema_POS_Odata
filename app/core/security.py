@@ -22,7 +22,8 @@ class SecurityManager:
         # Patrones de validación
         self.email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
         self.password_pattern = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
-        self.sql_injection_pattern = re.compile(r'(\b(union|select|insert|update|delete|drop|create|alter)\b)', re.IGNORECASE)
+        # Patrón mejorado para SQL injection que incluye OR, AND, comentarios y comillas
+        self.sql_injection_pattern = re.compile(r'(\b(union|select|insert|update|delete|drop|create|alter|or|and)\b|\'|\-\-|\/\*|\*\/)', re.IGNORECASE)
         self.xss_pattern = re.compile(r'<script|javascript:|vbscript:|onload=|onerror=', re.IGNORECASE)
         
         # Lista de IPs bloqueadas
@@ -411,5 +412,15 @@ security_manager = None
 def init_security(app):
     """Inicializa el gestor de seguridad"""
     global security_manager
-    security_manager = SecurityManager(app.redis)
-    app.security_manager = security_manager 
+    try:
+        # Intentar usar Redis si está disponible
+        if hasattr(app, 'redis') and app.redis:
+            security_manager = SecurityManager(app.redis)
+        else:
+            # Usar modo sin Redis
+            security_manager = SecurityManager(None)
+        app.security_manager = security_manager
+    except Exception as e:
+        app.logger.warning(f"Error inicializando seguridad: {e}. Usando modo básico.")
+        security_manager = SecurityManager(None)
+        app.security_manager = security_manager 

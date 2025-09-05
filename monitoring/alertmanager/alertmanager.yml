@@ -1,0 +1,126 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'localhost:25'
+  smtp_from: 'alertmanager@odata-pos.local'
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      continue: true
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      continue: true
+    - match:
+        service: odata-pos-backend
+      receiver: 'backend-alerts'
+      continue: true
+    - match:
+        service: odata-pos-frontend
+      receiver: 'frontend-alerts'
+      continue: true
+
+receivers:
+  - name: 'web.hook'
+    webhook_configs:
+      - url: 'http://localhost:5000/api/v1/alerts/webhook'
+        send_resolved: true
+
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'admin@odata-pos.local'
+        subject: '🚨 CRÍTICO: {{ .GroupLabels.alertname }}'
+        body: |
+          Alerta CRÍTICA detectada:
+          
+          **Alerta:** {{ .GroupLabels.alertname }}
+          **Servicio:** {{ .GroupLabels.service }}
+          **Instancia:** {{ .GroupLabels.instance }}
+          **Descripción:** {{ .CommonAnnotations.description }}
+          
+          **Estado:** {{ .Status }}
+          **Inicio:** {{ .StartsAt }}
+          
+          Por favor, revise inmediatamente el sistema.
+    webhook_configs:
+      - url: 'http://localhost:5000/api/v1/alerts/critical'
+        send_resolved: true
+
+  - name: 'warning-alerts'
+    email_configs:
+      - to: 'tech@odata-pos.local'
+        subject: '⚠️ ADVERTENCIA: {{ .GroupLabels.alertname }}'
+        body: |
+          Alerta de ADVERTENCIA detectada:
+          
+          **Alerta:** {{ .GroupLabels.alertname }}
+          **Servicio:** {{ .GroupLabels.service }}
+          **Instancia:** {{ .GroupLabels.instance }}
+          **Descripción:** {{ .CommonAnnotations.description }}
+          
+          **Estado:** {{ .Status }}
+          **Inicio:** {{ .StartsAt }}
+          
+          Por favor, revise el sistema cuando sea posible.
+    webhook_configs:
+      - url: 'http://localhost:5000/api/v1/alerts/warning'
+        send_resolved: true
+
+  - name: 'backend-alerts'
+    webhook_configs:
+      - url: 'http://localhost:5000/api/v1/alerts/backend'
+        send_resolved: true
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK'
+        channel: '#odata-backend'
+        title: '🚨 Backend Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          *Alerta del Backend:*
+          • **Alerta:** {{ .GroupLabels.alertname }}
+          • **Descripción:** {{ .CommonAnnotations.description }}
+          • **Estado:** {{ .Status }}
+          • **Inicio:** {{ .StartsAt }}
+
+  - name: 'frontend-alerts'
+    webhook_configs:
+      - url: 'http://localhost:5000/api/v1/alerts/frontend'
+        send_resolved: true
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK'
+        channel: '#odata-frontend'
+        title: '🚨 Frontend Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          *Alerta del Frontend:*
+          • **Alerta:** {{ .GroupLabels.alertname }}
+          • **Descripción:** {{ .CommonAnnotations.description }}
+          • **Estado:** {{ .Status }}
+          • **Inicio:** {{ .StartsAt }}
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']
+
+  - source_match:
+      alertname: 'OData_POS_Backend_Down'
+    target_match:
+      alertname: 'High_Response_Time'
+    equal: ['instance']
+
+  - source_match:
+      alertname: 'OData_POS_Backend_Down'
+    target_match:
+      alertname: 'High_Error_Rate'
+    equal: ['instance']
+
+templates:
+  - '/etc/alertmanager/template/*.tmpl'

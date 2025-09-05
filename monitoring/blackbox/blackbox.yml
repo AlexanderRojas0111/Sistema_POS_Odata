@@ -1,0 +1,179 @@
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: "ip4"
+      valid_status_codes: [200, 201, 202, 204, 301, 302, 307, 308]
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: true
+      headers:
+        User-Agent: "Prometheus/Blackbox Exporter"
+        Accept: "application/json, text/plain, */*"
+        Cache-Control: "no-cache"
+
+  http_post_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      method: POST
+      preferred_ip_protocol: "ip4"
+      valid_status_codes: [200, 201, 202, 204]
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: true
+      headers:
+        User-Agent: "Prometheus/Blackbox Exporter"
+        Content-Type: "application/json"
+        Accept: "application/json"
+        Cache-Control: "no-cache"
+      body: '{"test": "health_check"}'
+
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: "ip4"
+      tls: false
+
+  icmp:
+    prober: icmp
+    timeout: 5s
+    icmp:
+      preferred_ip_protocol: "ip4"
+
+  dns:
+    prober: dns
+    timeout: 5s
+    dns:
+      preferred_ip_protocol: "ip4"
+      query_name: "localhost"
+      query_type: "A"
+      valid_rcodes: ["NOERROR"]
+      fail_if_rcode_not_matches: ["NOERROR"]
+
+  # Configuración específica para O'Data POS
+  odata_health_check:
+    prober: http
+    timeout: 10s
+    http:
+      preferred_ip_protocol: "ip4"
+      valid_status_codes: [200]
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: true
+      headers:
+        User-Agent: "OData-POS-Health-Check"
+        Accept: "application/json"
+        Cache-Control: "no-cache"
+      fail_if_body_matches_regexp:
+        - "error"
+        - "failed"
+        - "down"
+      fail_if_body_not_matches_regexp:
+        - "status.*ok"
+        - "healthy"
+
+  odata_api_check:
+    prober: http
+    timeout: 15s
+    http:
+      preferred_ip_protocol: "ip4"
+      valid_status_codes: [200, 201, 202, 204, 401, 403]
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: true
+      headers:
+        User-Agent: "OData-POS-API-Check"
+        Accept: "application/json"
+        Cache-Control: "no-cache"
+      fail_if_body_matches_regexp:
+        - "Internal Server Error"
+        - "Database connection failed"
+        - "Redis connection failed"
+      fail_if_header_matches:
+        - header: "Content-Type"
+          regexp: "text/html"
+          allow_missing: true
+
+  # Configuración para monitoreo de autenticación
+  odata_auth_check:
+    prober: http
+    timeout: 10s
+    http:
+      method: POST
+      preferred_ip_protocol: "ip4"
+      valid_status_codes: [401, 403, 422]
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: true
+      headers:
+        User-Agent: "OData-POS-Auth-Check"
+        Content-Type: "application/json"
+        Accept: "application/json"
+        Cache-Control: "no-cache"
+      body: '{"username": "test", "password": "test"}'
+      fail_if_body_matches_regexp:
+        - "Internal Server Error"
+        - "Database connection failed"
+      fail_if_body_not_matches_regexp:
+        - "Invalid credentials"
+        - "Unauthorized"
+        - "validation error"
+
+  # Configuración para monitoreo de base de datos
+  postgres_health_check:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: "ip4"
+      tls: false
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+
+  # Configuración para monitoreo de Redis
+  redis_health_check:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: "ip4"
+      tls: false
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+
+  # Configuración para monitoreo de frontend
+  frontend_health_check:
+    prober: http
+    timeout: 10s
+    http:
+      preferred_ip_protocol: "ip4"
+      valid_status_codes: [200, 301, 302]
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: true
+      headers:
+        User-Agent: "OData-POS-Frontend-Check"
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        Cache-Control: "no-cache"
+      fail_if_body_matches_regexp:
+        - "Error"
+        - "Failed to load"
+        - "Connection refused"
+      fail_if_body_not_matches_regexp:
+        - "O'Data POS"
+        - "Sistema POS"
+        - "Login"
+        - "Dashboard"
