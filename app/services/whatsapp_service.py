@@ -6,6 +6,7 @@ Servicio para envío de mensajes por WhatsApp.
 
 import requests
 import json
+import os
 from typing import List, Optional, Dict, Any
 import logging
 from datetime import datetime

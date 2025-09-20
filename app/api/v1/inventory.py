@@ -482,3 +482,4 @@ def stock_report(current_user):
             'message': 'Error interno del servidor',
             'error': str(e)
         }), 500
+

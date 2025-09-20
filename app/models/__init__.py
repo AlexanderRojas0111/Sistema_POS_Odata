@@ -9,14 +9,21 @@ from .product import Product
 from .sale import Sale, SaleItem
 from .inventory import InventoryMovement
 from .ai_models import ProductEmbedding, DocumentEmbedding
-from .electronic_invoice import ElectronicInvoice, InvoiceItem
+from .electronic_invoice import ElectronicInvoice, ElectronicInvoiceItem
 from .support_document import SupportDocument
 from .accounting import AccountingEntry, AccountingEntryLine, ChartOfAccounts
 from .digital_certificate import DigitalCertificate, CertificateUsage
 from .support import SupportTicket, SupportMessage, SupportChat, ChatMessage
 from .help import HelpArticle, FAQ
+from .payroll import Employee, PayrollPeriod, Payroll, PayrollItem, PayrollConfig
+from .accounts_receivable import Customer, Invoice, AccountsReceivableInvoiceItem, Payment, PaymentAllocation
+from .quotation import Quotation, QuotationItem, QuotationApproval, QuotationTemplate
+
+# Importar db al final para evitar importaciones circulares
+from app import db
 
 __all__ = [
+    'db',
     'User',
     'Product', 
     'Sale',
@@ -25,7 +32,7 @@ __all__ = [
     'ProductEmbedding',
     'DocumentEmbedding',
     'ElectronicInvoice',
-    'InvoiceItem',
+    'ElectronicInvoiceItem',
     'SupportDocument',
     'AccountingEntry',
     'AccountingEntryLine',
@@ -37,5 +44,19 @@ __all__ = [
     'SupportChat',
     'ChatMessage',
     'HelpArticle',
-    'FAQ'
+    'FAQ',
+    'Employee',
+    'PayrollPeriod',
+    'Payroll',
+    'PayrollItem',
+    'PayrollConfig',
+    'Customer',
+    'Invoice',
+    'AccountsReceivableInvoiceItem',
+    'Payment',
+    'PaymentAllocation',
+    'Quotation',
+    'QuotationItem',
+    'QuotationApproval',
+    'QuotationTemplate'
 ]

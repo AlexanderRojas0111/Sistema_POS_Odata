@@ -1,0 +1,26 @@
+{
+  "extends": ["web-recommended"],
+  "hints": {
+    "no-inline-styles": {
+      "severity": "off"
+    }
+  },
+  "browserslist": [
+    "defaults"
+  ],
+  "ignoredUrls": [
+    {
+      "domain": ".*",
+      "hints": ["no-inline-styles"]
+    }
+  ],
+  "parsers": ["html"],
+  "formatters": ["html"],
+  "ignore": [
+    "app/templates/**/*.html"
+  ]
+}
+
+    "**/invoice_email.html"
+  ]
+}

@@ -1,0 +1,223 @@
+# Docker Compose Enterprise - Sistema POS O'Data v2.0.0
+# =====================================================
+# Arquitectura enterprise con alta disponibilidad y escalabilidad
+# Optimizado para producción con monitoreo completo
+
+version: '3.8'
+
+services:
+  # ===== APLICACIÓN PRINCIPAL =====
+  pos-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.enterprise
+      target: production
+    container_name: odata-pos-api
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_TYPE=postgresql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=odata_pos_enterprise
+      - DB_USER=odata_user
+      - DB_PASSWORD=${DB_PASSWORD:-enterprise_password_123}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_enterprise_123}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jwt_enterprise_secret_123}
+      - SECRET_KEY=${SECRET_KEY:-enterprise_secret_key_123}
+      - RATELIMIT_STORAGE_URL=redis://redis:6379/1
+    ports:
+      - "8000:8000"
+    networks:
+      - odata-enterprise
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./backups:/app/backups
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # ===== BASE DE DATOS POSTGRESQL =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: odata-pos-postgres
+    environment:
+      POSTGRES_DB: odata_pos_enterprise
+      POSTGRES_USER: odata_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-enterprise_password_123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - odata-enterprise
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-odata_user} -d ${DB_NAME:-odata_pos_enterprise}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # ===== CACHE REDIS =====
+  redis:
+    image: redis:7.2-alpine
+    container_name: odata-pos-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_enterprise_123}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - odata-enterprise
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis_enterprise_123}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+
+  # ===== NGINX REVERSE PROXY =====
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: odata-pos-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/enterprise.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - odata-enterprise
+    depends_on:
+      - pos-api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # ===== MONITOREO PROMETHEUS =====
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: odata-pos-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    networks:
+      - odata-enterprise
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # ===== DASHBOARD GRAFANA =====
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: odata-pos-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - odata-enterprise
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+
+# ===== VOLÚMENES PERSISTENTES =====
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# ===== REDES =====
+networks:
+  odata-enterprise:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

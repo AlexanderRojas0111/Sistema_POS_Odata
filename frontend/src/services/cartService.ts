@@ -4,7 +4,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
-  category: 'Sencillas' | 'Clásicas' | 'Premium' | 'Dulces' | 'Picantes';
+  category: 'Sencillas' | 'Clásicas' | 'Premium' | 'Bebidas Frías' | 'Bebidas Calientes';
   ingredients: string[];
   image: string;
   popular?: boolean;

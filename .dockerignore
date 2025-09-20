@@ -1,16 +1,16 @@
-# ========================================================================
-# Sistema POS O'data - Docker Ignore
-# ========================================================================
-# Archivos y directorios que no deben incluirse en la imagen Docker
-# ========================================================================
+# Sistema POS Sabrositas - Docker Ignore
+# ===================================
+# Archivos y directorios a excluir del contexto Docker
 
-# ========================================================================
-# ARCHIVOS DE DESARROLLO
-# ========================================================================
-*.pyc
-*.pyo
-*.pyd
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
 *.so
 .Python
 build/
@@ -29,134 +29,124 @@ wheels/
 .installed.cfg
 *.egg
 
-# ========================================================================
-# ENTORNOS VIRTUALES
-# ========================================================================
+# Virtual environments
 venv/
-venv_*/
+venv_python313/
 ENV/
 env/
-.venv/
-.ENV/
-
-# ========================================================================
-# ARCHIVOS DE CONFIGURACIÓN LOCAL
-# ========================================================================
 .env
-.env.local
-.env.development
-.env.production
-*.env
+.venv
 
-# ========================================================================
-# BASES DE DATOS LOCALES
-# ========================================================================
-*.db
-*.sqlite
-*.sqlite3
-instance/
-
-# ========================================================================
-# LOGS Y ARCHIVOS TEMPORALES
-# ========================================================================
-logs/
-*.log
-*.tmp
-*.temp
-.cache/
-
-# ========================================================================
-# ARCHIVOS DE TESTING
-# ========================================================================
-.coverage
-.pytest_cache/
-.tox/
-htmlcov/
-.nyc_output/
-coverage/
-
-# ========================================================================
-# ARCHIVOS DE DESARROLLO
-# ========================================================================
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# ========================================================================
-# CONTROL DE VERSIONES
-# ========================================================================
-.git/
-.gitignore
-.gitattributes
+# Logs
+*.log
+logs/*.log
 
-# ========================================================================
-# DOCUMENTACIÓN Y ARCHIVOS README
-# ========================================================================
-README.md
-CHANGELOG.md
-CONTRIBUTING.md
-docs/
+# Testing
+.tox/
+.coverage
+.pytest_cache/
+htmlcov/
+.nox/
+
+# Documentation
 *.md
+docs/
+Documentacion/
 
-# ========================================================================
-# ARCHIVOS DE CI/CD
-# ========================================================================
-.github/
-.gitlab-ci.yml
-Jenkinsfile
-.travis.yml
-
-# ========================================================================
-# ARCHIVOS DE DOCKER
-# ========================================================================
-Dockerfile*
-docker-compose*.yml
-.dockerignore
-
-# ========================================================================
-# ARCHIVOS DE BACKUP Y AUDITORÍA
-# ========================================================================
+# Backups
 backups/
 *.backup
-security_audit_report.json
+*.bak
+*.tar.gz
 
-# ========================================================================
-# ARCHIVOS DE FRONTEND (si están en el mismo repo)
-# ========================================================================
-frontend/node_modules/
-frontend/build/
-frontend/dist/
-frontend/.next/
+# Temporary files
+*.tmp
+*.temp
+temp/
 
-# ========================================================================
-# ARCHIVOS DE MONITOREO
-# ========================================================================
+# Development files
+debug_*.py
+test_*.py
+check_*.py
+fix_*.py
+update_*.py
+load_*.py
+clean_*.py
+system_*.py
+simple_*.py
+initialize_*.py
+deploy_*.py
+cargar_*.py
+actualizar_*.py
+limpiar_*.py
+
+# Scripts de desarrollo
+*.bat
+*.ps1
+*.sh
+Makefile
+Jenkinsfile
+
+# Frontend (si no se incluye en la imagen)
+frontend/
+node_modules/
+
+# Monitoring (si no se incluye)
 monitoring/
-prometheus_data/
-grafana_data/
 
-# ========================================================================
-# ARCHIVOS DE SCRIPTS DE DESARROLLO
-# ========================================================================
-scripts/test_*.py
-scripts/demo_*.py
-scripts/setup_*.py
-scripts/security_audit.py
+# SSL certificates
+ssl/
+certbot/
 
-# ========================================================================
-# UPLOADS Y MEDIA (para desarrollo)
-# ========================================================================
-uploads/
-media/
-static/uploads/
+# Reports
+reports/
 
-# ========================================================================
-# ARCHIVOS ESPECÍFICOS DEL PROYECTO
-# ========================================================================
-add_arepas_with_auth.py
-*.exe
-vs_community.exe
+# Data files (usar volúmenes)
+data/
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration templates
+env.example
+env.development
+env.production.template
+config.production.env
+
+# Test data
+testsprite_tests/
+
+# Archive files
+*.zip
+*.tar
+*.gz
+
+# Unnecessary Docker files (ya eliminados)
+Dockerfile.*
+docker-compose.*.yml
+
+# Keep only essential files
+!Dockerfile
+!docker-compose.yml
+!requirements.txt
+!main.py
+!app/
+!instance/
+!logs/

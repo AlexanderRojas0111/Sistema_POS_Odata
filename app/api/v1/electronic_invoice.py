@@ -6,7 +6,7 @@ Endpoints para facturación electrónica.
 
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models.electronic_invoice import ElectronicInvoice, InvoiceItem
+from app.models.electronic_invoice import ElectronicInvoice, ElectronicInvoiceItem
 from app.models.sale import Sale
 from app.services.auth_service import token_required
 from app.repositories.base_repository import BaseRepository
@@ -23,7 +23,7 @@ electronic_invoice_bp = Blueprint('electronic_invoice', __name__, url_prefix='/a
 
 # Repositorios
 invoice_repository = BaseRepository(ElectronicInvoice)
-invoice_item_repository = BaseRepository(InvoiceItem)
+invoice_item_repository = BaseRepository(ElectronicInvoiceItem)
 
 @electronic_invoice_bp.route('/', methods=['GET'])
 @token_required
@@ -132,7 +132,7 @@ def create_invoice(current_user):
         
         # Crear items de la factura
         for sale_item in sale.items:
-            invoice_item = InvoiceItem(
+            invoice_item = ElectronicInvoiceItem(
                 invoice_id=invoice.id,
                 product_id=sale_item.product_id,
                 product_code=sale_item.product.sku,
@@ -180,7 +180,7 @@ def get_invoice(current_user, invoice_id):
         invoice_data = invoice.to_dict()
         
         # Agregar items
-        items = InvoiceItem.query.filter_by(invoice_id=invoice_id).all()
+        items = ElectronicInvoiceItem.query.filter_by(invoice_id=invoice_id).all()
         invoice_data['items'] = [item.to_dict() for item in items]
         
         return jsonify({

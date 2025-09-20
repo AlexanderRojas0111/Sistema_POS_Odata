@@ -1,0 +1,6 @@
+<!-- Este es un placeholder SVG que simula un PNG -->
+<svg width="144" height="144" xmlns="http://www.w3.org/2000/svg">
+  <rect width="144" height="144" fill="#f59e0b" rx="20"/>
+  <text x="72" y="80" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="60" font-weight="bold">🍽️</text>
+  <text x="72" y="120" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">POS</text>
+</svg>

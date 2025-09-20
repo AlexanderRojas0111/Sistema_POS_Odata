@@ -1,0 +1,67 @@
+# Promtail Configuration - Sistema POS O'Data v2.0.0
+# Fase 5: Optimización Empresarial y Despliegue a Producción
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # O'Data POS Application logs
+  - job_name: odata-pos-app
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: odata-pos-app
+          __path__: /var/log/odata-pos/*.log
+
+  # Nginx logs
+  - job_name: nginx
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          __path__: /var/log/nginx/*.log
+
+  # PostgreSQL logs
+  - job_name: postgres
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: postgres
+          __path__: /var/log/postgresql/*.log
+
+  # Redis logs
+  - job_name: redis
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: redis
+          __path__: /var/log/redis/*.log
+
+  # System logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/syslog
+
+  # Docker logs
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*.log

@@ -1,239 +1,182 @@
-#!/usr/bin/env python3
 """
-Aplicación Principal - O'Data v2.0.0
-====================================
-
-Inicialización de la aplicación Flask con:
-- Configuración de base de datos
-- Redis para cache y rate limiting
-- PostgreSQL para producción
-- Extensions y blueprints
-- Manejo de errores
-
-Autor: Sistema POS Odata
-Versión: 2.0.0
+Sistema POS O'Data v2.0.0 - Enterprise Architecture
+==================================================
+Arquitectura enterprise con DI Container, Repository Pattern, 
+Strategy Pattern y Exception Hierarchy profesional.
 """
 
-import os
-import logging
-from logging.handlers import RotatingFileHandler
-from flask import Flask, jsonify, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_compress import Compress
-
-# Importar configuraciones
-from app.core.config import get_config
-from app.core.redis_config import redis_manager
-from app.core.postgresql_config import postgresql_manager
-
-# Importar blueprints
-from app.api.v1.routes import api_v1
-from app.api.v2.routes import api_v2
-
-# Importar funciones de inicialización
-from app.core.database import init_db
-from app.core.security import init_security
-from app.utils.pagination import setup_pagination, setup_filters, setup_search
+import os
+import logging
+from datetime import datetime
 
 # Inicializar extensiones
 db = SQLAlchemy()
-migrate = Migrate()
-jwt = JWTManager()
 cors = CORS()
-limiter = Limiter(key_func=get_remote_address)
-compress = Compress()
+# Limiter se inicializará con Redis en configure_app
+limiter = None
 
-# Configurar logging
-def setup_logging(app):
-    """Configurar sistema de logging"""
-    if not app.debug and not app.testing:
-        # Logging para producción
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        
-        # Log principal de la aplicación
-        file_handler = RotatingFileHandler(
-            app.config['LOG_FILE'],
-            maxBytes=app.config['LOG_MAX_SIZE'],
-            backupCount=app.config['LOG_BACKUP_COUNT']
-        )
-        file_handler.setFormatter(logging.Formatter(app.config['LOG_FORMAT']))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
-        
-        # Log de auditoría
-        if app.config.get('AUDIT_LOG_ENABLED'):
-            audit_handler = RotatingFileHandler(
-                app.config['AUDIT_LOG_FILE'],
-                maxBytes=app.config['LOG_MAX_SIZE'],
-                backupCount=app.config['LOG_BACKUP_COUNT']
-            )
-            audit_handler.setFormatter(logging.Formatter(app.config['LOG_FORMAT']))
-            audit_handler.setLevel(logging.INFO)
-            
-            audit_logger = logging.getLogger('audit')
-            audit_logger.addHandler(audit_handler)
-            audit_logger.setLevel(logging.INFO)
-        
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('O\'Data POS v2.0.0 iniciando...')
-
-def create_app(config_name=None):
-    """Factory para crear la aplicación Flask"""
+def create_app(config_name='production'):
+    """Factory pattern para crear aplicación Flask con arquitectura enterprise"""
     app = Flask(__name__)
     
     # Configuración
-    if config_name is None:
-        config_name = os.environ.get('FLASK_ENV', 'development')
-    
-    config_class = get_config()
-    app.config.from_object(config_class)
-    
-    # Configurar logging
-    setup_logging(app)
+    configure_app(app, config_name)
     
     # Inicializar extensiones
     db.init_app(app)
-    migrate.init_app(app, db)
-    jwt.init_app(app)
     cors.init_app(app)
-    limiter.init_app(app)
-    compress.init_app(app)
     
-    # Inicializar Redis
-    redis_manager.init_app(app)
+    # Configurar limiter con Redis si está disponible
+    global limiter
+    redis_url = os.environ.get('REDIS_URL', 'memory://')
+    if redis_url.startswith('redis://'):
+        from flask_limiter import Limiter
+        limiter = Limiter(
+            app=app,
+            key_func=get_remote_address,
+            storage_uri=redis_url
+        )
+    else:
+        from flask_limiter import Limiter
+        limiter = Limiter(
+            app=app,
+            key_func=get_remote_address,
+            storage_uri='memory://'
+        )
+        app.logger.warning("Using in-memory storage for rate limiting. Not recommended for production.")
     
-    # Inicializar PostgreSQL si está configurado
-    if app.config.get('DATABASE_TYPE') == 'postgresql':
-        postgresql_manager.init_app(app)
-    
-    # Configurar paginación, filtros y búsqueda
-    setup_pagination(
-        default_page=app.config.get('DEFAULT_PAGE_SIZE', 1),
-        default_per_page=app.config.get('DEFAULT_PAGE_SIZE', 20),
-        max_per_page=app.config.get('MAX_PAGE_SIZE', 100)
-    )
-    
-    # Configurar filtros por defecto
-    default_filters = {
-        'name': 'like',
-        'category': 'exact',
-        'price': 'range',
-        'status': 'exact',
-        'is_active': 'boolean'
-    }
-    setup_filters(default_filters)
-    
-    # Configurar campos de búsqueda por defecto
-    default_search_fields = ['name', 'description', 'category']
-    setup_search(default_search_fields)
-    
-    # Inicializar base de datos
-    with app.app_context():
-        init_db(app)
-        init_security(app)
+    # Configurar logging
+    configure_logging(app)
     
     # Registrar blueprints
-    app.register_blueprint(api_v1, url_prefix='/api/v1')
-    app.register_blueprint(api_v2, url_prefix='/api/v2')
+    register_blueprints(app)
     
-    # Ruta principal
-    @app.route('/')
-    def index():
-        return jsonify({
-            'message': 'O\'Data POS v2.0.0 API',
-            'version': '2.0.0',
-            'status': 'running',
-            'endpoints': {
-                'v1': '/api/v1',
-                'v2': '/api/v2',
-                'health': '/health',
-                'docs': '/docs'
-            }
-        })
+    # Configurar middleware enterprise
+    configure_enterprise_middleware(app)
     
-    # Ruta de salud
-    @app.route('/health')
-    def health():
-        health_status = {
-            'status': 'healthy',
-            'version': '2.0.0',
-            'database': 'connected' if db.engine else 'disconnected',
-            'redis': 'connected' if redis_manager.is_connected else 'disconnected',
-            'postgresql': 'connected' if postgresql_manager.is_connected else 'disconnected'
-        }
+    # Crear tablas
+    with app.app_context():
+        db.create_all()
+        app.logger.info("Database tables created successfully")
         
-        # Verificar estado de la base de datos
-        try:
-            db.session.execute('SELECT 1')
-            health_status['database'] = 'connected'
-        except Exception as e:
-            health_status['database'] = 'error'
-            health_status['database_error'] = str(e)
-        
-        return jsonify(health_status)
+        # Inicializar sistema de IA
+        initialize_ai_system(app)
     
-    # Ruta de información del sistema
-    @app.route('/system/info')
-    def system_info():
-        from app.api.v1.endpoints.stats_routes import get_system_stats
-        return get_system_stats()
-    
-    # Manejo de errores
-    @app.errorhandler(400)
-    def bad_request_error(error):
-        return {'error': 'Bad Request', 'message': 'Solicitud incorrecta'}, 400
-    
-    @app.errorhandler(401)
-    def unauthorized_error(error):
-        return {'error': 'Unauthorized', 'message': 'Authentication required'}, 401
-    
-    @app.errorhandler(404)
-    def not_found_error(error):
-        return {'error': 'Not Found', 'message': 'Resource not found'}, 404
-    
-    @app.errorhandler(405)
-    def method_not_allowed_error(error):
-        return {'error': 'Method Not Allowed', 'message': 'HTTP method not allowed'}, 405
-    
-    @app.errorhandler(415)
-    def unsupported_media_type_error(error):
-        return {'error': 'Bad Request', 'message': 'Content-Type debe ser application/json'}, 400
-    
-    @app.errorhandler(429)
-    def too_many_requests_error(error):
-        return {'error': 'Too Many Requests', 'message': 'Rate limit exceeded'}, 429
-    
-    @app.errorhandler(500)
-    def internal_server_error(error):
-        return {'error': 'Internal Server Error', 'message': 'An unexpected error occurred'}, 500
-    
-    # Middleware para headers de seguridad
-    @app.after_request
-    def add_security_headers(response):
-        if app.config.get('SECURITY_HEADERS'):
-            for header, value in app.config['SECURITY_HEADERS'].items():
-                response.headers[header] = value
-        return response
-    
-    # Middleware para logging de auditoría
-    @app.after_request
-    def audit_log(response):
-        if app.config.get('AUDIT_LOG_ENABLED') and response.status_code >= 400:
-            audit_logger = logging.getLogger('audit')
-            audit_logger.info(
-                f"Error {response.status_code}: {request.method} {request.path} - "
-                f"IP: {request.remote_addr} - User-Agent: {request.headers.get('User-Agent', 'Unknown')}"
-            )
-        return response
-    
-    app.logger.info('Aplicación O\'Data POS v2.0.0 creada exitosamente')
     return app
 
-# Importar modelos después de inicializar db
-from app.models import user, product, sale, inventory, customer
+def configure_app(app, config_name):
+    """Configuración centralizada de la aplicación"""
+    app.config.update(
+        SECRET_KEY=os.environ.get('SECRET_KEY', 'enterprise-secret-key-change-in-production'),
+        SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL', 'sqlite:///pos_odata.db'),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        JSON_SORT_KEYS=False,
+        JSONIFY_PRETTYPRINT_REGULAR=False,
+        RATELIMIT_STORAGE_URL=os.environ.get('REDIS_URL', 'memory://'),
+        RATELIMIT_DEFAULT="1000 per hour"
+    )
+
+def configure_logging(app):
+    """Configuración de logging enterprise"""
+    if not app.debug:
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('logs/app.log'),
+                logging.StreamHandler()
+            ]
+        )
+
+def register_blueprints(app):
+    """Registrar blueprints de la aplicación"""
+    print("DEBUG: Iniciando registro de blueprints...")
+    from app.api.v1 import api_bp
+    print("DEBUG: api_bp importado exitosamente")
+    from app.api.v2 import api_v2_bp
+    print("DEBUG: api_v2_bp importado exitosamente")
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
+    app.register_blueprint(api_v2_bp, url_prefix='/api/v2')
+
+def configure_enterprise_middleware(app):
+    """Configurar middleware enterprise"""
+    from app.middleware.error_handler import ErrorHandler
+    from app.middleware.request_logger import RequestLogger
+    from app.middleware.security_headers import SecurityHeaders
+    from app.security.rate_limiter import AdvancedRateLimiter
+    from app.security.audit_logger import AuditLogger
+    
+    # Middleware de manejo de errores
+    ErrorHandler(app)
+    
+    # Middleware de logging de requests
+    RequestLogger(app)
+    
+    # Middleware de headers de seguridad
+    SecurityHeaders(app)
+    
+    # Rate limiting avanzado
+    AdvancedRateLimiter(app)
+    
+    # Sistema de auditoría
+    app.audit_logger = AuditLogger()
+    
+    # Configurar DI Container
+    configure_di_container(app)
+
+def configure_di_container(app):
+    """Configurar DI Container con servicios enterprise"""
+    from app.container import container
+    from app.repositories.user_repository import UserRepository
+    from app.repositories.product_repository import ProductRepository
+    from app.repositories.sale_repository import SaleRepository
+    from app.repositories.inventory_repository import InventoryRepository
+    from app.services.user_service import UserService
+    from app.services.product_service import ProductService
+    from app.services.sale_service import SaleService
+    from app.services.inventory_service import InventoryService
+    
+    # Registrar repositories
+    container.register_singleton(UserRepository, UserRepository)
+    container.register_singleton(ProductRepository, ProductRepository)
+    container.register_singleton(SaleRepository, SaleRepository)
+    container.register_singleton(InventoryRepository, InventoryRepository)
+    
+    # Registrar services
+    container.register_singleton(UserService, UserService)
+    container.register_singleton(ProductService, ProductService)
+    container.register_singleton(SaleService, SaleService)
+    container.register_singleton(InventoryService, InventoryService)
+    
+    # Hacer container disponible en la app
+    app.container = container
+    
+    app.logger.info("DI Container configured with enterprise services")
+
+def initialize_ai_system(app):
+    """Inicializar sistema de IA al arrancar la aplicación"""
+    try:
+        from app.services.ai_service import AIService
+        from app.models.product import Product
+        
+        # Verificar si hay productos para entrenar
+        product_count = Product.query.filter(Product.is_active == True).count()
+        
+        if product_count > 0:
+            ai_service = AIService()
+            success = ai_service.initialize_ai_system()
+            
+            if success:
+                app.logger.info(f"AI system initialized successfully with {product_count} products")
+            else:
+                app.logger.warning("AI system initialization failed")
+        else:
+            app.logger.info("No products found for AI initialization")
+            
+    except Exception as e:
+        app.logger.error(f"Error initializing AI system: {e}")

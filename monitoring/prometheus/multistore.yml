@@ -1,0 +1,159 @@
+# Configuración Prometheus Multi-Sede - Sabrositas POS
+# ===================================================
+# Monitoreo especializado para arquitectura multi-tienda
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'sabrositas-pos'
+    environment: 'production'
+
+# Reglas de alertas
+rule_files:
+  - "rules/multistore_alerts.yml"
+  - "rules/inventory_alerts.yml"
+  - "rules/sync_alerts.yml"
+  - "rules/performance_alerts.yml"
+
+# Configuración de scraping
+scrape_configs:
+  # === APLICACIÓN PRINCIPAL ===
+  - job_name: 'pos-api'
+    static_configs:
+      - targets: ['pos-api:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.+)'
+        replacement: 'pos-api'
+      - target_label: service
+        replacement: 'sabrositas-pos-api'
+
+  # === MÉTRICAS POR TIENDA ===
+  - job_name: 'store-metrics'
+    static_configs:
+      - targets: ['pos-api:8000']
+    metrics_path: '/api/v1/metrics/stores'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - target_label: service
+        replacement: 'store-metrics'
+
+  # === SINCRONIZACIÓN ===
+  - job_name: 'sync-service'
+    static_configs:
+      - targets: ['pos-api:8000']
+    metrics_path: '/api/v1/sync/metrics'
+    scrape_interval: 20s
+    scrape_timeout: 8s
+    relabel_configs:
+      - target_label: service
+        replacement: 'sync-service'
+
+  # === BASE DE DATOS MYSQL ===
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:3306']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    params:
+      target: ['mysql:3306']
+    relabel_configs:
+      - target_label: service
+        replacement: 'mysql-database'
+
+  # === REDIS CACHE ===
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    relabel_configs:
+      - target_label: service
+        replacement: 'redis-cache'
+
+  # === NGINX REVERSE PROXY ===
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/nginx_status'
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    relabel_configs:
+      - target_label: service
+        replacement: 'nginx-proxy'
+
+  # === WORKER DE SINCRONIZACIÓN ===
+  - job_name: 'sync-worker'
+    static_configs:
+      - targets: ['sync-worker:9100']
+    scrape_interval: 20s
+    scrape_timeout: 8s
+    relabel_configs:
+      - target_label: service
+        replacement: 'sync-worker'
+
+  # === MÉTRICAS DEL SISTEMA ===
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    relabel_configs:
+      - target_label: service
+        replacement: 'system-metrics'
+
+  # === HEALTH CHECKS ===
+  - job_name: 'health-checks'
+    static_configs:
+      - targets: ['pos-api:8000']
+    metrics_path: '/api/v1/health'
+    scrape_interval: 10s
+    scrape_timeout: 3s
+    relabel_configs:
+      - target_label: service
+        replacement: 'health-monitoring'
+
+# === CONFIGURACIÓN DE ALERTMANAGER ===
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      timeout: 10s
+      api_version: v2
+
+# === CONFIGURACIÓN DE STORAGE ===
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 30d
+    retention.size: 10GB
+    wal-compression: true
+
+# === CONFIGURACIÓN REMOTA (OPCIONAL) ===
+remote_write:
+  - url: "http://grafana-cloud-endpoint/api/prom/push"  # Si se usa Grafana Cloud
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 10
+      capacity: 10000
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'sabrositas_.*'
+        action: keep
+
+# === CONFIGURACIÓN WEB ===
+web:
+  console:
+    libraries: /etc/prometheus/console_libraries
+    templates: /etc/prometheus/consoles
+  enable-lifecycle: true
+  enable-admin-api: true

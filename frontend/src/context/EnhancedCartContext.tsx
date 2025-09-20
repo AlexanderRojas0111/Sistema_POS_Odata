@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { cartService } from '../services/cartService';
-import type { Cart, CartItem } from '../services/cartService';
+import type { Cart} from '../services/cartService';
 
 // Definir el tipo Product localmente para evitar problemas de importación
 interface Product {
@@ -8,7 +9,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
-  category: 'Sencillas' | 'Clásicas' | 'Premium' | 'Dulces' | 'Picantes';
+  category: 'Sencillas' | 'Clásicas' | 'Premium' | 'Bebidas Frías' | 'Bebidas Calientes';
   ingredients: string[];
   image: string;
   popular?: boolean;

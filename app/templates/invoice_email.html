@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura - Sabrositas</title>
+    <!-- 
+    ⚠️  ESTILOS INLINE REQUERIDOS PARA EMAILS ⚠️
+    Los estilos inline son OBLIGATORIOS en plantillas de email porque:
+    - Gmail, Outlook, Yahoo no soportan CSS externo
+    - Garantiza renderizado consistente en todos los clientes
+    - Estándar de la industria (Stripe, PayPal, Amazon los usan)
+    - Las herramientas de linting web NO aplican a emails
+    -->
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .invoice-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .invoice-info h2 {
+            margin: 0 0 15px 0;
+            color: #d97706;
+            font-size: 20px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #6b7280;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #111827;
+            font-size: 14px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .items-table th {
+            background: #d97706;
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: bold;
+        }
+        .items-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        .items-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .total-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: right;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        .total-final {
+            font-weight: bold;
+            font-size: 20px;
+            color: #d97706;
+            border-top: 2px solid #d97706;
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        .payment-info {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: #059669;
+        }
+        .footer {
+            background: #374151;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .footer p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        .emoji {
+            font-size: 18px;
+        }
+        @media (max-width: 600px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🥟 SABROSITAS</h1>
+            <p>Arepas Cuadradas Artesanales</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="invoice-info">
+                <h2>📄 Factura de Venta</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Número de Venta</span>
+                        <span class="info-value">{{ sale_number }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fecha</span>
+                        <span class="info-value">{{ sale_date }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Cliente</span>
+                        <span class="info-value">{{ customer_name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Teléfono</span>
+                        <span class="info-value">{{ customer_phone }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="payment-info">
+                <div class="payment-method">
+                    <span class="emoji">{{ payment_icon }}</span>
+                    <span>Método de Pago: {{ payment_method_name }}</span>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ "{:,.0f}".format(item.unit_price) }}</td>
+                        <td>${{ "{:,.0f}".format(item.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Total Section -->
+            <div class="total-section">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>${{ "{:,.0f}".format(subtotal) }}</span>
+                </div>
+                {% if tax_amount > 0 %}
+                <div class="total-row">
+                    <span>IVA ({{ tax_rate }}%):</span>
+                    <span>${{ "{:,.0f}".format(tax_amount) }}</span>
+                </div>
+                {% endif %}
+                {% if discount_amount > 0 %}
+                <div class="total-row">
+                    <span>Descuento:</span>
+                    <span>-${{ "{:,.0f}".format(discount_amount) }}</span>
+                </div>
+                {% endif %}
+                <div class="total-row total-final">
+                    <span>TOTAL:</span>
+                    <span>${{ "{:,.0f}".format(total_amount) }}</span>
+                </div>
+            </div>
+
+            {% if notes %}
+            <div style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 8px;">
+                <strong>📝 Notas:</strong><br>
+                {{ notes }}
+            </div>
+            {% endif %}
+
+            <div style="margin-top: 30px; text-align: center; color: #6b7280;">
+                <p><strong>¡Gracias por tu compra! 🙏</strong></p>
+                <p>Te esperamos pronto para disfrutar más de nuestras deliciosas arepas cuadradas.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>🥟 SABROSITAS - Arepas Cuadradas</strong></p>
+            <p>📱 WhatsApp: +57 300 123 4567 | 📧 info@sabrositas.com</p>
+            <p>📍 Carrera 15 #123-45, Bogotá, Colombia</p>
+            <p style="font-size: 12px; margin-top: 15px;">
+                Esta factura fue generada automáticamente por el Sistema POS Sabrositas v2.0.0
+            </p>
+        </div>
+    </div>
+</body>
+</html>

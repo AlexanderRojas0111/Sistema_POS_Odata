@@ -1,13 +1,39 @@
 {
-    "python.testing.pytestArgs": [
-        "tests"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "python.analysis.extraPaths": [
-        "./app"
-    ],
-    "cursorpyright.analysis.extraPaths": [
-        "./app"
-    ]
+  "html.validate.styles": false,
+  "css.validate": false,
+  "html.validate.scripts": false,
+  "html.suggest.html5": true,
+  "emmet.includeLanguages": {
+    "html": "html"
+  },
+  "files.associations": {
+    "*.html": "html"
+  },
+  "html.customData": [],
+  "webhint.enableTelemetry": false,
+  "webhint.configPath": ".webhintrc",
+  "edge-tools.enableTelemetry": false,
+  "edge-tools.disableHints": ["no-inline-styles", "compat-api", "compat-api/html"],
+  "html.experimental.custom.attributes": ["theme-color"],
+  "html.format.enable": true,
+  "html.format.preserveNewLines": true,
+  "html.format.maxPreserveNewLines": 2,
+  "html.format.indentInnerHtml": true,
+  "html.format.wrapLineLength": 120,
+  "html.format.unformatted": "wbr",
+  "html.format.contentUnformatted": "pre,code,textarea",
+  "html.format.extraLiners": "head, body, /html",
+  "html.format.wrapAttributes": "auto",
+  "html.format.templating": false,
+  "html.format.unformattedContentDelimiter": "",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  }
 }

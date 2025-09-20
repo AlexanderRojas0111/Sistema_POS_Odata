@@ -10,13 +10,9 @@ import {
   AlertTriangle,
   CheckCircle,
   X,
-  Save,
-  Eye,
-  EyeOff,
+  SaveOff,
   DollarSign,
-  Hash,
-  Tag
-} from 'lucide-react';
+  Hash} from 'lucide-react';
 
 interface Product {
   id: number;
@@ -65,7 +61,7 @@ const ProductsManagement: React.FC = () => {
     is_active: true
   });
 
-  const categories = ['all', 'Sencillas', 'Clásicas', 'Premium', 'Dulces', 'Picantes'];
+  const categories = ['all', 'Sencillas', 'Clásicas', 'Premium', 'Bebidas Frías', 'Bebidas Calientes'];
 
   // Obtener token de autenticación
   const getAuthToken = () => {
@@ -233,9 +229,7 @@ const ProductsManagement: React.FC = () => {
     const colors = {
       'Sencillas': 'bg-green-100 text-green-800',
       'Clásicas': 'bg-yellow-100 text-yellow-800',
-      'Premium': 'bg-orange-100 text-orange-800',
-      'Dulces': 'bg-pink-100 text-pink-800',
-      'Picantes': 'bg-red-100 text-red-800'
+      'Premium': 'bg-orange-100 text-orange-800'
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -292,6 +286,8 @@ const ProductsManagement: React.FC = () => {
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="input-field pl-10"
+                aria-label="Filtrar productos por categoría"
+                title="Seleccionar categoría para filtrar productos"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
@@ -319,6 +315,8 @@ const ProductsManagement: React.FC = () => {
             <button
               onClick={() => setError(null)}
               className="ml-auto text-red-600 hover:text-red-800"
+              aria-label="Cerrar mensaje de error"
+              title="Cerrar mensaje de error"
             >
               <X className="w-4 h-4" />
             </button>
@@ -326,10 +324,10 @@ const ProductsManagement: React.FC = () => {
         )}
 
         {/* Tabla de productos */}
-        <div className="bg-white rounded-xl shadow-amber overflow-hidden">
+        <div className="bg-white rounded-xl shadow-amber overflow-hidden" role="region" aria-label="Lista de productos">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200" role="table" aria-label="Tabla de productos del catálogo">
+              <thead className="bg-gray-50" role="rowgroup">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Producto
@@ -354,7 +352,7 @@ const ProductsManagement: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200" role="rowgroup">
                 {filteredProducts.map((product, index) => (
                   <motion.tr
                     key={product.id}
@@ -430,12 +428,16 @@ const ProductsManagement: React.FC = () => {
                         <button
                           onClick={() => handleEditProduct(product)}
                           className="text-sabrositas-primary hover:text-sabrositas-accent"
+                          aria-label={`Editar producto ${product.name}`}
+                          title={`Editar producto ${product.name}`}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteProduct(product)}
                           className="text-red-600 hover:text-red-800"
+                          aria-label={`Eliminar producto ${product.name}`}
+                          title={`Eliminar producto ${product.name}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -457,6 +459,10 @@ const ProductsManagement: React.FC = () => {
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
               onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
+              aria-describedby="modal-description"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -470,10 +476,10 @@ const ProductsManagement: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <Package className="w-6 h-6" />
                       <div>
-                        <h2 className="text-2xl font-bold">
+                        <h2 id="modal-title" className="text-2xl font-bold">
                           {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
                         </h2>
-                        <p className="text-amber-100">
+                        <p id="modal-description" className="text-amber-100">
                           {editingProduct ? 'Modifica la información del producto' : 'Agrega un nuevo producto al catálogo'}
                         </p>
                       </div>
@@ -481,6 +487,8 @@ const ProductsManagement: React.FC = () => {
                     <button
                       onClick={() => setShowModal(false)}
                       className="text-white hover:text-amber-200 transition-colors"
+                      aria-label="Cerrar modal de producto"
+                      title="Cerrar modal de producto"
                     >
                       <X className="w-6 h-6" />
                     </button>
@@ -568,6 +576,9 @@ const ProductsManagement: React.FC = () => {
                         value={formData.category}
                         onChange={(e) => setFormData({...formData, category: e.target.value})}
                         className="input-field"
+                        aria-label="Seleccionar categoría del producto"
+                        title="Seleccionar categoría del producto"
+                        required
                       >
                         {categories.filter(cat => cat !== 'all').map(category => (
                           <option key={category} value={category}>{category}</option>

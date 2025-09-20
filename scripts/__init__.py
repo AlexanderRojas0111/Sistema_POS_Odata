@@ -1,1 +1,0 @@
-# Carpeta para scripts de migración y carga de datos 

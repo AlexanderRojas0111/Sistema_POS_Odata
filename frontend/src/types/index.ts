@@ -4,14 +4,18 @@
 export interface Product {
   id: string;
   name: string;
+  sku?: string;
   description: string;
   price: number;
-  category: 'Sencillas' | 'Clásicas' | 'Premium' | 'Dulces' | 'Picantes';
+  category: 'Sencillas' | 'Clásicas' | 'Premium' | 'Bebidas Frías' | 'Bebidas Calientes';
   ingredients: string[];
   image: string;
   popular?: boolean;
   new?: boolean;
   spicy?: boolean;
+  stock?: number;
+  min_stock?: number;
+  is_active?: boolean;
 }
 
 export interface CartItem {

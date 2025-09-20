@@ -1,62 +1,54 @@
 {
-  "name": "sistema-pos-frontend",
+  "name": "sabrositas-frontend",
+  "description": "Sistema POS Sabrositas - Las Arepas Cuadradas - Frontend React",
   "version": "2.0.0",
-  "private": true,
+  "type": "module",
+  "author": "O'Data Sabrositas",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "dev:mysql": "cross-env VITE_API_URL=http://localhost:8000 VITE_DB_TYPE=mysql vite --host 0.0.0.0 --port 5173",
+    "build": "tsc -b && vite build",
+    "build:production": "cross-env NODE_ENV=production tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "start": "powershell -ExecutionPolicy Bypass -File start-frontend.ps1"
+  },
   "dependencies": {
-    "@emotion/react": "^11.11.0",
-    "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.15.0",
-    "@mui/material": "^5.15.0",
-    "axios": "^1.7.9",
+    "@tanstack/react-query": "^5.89.0",
+    "autoprefixer": "^10.4.16",
+    "axios": "^1.6.2",
     "date-fns": "^4.1.0",
-    "jspdf": "^3.0.2",
+    "framer-motion": "^10.18.0",
+    "jose": "^6.1.0",
+    "lucide-react": "^0.263.1",
+    "postcss": "^8.4.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.8.0",
-    "react-scripts": "5.0.1",
-    "react-zxing": "^2.1.0",
-    "chart.js": "^4.4.0",
-    "react-chartjs-2": "^5.2.0",
-    "d3": "^7.8.5",
-    "socket.io-client": "^4.7.4"
+    "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.9.1",
+    "recharts": "^3.2.1",
+    "tailwindcss": "^3.4.0"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "test:e2e": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:debug": "playwright test --debug",
-    "eject": "react-scripts eject",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
-    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,md}"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "proxy": "http://localhost:8000",
   "devDependencies": {
-    "@types/d3": "^7.4.3",
+    "@eslint/js": "^9.33.0",
+    "@types/node": "^24.5.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "eslint": "^8.57.0",
-    "prettier": "^3.2.0",
-    "typescript": "^5.3.0"
-  }
+    "@vitejs/plugin-react": "^5.0.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "terser": "^5.44.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2"
+  },
+  "proxy": "http://localhost:8000",
+  "https-proxy": "http://localhost:8000"
 }

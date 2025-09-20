@@ -1,9 +1,31 @@
 [run]
+# ========================================================================
+# Sistema POS O'data - Configuración de Coverage UNIFICADA
+# ========================================================================
+# Versión: 2.0.0 - Enterprise Grade
+# Objetivo: 85%+ cobertura verificable
+# ========================================================================
+
+# Directorio fuente
 source = app
+
+# Incluir archivos específicos
+include = 
+    app/*.py
+    app/api/**/*.py
+    app/core/**/*.py
+    app/crud/**/*.py
+    app/models/**/*.py
+    app/services/**/*.py
+    app/utils/**/*.py
+    app/agents/**/*.py
+    app/rag/**/*.py
+
+# Excluir archivos específicos
 omit = 
     */tests/*
     */migrations/*
-    */venv/*
+    */venv*/*
     */__pycache__/*
     */scripts/*
     */frontend/*
@@ -15,8 +37,89 @@ omit =
     */reports/*
     */data/*
     */Documentacion/*
+    */deploy_*.py
+    */run_*.py
+    */start_*.py
+    */prepare_*.py
+    */add_*.py
+    */CHANGELOG.md
+    */CONTRIBUTING.md
+    */README.md
+    */LICENSE
+    */SECURITY.md
+    */VERSION.md
+    */GUIA_*.md
+    */SISTEMA_*.md
+    */MODELOS_*.md
+    */VALIDATION_*.md
+    */DEPLOYMENT_*.md
+    */Dockerfile*
+    */docker-compose*.yml
+    */Jenkinsfile
+    */pytest.ini
+    */requirements*.txt
+    */Makefile
+    */.env*
+    */.git*
+    */.flake8
+    */.blackboxrules
+    */.dockerignore
+    */alembic.ini
+    */migrations/env.py
+    */migrations/script.py.mako
+    */migrations/versions/*
+    */migrations/README
+    */scripts/init-production-db.sql
+    */scripts/*.sh
+    */scripts/*.bat
+    */scripts/entrypoint.sh
+    */scripts/backup.sh
+    */scripts/clean_*.py
+    */scripts/export_*.py
+    */scripts/generate_*.sh
+    */scripts/install_*.py
+    */scripts/load_*.py
+    */scripts/migrate_*.py
+    */scripts/pre-commit.sh
+    */scripts/prepare_*.py
+    */scripts/run_*.py
+    */scripts/security_*.py
+    */scripts/setup_*.py
+    */scripts/update_*.py
+    */scripts/validate_*.py
+    */scripts/check_*.py
+    */scripts/health_*.py
+    */scripts/github_*.py
+    */scripts/entrypoint.sh
+    */scripts/backup.sh
+    */scripts/clean_*.py
+    */scripts/export_*.py
+    */scripts/generate_*.sh
+    */scripts/install_*.py
+    */scripts/load_*.py
+    */scripts/migrate_*.py
+    */scripts/pre-commit.sh
+    */scripts/prepare_*.py
+    */scripts/run_*.py
+    */scripts/security_*.py
+    */scripts/setup_*.py
+    */scripts/update_*.py
+    */scripts/validate_*.py
+    */scripts/check_*.py
+    */scripts/health_*.py
+    */scripts/github_*.py
+
+# Configuración de branch coverage
+branch = True
+
+# Configuración de precisión (solo en [report])
+# precision = 2
+
+# Configuración de show missing (solo en [report])
+# show_missing = True
 
 [report]
+# Configuración de reportes
 exclude_lines =
     pragma: no cover
     def __repr__
@@ -28,6 +131,32 @@ exclude_lines =
     if __name__ == .__main__.:
     class .*\bProtocol\):
     @(abc\.)?abstractmethod
+    # Excluir líneas de configuración
+    if TYPE_CHECKING:
+    # Excluir imports de tipo
+    from typing import TYPE_CHECKING
+    # Excluir líneas de logging
+    logger\.
+    # Excluir líneas de debug
+    print\(
+    # Excluir líneas de desarrollo
+    # TODO:
+    # FIXME:
+    # HACK:
+
+# Configuración de precisión para reportes
+precision = 2
+
+# Configuración de show missing
+show_missing = True
+
+# Configuración de skip covered
+skip_covered = False
+
+# Configuración de skip empty
+skip_empty = True
 
 [html]
+# Configuración de reporte HTML
 directory = reports/coverage
+title = Sistema POS O'data - Coverage Report

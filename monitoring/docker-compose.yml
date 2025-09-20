@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Prometheus
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.48.1
     container_name: odata-prometheus
     ports:
       - "9090:9090"
@@ -23,13 +23,13 @@ services:
 
   # Grafana
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     container_name: odata-grafana
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=odata2024
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-odata2024}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
     volumes:
@@ -44,7 +44,7 @@ services:
 
   # Node Exporter
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.7.0
     container_name: odata-node-exporter
     ports:
       - "9100:9100"
@@ -63,7 +63,7 @@ services:
 
   # Redis Exporter
   redis-exporter:
-    image: oliver006/redis_exporter:latest
+    image: oliver006/redis_exporter:v1.55.0
     container_name: odata-redis-exporter
     ports:
       - "9121:9121"
@@ -72,10 +72,16 @@ services:
     restart: unless-stopped
     networks:
       - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9121/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # PostgreSQL Exporter
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
+    image: prometheuscommunity/postgres-exporter:v0.15.0
     container_name: odata-postgres-exporter
     ports:
       - "9187:9187"
@@ -84,10 +90,16 @@ services:
     restart: unless-stopped
     networks:
       - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # Blackbox Exporter
   blackbox-exporter:
-    image: prom/blackbox-exporter:latest
+    image: prom/blackbox-exporter:v0.24.0
     container_name: odata-blackbox-exporter
     ports:
       - "9115:9115"
@@ -101,7 +113,7 @@ services:
 
   # Alertmanager
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.26.0
     container_name: odata-alertmanager
     ports:
       - "9093:9093"
@@ -118,7 +130,7 @@ services:
 
   # cAdvisor (monitoreo de contenedores)
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.48.1
     container_name: odata-cadvisor
     ports:
       - "8080:8080"
@@ -135,7 +147,7 @@ services:
 
   # Nginx (opcional, para monitoreo del proxy)
   nginx-exporter:
-    image: nginx/nginx-prometheus-exporter:latest
+    image: nginx/nginx-prometheus-exporter:1.1.0
     container_name: odata-nginx-exporter
     ports:
       - "9113:9113"

@@ -1,0 +1,253 @@
+# Reglas de Alertas Multi-Sede - Sabrositas POS
+# ==============================================
+# Alertas específicas para arquitectura multi-tienda
+
+groups:
+  # === ALERTAS DE TIENDAS ===
+  - name: store_alerts
+    interval: 30s
+    rules:
+      - alert: StoreOffline
+        expr: store_online_status == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: multistore
+          category: availability
+        annotations:
+          summary: "Tienda {{ $labels.store_name }} está offline"
+          description: "La tienda {{ $labels.store_name }} (ID: {{ $labels.store_id }}) no ha sincronizado en los últimos 5 minutos."
+          runbook_url: "https://docs.sabrositas.com/runbooks/store-offline"
+          action: "Verificar conectividad de red y estado del sistema en la tienda"
+
+      - alert: StoreHighLatency
+        expr: store_sync_latency_seconds > 30
+        for: 2m
+        labels:
+          severity: warning
+          service: multistore
+          category: performance
+        annotations:
+          summary: "Alta latencia de sincronización en tienda {{ $labels.store_name }}"
+          description: "La tienda {{ $labels.store_name }} tiene una latencia de sincronización de {{ $value }}s (>30s)."
+          action: "Verificar red y carga del servidor"
+
+      - alert: MultipleSyncFailures
+        expr: increase(store_sync_failures_total[10m]) > 3
+        for: 1m
+        labels:
+          severity: critical
+          service: multistore
+          category: reliability
+        annotations:
+          summary: "Múltiples fallos de sincronización en tienda {{ $labels.store_name }}"
+          description: "La tienda {{ $labels.store_name }} ha tenido {{ $value }} fallos de sincronización en 10 minutos."
+          action: "Revisar logs de sincronización y estado de la base de datos"
+
+      - alert: StoreInventoryDrift
+        expr: abs(store_inventory_drift_percentage) > 5
+        for: 15m
+        labels:
+          severity: warning
+          service: multistore
+          category: data_integrity
+        annotations:
+          summary: "Deriva de inventario detectada en tienda {{ $labels.store_name }}"
+          description: "El inventario de la tienda {{ $labels.store_name }} difiere {{ $value }}% del inventario central."
+          action: "Ejecutar reconciliación de inventario"
+
+  # === ALERTAS DE SINCRONIZACIÓN ===
+  - name: sync_alerts
+    interval: 30s
+    rules:
+      - alert: SyncServiceDown
+        expr: up{job="sync-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: sync
+          category: availability
+        annotations:
+          summary: "Servicio de sincronización no disponible"
+          description: "El servicio de sincronización no responde desde hace {{ $value }} minutos."
+          action: "Reiniciar servicio de sincronización"
+
+      - alert: SyncQueueBacklog
+        expr: sync_queue_size > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: sync
+          category: performance
+        annotations:
+          summary: "Cola de sincronización con retraso"
+          description: "La cola de sincronización tiene {{ $value }} operaciones pendientes."
+          action: "Verificar workers de sincronización y capacidad del sistema"
+
+      - alert: SyncWorkerDown
+        expr: sync_worker_healthy == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: sync
+          category: availability
+        annotations:
+          summary: "Worker de sincronización no disponible"
+          description: "El worker de sincronización {{ $labels.worker_id }} no está funcionando."
+          action: "Reiniciar worker de sincronización"
+
+      - alert: HighSyncErrorRate
+        expr: rate(sync_errors_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          service: sync
+          category: reliability
+        annotations:
+          summary: "Alta tasa de errores de sincronización"
+          description: "Tasa de errores de sincronización: {{ $value | humanizePercentage }}."
+          action: "Revisar logs de sincronización para identificar causa"
+
+  # === ALERTAS DE INVENTARIO ===
+  - name: inventory_alerts
+    interval: 60s
+    rules:
+      - alert: CriticalStockLevel
+        expr: store_product_stock <= store_product_min_stock AND store_product_stock > 0
+        for: 0s
+        labels:
+          severity: critical
+          service: inventory
+          category: business
+        annotations:
+          summary: "Stock crítico: {{ $labels.product_name }} en {{ $labels.store_name }}"
+          description: "Producto {{ $labels.product_name }} tiene solo {{ $value }} unidades en tienda {{ $labels.store_name }}."
+          action: "Crear transferencia de inventario o reorden inmediato"
+
+      - alert: ProductOutOfStock
+        expr: store_product_stock == 0 AND store_product_is_available == 1
+        for: 0s
+        labels:
+          severity: warning
+          service: inventory
+          category: business
+        annotations:
+          summary: "Producto agotado: {{ $labels.product_name }} en {{ $labels.store_name }}"
+          description: "Producto {{ $labels.product_name }} está agotado en tienda {{ $labels.store_name }}."
+          action: "Deshabilitar producto o programar transferencia urgente"
+
+      - alert: InventoryTransferOverdue
+        expr: inventory_transfer_overdue_hours > 24
+        for: 1h
+        labels:
+          severity: warning
+          service: inventory
+          category: operations
+        annotations:
+          summary: "Transferencia vencida: {{ $labels.transfer_number }}"
+          description: "Transferencia {{ $labels.transfer_number }} está vencida por {{ $value }} horas."
+          action: "Contactar tiendas involucradas y actualizar estado"
+
+      - alert: HighInventoryDiscrepancy
+        expr: abs(inventory_discrepancy_percentage) > 10
+        for: 30m
+        labels:
+          severity: critical
+          service: inventory
+          category: data_integrity
+        annotations:
+          summary: "Alta discrepancia de inventario en {{ $labels.store_name }}"
+          description: "Discrepancia de inventario del {{ $value }}% detectada en tienda {{ $labels.store_name }}."
+          action: "Ejecutar auditoría de inventario inmediata"
+
+  # === ALERTAS DE NEGOCIO ===
+  - name: business_alerts
+    interval: 300s  # 5 minutos
+    rules:
+      - alert: LowSalesVolume
+        expr: rate(store_sales_total[1h]) < 0.5
+        for: 2h
+        labels:
+          severity: warning
+          service: business
+          category: sales
+        annotations:
+          summary: "Bajo volumen de ventas en {{ $labels.store_name }}"
+          description: "Tienda {{ $labels.store_name }} tiene menos de 0.5 ventas por hora en las últimas 2 horas."
+          action: "Verificar operaciones de la tienda y sistemas POS"
+
+      - alert: HighRefundRate
+        expr: rate(store_refunds_total[1h]) / rate(store_sales_total[1h]) > 0.1
+        for: 1h
+        labels:
+          severity: warning
+          service: business
+          category: quality
+        annotations:
+          summary: "Alta tasa de devoluciones en {{ $labels.store_name }}"
+          description: "Tienda {{ $labels.store_name }} tiene {{ $value | humanizePercentage }} de devoluciones."
+          action: "Revisar calidad de productos y procesos de venta"
+
+      - alert: UnusualSalesPattern
+        expr: abs(store_sales_hourly - store_sales_hourly_avg) > (2 * store_sales_hourly_stddev)
+        for: 30m
+        labels:
+          severity: info
+          service: business
+          category: analytics
+        annotations:
+          summary: "Patrón de ventas inusual en {{ $labels.store_name }}"
+          description: "Las ventas actuales ({{ $value }}) difieren significativamente del promedio histórico."
+          action: "Revisar eventos especiales o problemas operativos"
+
+  # === ALERTAS DE SISTEMA ===
+  - name: system_alerts
+    interval: 30s
+    rules:
+      - alert: DatabaseConnectionPoolExhausted
+        expr: mysql_connection_pool_active / mysql_connection_pool_max > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          service: database
+          category: performance
+        annotations:
+          summary: "Pool de conexiones MySQL casi agotado"
+          description: "{{ $value | humanizePercentage }} del pool de conexiones está en uso."
+          action: "Aumentar tamaño del pool o investigar conexiones lentas"
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: cache
+          category: resource
+        annotations:
+          summary: "Uso alto de memoria en Redis"
+          description: "Redis está usando {{ $value | humanizePercentage }} de la memoria disponible."
+          action: "Limpiar cache o aumentar memoria de Redis"
+
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+          service: api
+          category: performance
+        annotations:
+          summary: "Alta latencia en API"
+          description: "P95 de latencia de API: {{ $value }}s (>2s)."
+          action: "Investigar queries lentas y optimizar endpoints"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+          category: reliability
+        annotations:
+          summary: "Alta tasa de errores HTTP 5xx"
+          description: "Tasa de errores: {{ $value | humanizePercentage }}."
+          action: "Revisar logs de aplicación y estado de servicios dependientes"

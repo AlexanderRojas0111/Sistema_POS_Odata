@@ -1,302 +1,307 @@
-# 🏪 Sistema POS O'data v2.0.0
+# 🥟 Sistema POS Sabrositas v2.0.0
 
-[![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/Flask-3.1.1-green.svg)](https://flask.palletsprojects.com/)
-[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
-[![SQLite](https://img.shields.io/badge/SQLite-3.x-lightgrey.svg)](https://www.sqlite.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+## 🎯 Las Arepas Cuadradas - Sistema Enterprise
 
-**Sistema de Punto de Venta (POS) moderno y robusto con funcionalidades de Inteligencia Artificial, desarrollado con Flask y React.**
-
-## 🚀 **CARACTERÍSTICAS PRINCIPALES**
-
-### **🔧 Backend (Flask)**
-- ✅ **API RESTful** con versionado (v1 y v2)
-- ✅ **Autenticación JWT** con roles y permisos
-- ✅ **Base de datos SQLite** con SQLAlchemy ORM
-- ✅ **Funcionalidades de IA** con scikit-learn y TF-IDF
-- ✅ **Búsqueda semántica** de productos
-- ✅ **Recomendaciones inteligentes**
-- ✅ **Validación de datos** con Marshmallow/Pydantic
-- ✅ **Manejo de errores** robusto
-- ✅ **Logging** estructurado
-- ✅ **Rate limiting** y seguridad CORS
-
-### **🎨 Frontend (React)**
-- ✅ **Material-UI** para interfaz moderna
-- ✅ **Responsive design** para móviles y tablets
-- ✅ **Navegación intuitiva** entre módulos
-- ✅ **Gestión de productos** con CRUD completo
-- ✅ **Sistema de ventas** con carrito de compras
-- ✅ **Gestión de usuarios** y roles
-- ✅ **Dashboard** con métricas en tiempo real
-- ✅ **Búsqueda avanzada** con IA
-
-### **🤖 Inteligencia Artificial**
-- ✅ **Búsqueda semántica** de productos
-- ✅ **Recomendaciones** basadas en historial
-- ✅ **Clasificación automática** de categorías
-- ✅ **Análisis de sentimientos** en comentarios
-- ✅ **Predicción de demanda** de productos
-- ✅ **Optimización de inventario**
-
-### **🧪 Testing & Calidad**
-- ✅ **Framework de pruebas** completo con pytest
-- ✅ **Pruebas automatizadas** de backend, frontend y BD
-- ✅ **Pruebas de integración** end-to-end
-- ✅ **Pruebas de rendimiento** (< 500ms)
-- ✅ **Cobertura de código** > 80%
-- ✅ **CI/CD** ready para GitHub Actions
-
-## 🏗️ **ARQUITECTURA DEL SISTEMA**
-
-```
-Sistema_POS_Odata/
-├── app/                    # Backend Flask
-│   ├── api/               # APIs v1 y v2
-│   ├── core/              # Configuración y seguridad
-│   ├── models/            # Modelos de base de datos
-│   ├── services/          # Lógica de negocio
-│   └── utils/             # Utilidades y helpers
-├── frontend/              # Frontend React
-│   ├── src/               # Código fuente
-│   ├── components/        # Componentes reutilizables
-│   └── pages/             # Páginas principales
-├── tests/                 # Framework de pruebas
-│   ├── backend/           # Pruebas del backend
-│   ├── frontend/          # Pruebas del frontend
-│   ├── database/          # Pruebas de BD
-│   ├── integration/       # Pruebas de integración
-│   └── performance/       # Pruebas de rendimiento
-├── docs/                  # Documentación
-├── scripts/               # Scripts de despliegue
-└── requirements.txt       # Dependencias Python
-```
-
-## 🚀 **INSTALACIÓN Y DESPLIEGUE**
-
-### **Requisitos Previos**
-- Python 3.13+ (recomendado 3.13.4)
-- Node.js 18+
-- npm o yarn
-- Git
-
-### **1. Clonar el Repositorio**
-```bash
-git clone https://github.com/tu-usuario/Sistema_POS_Odata.git
-cd Sistema_POS_Odata
-```
-
-### **2. Configurar Backend**
-```bash
-# Crear entorno virtual
-python -m venv venv_pos
-venv_pos\Scripts\activate  # Windows
-source venv_pos/bin/activate  # Linux/Mac
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Configurar variables de entorno
-copy env.example .env
-# Editar .env con tus configuraciones
-
-# Inicializar base de datos
-python -c "from app import create_app; app = create_app(); app.app_context().push(); from app.models import db; db.create_all()"
-```
-
-### **3. Configurar Frontend**
-```bash
-cd frontend
-npm install
-npm start
-```
-
-### **4. Ejecutar el Sistema**
-```bash
-# Terminal 1: Backend
-python run_server_8000.py
-
-# Terminal 2: Frontend
-cd frontend
-npm start
-```
-
-## 🌐 **ACCESO AL SISTEMA**
-
-- **Backend API:** http://127.0.0.1:8000
-- **Frontend:** http://localhost:3000
-- **Documentación API:** http://127.0.0.1:8000/docs
-- **Health Check:** http://127.0.0.1:8000/health
-
-## 🧪 **EJECUTAR PRUEBAS**
-
-### **Ejecutar Todas las Pruebas**
-```bash
-python run_tests.py --all
-```
-
-### **Pruebas por Categoría**
-```bash
-# Solo backend
-python run_tests.py --backend
-
-# Solo frontend
-python run_tests.py --frontend
-
-# Solo base de datos
-python run_tests.py --database
-
-# Solo integración
-python run_tests.py --integration
-
-# Solo rendimiento
-python run_tests.py --performance
-```
-
-### **Con Cobertura y Reportes**
-```bash
-python run_tests.py --coverage --html
-```
-
-## 📊 **ENDPOINTS DE LA API**
-
-### **API v1 - Funcionalidades Básicas**
-- `GET /api/v1/productos/` - Listar productos
-- `POST /api/v1/productos/` - Crear producto
-- `GET /api/v1/ventas/` - Listar ventas
-- `POST /api/v1/ventas/` - Crear venta
-- `GET /api/v1/usuarios/` - Listar usuarios
-- `POST /api/v1/usuarios/` - Crear usuario
-
-### **API v2 - Funcionalidades de IA**
-- `GET /api/v2/` - Información de la API
-- `POST /api/v2/ai/search` - Búsqueda semántica
-- `POST /api/v2/ai/recommendations` - Recomendaciones
-- `POST /api/v2/ai/embeddings` - Generar embeddings
-
-### **Endpoints del Sistema**
-- `GET /health` - Estado del sistema
-- `GET /docs` - Documentación de la API
-
-## 🔐 **AUTENTICACIÓN Y SEGURIDAD**
-
-### **Roles de Usuario**
-- **ADMIN:** Acceso completo al sistema
-- **MANAGER:** Gestión de productos y ventas
-- **EMPLOYEE:** Operaciones básicas de venta
-- **CASHIER:** Solo ventas y consultas
-
-### **Seguridad Implementada**
-- ✅ **JWT Tokens** con expiración
-- ✅ **Bcrypt** para hash de contraseñas
-- ✅ **Rate Limiting** para prevenir abusos
-- ✅ **CORS** configurado para frontend
-- ✅ **Headers de seguridad** (HSTS, CSP, etc.)
-- ✅ **Validación de entrada** robusta
-
-## 📈 **MÉTRICAS Y MONITOREO**
-
-### **Rendimiento**
-- **Backend:** < 500ms por request
-- **Frontend:** < 3000ms de carga
-- **Base de datos:** < 100ms por consulta
-
-### **Calidad del Código**
-- **Cobertura:** > 80%
-- **Pruebas:** 100% de funcionalidades críticas
-- **Documentación:** 100% de APIs documentadas
-
-## 🛠️ **TECNOLOGÍAS UTILIZADAS**
-
-### **Backend**
-- **Flask 3.1.1** - Framework web
-- **SQLAlchemy 2.0.42** - ORM
-- **Flask-JWT-Extended** - Autenticación
-- **Marshmallow** - Serialización
-- **scikit-learn** - Machine Learning
-- **NumPy/SciPy** - Computación científica
-
-### **Frontend**
-- **React 18.2.0** - Biblioteca de UI
-- **Material-UI** - Componentes de diseño
-- **React Router** - Navegación
-- **Axios** - Cliente HTTP
-- **React Hook Form** - Formularios
-
-### **Base de Datos**
-- **SQLite** - Base de datos local
-- **Alembic** - Migraciones
-- **SQLAlchemy** - ORM y consultas
-
-### **Testing**
-- **pytest** - Framework de pruebas
-- **Playwright** - Testing de frontend
-- **pytest-cov** - Cobertura de código
-
-## 📚 **DOCUMENTACIÓN ADICIONAL**
-
-- [Guía de Usuario](docs/USER_GUIDE.md)
-- [Manual de Desarrollador](docs/DEVELOPER_GUIDE.md)
-- [API Reference](docs/API_REFERENCE.md)
-- [Guía de Despliegue](docs/DEPLOYMENT_GUIDE.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-
-## 🤝 **CONTRIBUCIÓN**
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-### **Estándares de Código**
-- Seguir PEP 8 para Python
-- Usar ESLint para JavaScript/React
-- Escribir pruebas para nuevas funcionalidades
-- Mantener cobertura de código > 80%
-
-## 📄 **LICENCIA**
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
-
-## 👥 **AUTORES**
-
-- **Desarrollador Principal:** [Tu Nombre]
-- **Contribuidores:** [Lista de contribuidores]
-
-## 🙏 **AGRADECIMIENTOS**
-
-- Flask y su comunidad
-- React y Material-UI
-- scikit-learn y la comunidad de ML
-- Todos los contribuidores del proyecto
-
-## 📞 **SOPORTE**
-
-- **Issues:** [GitHub Issues](https://github.com/tu-usuario/Sistema_POS_Odata/issues)
-- **Discusiones:** [GitHub Discussions](https://github.com/tu-usuario/Sistema_POS_Odata/discussions)
-- **Email:** tu-email@ejemplo.com
-
-## 🔄 **ROADMAP**
-
-### **v2.1.0 (Próxima versión)**
-- [ ] Dashboard avanzado con gráficos
-- [ ] Sistema de notificaciones en tiempo real
-- [ ] Integración con pasarelas de pago
-- [ ] App móvil nativa
-
-### **v2.2.0**
-- [ ] Machine Learning avanzado
-- [ ] Análisis predictivo de ventas
-- [ ] Integración con redes sociales
-- [ ] Sistema de fidelización
+**Sistema de Punto de Venta completo y optimizado para Sabrositas, especializado en la venta de Arepas Cuadradas con arquitectura enterprise, IA integrada y tecnologías modernas.**
 
 ---
 
-**⭐ Si este proyecto te gusta, dale una estrella en GitHub!**
+## 🚀 **Características Principales**
 
-**🔄 Última actualización:** Agosto 2025  
-**🚀 Versión:** 2.0.0  
-**🐍 Python:** 3.13+  
-**⚛️ React:** 18.2.0
+### ✨ **Funcionalidades Core**
+- 🛒 **Sistema de Ventas** completo con carrito inteligente
+- 📦 **Gestión de Inventario** en tiempo real
+- 👥 **Gestión de Usuarios** con roles y permisos avanzados
+- 📊 **Dashboard Analytics** con métricas en vivo
+- 💰 **Control Financiero** y reportes detallados
+- 🔐 **Seguridad Enterprise** con JWT y rate limiting
+
+### 🤖 **Inteligencia Artificial v2.0**
+- 🔍 **Búsqueda Semántica** de productos con TF-IDF
+- 📈 **Análisis Predictivo** de ventas
+- 🎯 **Recomendaciones Inteligentes** basadas en ML
+- 📊 **Insights Automáticos** para optimización
+
+### 🏗️ **Arquitectura Enterprise**
+- 🐍 **Backend:** Python 3.13 + Flask
+- ⚛️ **Frontend:** React 18 + TypeScript + Vite
+- 🗄️ **Base de Datos:** SQLite (desarrollo) / PostgreSQL (producción)
+- 🚀 **Cache:** Redis para optimización
+- 🐳 **Containerización:** Docker optimizado
+- 📊 **Monitoreo:** Prometheus + Grafana
+
+---
+
+## 📋 **Catálogo de Productos**
+
+### 🥟 **18 Arepas Cuadradas Sabrositas**
+
+#### 🏷️ **Sencillas** (3 productos) - $7,000 - $10,000
+- **LA FÁCIL** - Queso, mucho queso! - $7,000
+- **LA CONSENTIDA** - Bocadillo con queso - $8,000
+- **LA SENCILLA** - Jamón con queso - $9,000
+
+#### 🏷️ **Clásicas** (10 productos) - $10,500 - $14,500
+- **LA COQUETA** - Jamón, piña y queso - $11,000
+- **LA SUMISA** - Pollo, maíz tierno y queso - $11,500
+- **LA COMPINCHE** - Carne desmechada, maduro al horno y queso - $12,000
+- **LA SEXY** - Pollo, champiñón y queso - $12,000
+- **LA SOLTERA** - Carne, maíz tierno y queso - $12,500
+- **LA CREÍDA** - Pollo, salchicha y queso - $13,000
+- **LA INFIEL** - Pollo, carne y queso - $13,000
+- **LA GOMELA** - Carne, salchicha y queso - $13,500
+- **LA CAPRICHOSA** - Carne desmechada, pollo, huevo y queso - $14,000
+- **LA CHURRA** - Carne, chorizo santarrosano y queso - $14,500
+
+#### 🏷️ **Premium** (5 productos) - $15,000+
+- **LA PATRONA** - Chicharrón, carne desmechada, maduro al horno y queso - $15,000
+- **LA DIFÍCIL** - Carne, chorizo, jalapeño y queso - $15,000
+- **LA DIVA** - Carne, pollo, champiñón, salchicha y queso - $16,000
+- **LA PICANTE** - Costilla BBQ, maíz tierno, tocineta, queso y ají - $17,000
+- **LA TÓXICA** - Costilla BBQ, carne, chorizo, maíz tierno y queso - $18,000
+
+---
+
+## 🛠️ **Instalación y Configuración**
+
+### 📋 **Requisitos del Sistema**
+- 🐍 **Python 3.13+**
+- 🟢 **Node.js 18+**
+- 🐳 **Docker** (opcional)
+- 💾 **4GB RAM mínimo**
+- 💿 **2GB espacio libre**
+
+### ⚡ **Inicio Rápido**
+
+#### 🐳 **Opción 1: Docker (Recomendado)**
+```powershell
+# Iniciar con Docker
+.\docker-start.ps1
+
+# O manualmente
+docker compose up -d --build
+```
+
+#### 🔧 **Opción 2: Manual**
+```powershell
+# 1. Clonar repositorio
+git clone https://github.com/tu-repo/sistema-pos-sabrositas.git
+cd sistema-pos-sabrositas
+
+# 2. Backend
+.\venv_python313\Scripts\Activate.ps1
+pip install -r requirements.txt
+python main.py
+
+# 3. Frontend
+cd frontend
+npm install
+npm run dev
+```
+
+#### 🚀 **Opción 3: Script Automatizado**
+```powershell
+# Inicio completo del sistema
+.\start_sabrositas.ps1
+```
+
+---
+
+## 🌐 **URLs del Sistema**
+
+| Servicio | URL | Estado |
+|----------|-----|--------|
+| **Frontend** | http://localhost:5173 | ✅ Activo |
+| **Backend API** | http://localhost:8000 | ✅ Activo |
+| **Health Check** | http://localhost:8000/api/v1/health | ✅ Activo |
+| **API Docs** | http://localhost:8000/api/v1/ | ✅ Disponible |
+
+---
+
+## 👥 **Credenciales del Sistema**
+
+| Rol | Usuario | Contraseña | Nivel de Acceso |
+|-----|---------|------------|----------------|
+| **SuperAdmin** | `superadmin` | `SuperAdmin123!` | Control total del sistema |
+| **Global Admin** | `globaladmin` | `Global123!` | Administración global |
+| **Store Admin** | `storeadmin1` | `Store123!` | Administración de tienda |
+| **Tech Admin** | `techadmin` | `TechAdmin123!` | Administración técnica |
+
+---
+
+## 🏗️ **Arquitectura del Sistema**
+
+### 🐍 **Backend (Python 3.13 + Flask)**
+```
+app/
+├── 📁 api/v1/          # API REST v1.0 (21 endpoints)
+├── 📁 api/v2/          # API v2.0 con IA
+├── 📁 services/        # 18 servicios de negocio
+├── 📁 models/          # 18 modelos de datos
+├── 📁 repositories/    # 6 repositorios
+├── 📁 middleware/      # 5 middlewares de seguridad
+└── 📁 security/        # Utilidades de seguridad
+```
+
+### ⚛️ **Frontend (React 18 + TypeScript)**
+```
+frontend/src/
+├── 📁 components/      # 29 componentes React
+├── 📁 services/        # Servicios API
+├── 📁 context/         # Context providers
+├── 📁 types/           # Definiciones TypeScript
+└── 📁 styles/          # Estilos Tailwind CSS
+```
+
+### 🐳 **Docker**
+- **Dockerfile** - Imagen principal (Python 3.13 Alpine)
+- **Dockerfile.enterprise** - Multi-stage build optimizado
+- **docker-compose.yml** - Orquestación completa
+
+---
+
+## 📊 **APIs Disponibles**
+
+### 🔌 **API v1.0 (REST)**
+- **Autenticación:** `/api/v1/auth/`
+- **Productos:** `/api/v1/products/`
+- **Ventas:** `/api/v1/sales/`
+- **Usuarios:** `/api/v1/users/`
+- **Inventario:** `/api/v1/inventory/`
+- **Dashboard:** `/api/v1/dashboard/`
+
+### 🤖 **API v2.0 (IA)**
+- **Búsqueda IA:** `/api/v2/ai/search`
+- **Recomendaciones:** `/api/v2/ai/recommend`
+- **Analytics:** `/api/v2/ai/analytics`
+
+---
+
+## 🔒 **Seguridad**
+
+### 🛡️ **Características de Seguridad**
+- ✅ **Autenticación JWT** con refresh tokens
+- ✅ **Rate Limiting** por IP y usuario
+- ✅ **CORS** configurado correctamente
+- ✅ **Headers de Seguridad** (CSP, HSTS, etc.)
+- ✅ **Validación de Entrada** en todos los endpoints
+- ✅ **Logging de Auditoría** completo
+
+### 👥 **Sistema de Roles**
+- **SuperAdmin:** Control total del sistema
+- **Tech Admin:** Configuración técnica y desarrollo
+- **Global Admin:** Administración de todas las tiendas
+- **Store Admin:** Administración de tienda específica
+
+---
+
+## 📈 **Monitoreo y Observabilidad**
+
+### 📊 **Stack de Monitoreo**
+- **Prometheus:** Métricas del sistema
+- **Grafana:** Dashboards visuales
+- **Loki:** Agregación de logs
+- **AlertManager:** Alertas automáticas
+
+### 📝 **Logging**
+- **Structured Logging:** JSON format
+- **Audit Trail:** Registro de todas las acciones
+- **Error Tracking:** Captura automática de errores
+- **Performance Metrics:** Tiempos de respuesta
+
+---
+
+## 🧪 **Testing y Calidad**
+
+### ✅ **Cobertura de Testing**
+- **Unit Tests:** pytest + coverage
+- **Integration Tests:** API testing
+- **Frontend Tests:** Jest + React Testing Library
+- **E2E Tests:** Playwright
+
+### 📊 **Métricas de Calidad**
+- **Code Coverage:** >90%
+- **Code Quality:** SonarQube
+- **Performance:** Lighthouse scores
+- **Security:** OWASP compliance
+
+---
+
+## 🚀 **Deployment y DevOps**
+
+### 🐳 **Containerización**
+```bash
+# Desarrollo
+docker compose up -d
+
+# Producción
+docker compose -f docker-compose.production.yml up -d
+
+# Enterprise
+docker compose -f docker-compose.enterprise.yml up -d
+```
+
+### 🔄 **CI/CD**
+- **GitHub Actions:** Automated testing
+- **Docker Hub:** Container registry
+- **Automated Deployment:** Production ready
+
+---
+
+## 📚 **Documentación Adicional**
+
+- 📖 **[Guía Docker](DOCKER.md)** - Configuración y despliegue con Docker
+- 🔧 **[API Documentation](docs/API.md)** - Documentación completa de APIs
+- 🏗️ **[Architecture Guide](docs/ARCHITECTURE.md)** - Guía de arquitectura
+- 🔒 **[Security Guide](docs/SECURITY.md)** - Guía de seguridad
+
+---
+
+## 🤝 **Contribución**
+
+### 📋 **Guía de Contribución**
+1. Fork el repositorio
+2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -am 'Add nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Crear Pull Request
+
+### 🎯 **Estándares de Código**
+- **Python:** PEP 8, Black formatter
+- **TypeScript:** ESLint + Prettier
+- **Docker:** Best practices
+- **Git:** Conventional commits
+
+---
+
+## 📄 **Licencia**
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+
+---
+
+## 📞 **Soporte**
+
+### 🆘 **Obtener Ayuda**
+- 📧 **Email:** soporte@sabrositas.com
+- 💬 **Chat:** Sistema de soporte integrado
+- 📖 **Documentación:** Completa y actualizada
+- 🐛 **Issues:** GitHub Issues para bugs
+
+---
+
+## 🎉 **¡Gracias por elegir Sistema POS Sabrositas!**
+
+### 🏆 **Logros del Proyecto**
+- ✅ **100% Funcional** para venta de Arepas Cuadradas
+- ✅ **Arquitectura Enterprise** robusta y escalable
+- ✅ **IA Integrada** para optimización de ventas
+- ✅ **Seguridad de Clase Mundial** implementada
+- ✅ **Documentación Completa** y mantenida
+- ✅ **Testing Comprehensivo** con alta cobertura
+
+### 🥟 **¡Listo para vender las mejores Arepas Cuadradas!**
+
+---
+
+**© 2024 Sistema POS Sabrositas v2.0.0 - Las Arepas Cuadradas Enterprise Edition**

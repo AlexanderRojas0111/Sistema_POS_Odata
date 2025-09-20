@@ -1,0 +1,86 @@
+# Sistema POS O'Data v2.0.0 - Dockerfile Enterprise
+# ================================================
+# Multi-stage build optimizado para producción enterprise
+
+# ===== STAGE 1: BUILD =====
+FROM python:3.13-slim AS builder
+
+# Metadatos
+LABEL maintainer="Sistema POS O'Data Enterprise"
+LABEL version="2.0.0"
+LABEL description="Sistema de Punto de Venta Enterprise"
+
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libpq-dev \
+    libffi-dev \
+    libssl-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar requirements y instalar dependencias
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# ===== STAGE 2: PRODUCTION =====
+FROM python:3.13-slim AS production
+
+# Metadatos
+LABEL maintainer="Sistema POS O'Data Enterprise"
+LABEL version="2.0.0"
+LABEL description="Sistema de Punto de Venta Enterprise"
+
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV FLASK_ENV=production
+ENV PORT=8000
+ENV PATH="/root/.local/bin:${PATH}"
+
+# Crear usuario no-root
+RUN groupadd -r posuser && useradd -r -g posuser posuser
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar dependencias Python del stage builder
+COPY --from=builder /root/.local /root/.local
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar código de la aplicación
+COPY . ./
+
+# Crear directorios necesarios
+RUN mkdir -p logs instance data backups
+
+# Cambiar permisos
+RUN chown -R posuser:posuser /app
+
+# Cambiar a usuario no-root
+USER posuser
+
+# Exponer puerto
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Comando de inicio
+CMD ["python", "main.py"]

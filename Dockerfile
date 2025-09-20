@@ -1,79 +1,59 @@
-# Etapa de construcción optimizada
-FROM python:3.12-slim-bookworm AS builder
+# Sistema POS O'Data v2.0.0 - Dockerfile de Producción
+FROM python:3.13-alpine3.18
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    DEBIAN_FRONTEND=noninteractive
+# Metadatos
+LABEL maintainer="Sistema POS O'Data"
+LABEL version="2.0.0"
+LABEL description="Sistema de Punto de Venta O'Data"
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV FLASK_ENV=production
+ENV PORT=8000
+
+# Crear usuario no-root
+RUN addgroup -g 1000 posuser && adduser -u 1000 -G posuser -s /bin/sh -D posuser
+
+# Instalar dependencias del sistema y actualizar paquetes
+RUN apk update && apk upgrade && apk add --no-cache \
+    gcc \
+    g++ \
+    musl-dev \
+    libffi-dev \
+    postgresql-dev \
     curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    build-base \
+    python3-dev \
+    && rm -rf /var/cache/apk/*
 
-WORKDIR /build
-
-# Instalar dependencias Python
-COPY requirements.txt .
-RUN python -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir -U pip setuptools wheel && \
-    /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
-
-# Etapa final
-FROM python:3.12-slim-bookworm
-
-ENV PATH="/opt/venv/bin:$PATH" \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    DEBIAN_FRONTEND=noninteractive \
-    FLASK_APP=app.main:app \
-    FLASK_ENV=production \
-    PYTHONPATH=/app
-
-# Actualizar y solo instalar dependencias mínimas
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    netcat-openbsd \
-    libpq5 \
-    ca-certificates \
- && rm -rf /var/lib/apt/lists/* \
- && apt-get clean \
- && apt-get autoremove -y
-
-COPY --from=builder /opt/venv /opt/venv
-
-# Crear usuario no root
-RUN groupadd -r -g 1001 appuser && \
-    useradd -r -u 1001 -g appuser -s /sbin/nologin -d /app appuser
-
+# Crear directorio de trabajo
 WORKDIR /app
-COPY --chown=appuser:appuser . .
 
-RUN mkdir -p logs && \
-    chown -R appuser:appuser /app && \
-    chmod -R 755 /app && \
-    find . -type f -name "*.py" -exec chmod 644 {} \; && \
-    find . -type d -exec chmod 755 {} \;
+# Copiar requirements e instalar dependencias
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip cache purge
 
-RUN if [ -f scripts/entrypoint.sh ]; then \
-        cp scripts/entrypoint.sh /entrypoint.sh && \
-        chown appuser:appuser /entrypoint.sh && \
-        chmod 755 /entrypoint.sh; \
-    else \
-        echo '#!/bin/bash\nset -e\nexec \"$@\"' > /entrypoint.sh && \
-        chown appuser:appuser /entrypoint.sh && \
-        chmod 755 /entrypoint.sh; \
-    fi
+# Copiar código de la aplicación
+COPY . ./
 
-USER appuser
+# Crear directorios necesarios
+RUN mkdir -p logs instance data
 
-EXPOSE 5000
+# Cambiar permisos
+RUN chown -R posuser:posuser /app
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+# Cambiar a usuario no-root
+USER posuser
 
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000"]
+# Exponer puerto
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Comando de inicio
+CMD ["python", "main.py"]

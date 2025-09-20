@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, 
   Edit, 
   Trash2, 
   Search, 
   Filter,
   Users,
-  UserPlus,
-  Shield,
-  Eye,
-  EyeOff,
+  User
+  ShieldOff,
   CheckCircle,
   X,
   Save,
   AlertTriangle,
-  Mail,
-  Phone,
-  Calendar,
-  Lock,
-  UserCheck
-} from 'lucide-react';
+  Mail
+  Lock} from 'lucide-react';
 
 interface User {
   id: number;
@@ -278,7 +271,7 @@ const UsersManagement: React.FC = () => {
               onClick={handleNewUser}
               className="btn-primary flex items-center space-x-2"
             >
-              <UserPlus className="w-5 h-5" />
+              <UserclassName="w-5 h-5" />
               <span>Nuevo Usuario</span>
             </button>
           </div>
@@ -473,7 +466,7 @@ const UsersManagement: React.FC = () => {
                 <div className="bg-gradient-amber text-white p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <UserPlus className="w-6 h-6" />
+                      <UserclassName="w-6 h-6" />
                       <div>
                         <h2 className="text-2xl font-bold">
                           {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}

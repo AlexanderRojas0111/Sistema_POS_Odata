@@ -107,7 +107,7 @@ class ElectronicInvoice(db.Model):
     def __repr__(self) -> str:
         return f'<ElectronicInvoice {self.invoice_number}>'
 
-class InvoiceItem(db.Model):
+class ElectronicInvoiceItem(db.Model):
     """Modelo de item de factura electrónica"""
     
     __tablename__ = 'invoice_items'
@@ -162,4 +162,4 @@ class InvoiceItem(db.Model):
         }
     
     def __repr__(self) -> str:
-        return f'<InvoiceItem {self.id}: {self.product_name}>'
+        return f'<ElectronicInvoiceItem {self.id}: {self.product_name}>'
