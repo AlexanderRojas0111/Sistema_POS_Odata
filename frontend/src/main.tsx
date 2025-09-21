@@ -5,8 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import './index.css'
 import { router } from './routes'
-import { AuthProvider } from './auth'
-import { ThemeProvider } from './context/ThemeContext'
+import { AuthProvider } from './authSimple'
+import { ThemeProvider } from './context/ThemeContextSimple'
 import PWAInstallBanner from './components/PWAInstallBanner'
 
 // Configurar React Query

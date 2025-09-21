@@ -6,7 +6,7 @@ Gestión centralizada de tiendas con soporte para escalabilidad enterprise.
 
 from datetime import datetime
 from app import db
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Decimal, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from dataclasses import dataclass
 from typing import List, Optional
@@ -41,7 +41,7 @@ class Store(db.Model):
     sync_frequency_minutes: int = Column(Integer, default=15)
     
     # Configuración financiera
-    tax_rate: float = Column(Decimal(5,4), default=0.1900)  # 19% IVA Colombia
+    tax_rate: float = Column(Numeric(5,4), default=0.1900)  # 19% IVA Colombia
     currency: str = Column(String(3), default='COP')
     
     # Timestamps
@@ -135,8 +135,8 @@ class StoreProduct(db.Model):
     product_id: int = Column(Integer, ForeignKey('products.id'), primary_key=True)
     
     # Precios locales
-    local_price: float = Column(Decimal(10,2), nullable=False)
-    cost_price: float = Column(Decimal(10,2), nullable=True)
+    local_price: float = Column(Numeric(10,2), nullable=False)
+    cost_price: float = Column(Numeric(10,2), nullable=True)
     
     # Gestión de inventario
     current_stock: int = Column(Integer, default=0)

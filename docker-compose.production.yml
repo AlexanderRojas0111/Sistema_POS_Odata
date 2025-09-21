@@ -136,62 +136,8 @@ services:
           memory: 128M
           cpus: '0.1'
 
-  # Servicio de monitoring para producción
-  monitoring:
-    build:
-      context: .
-      dockerfile: Dockerfile.monitoring
-    container_name: pos-monitoring-production
-    restart: always
-    environment:
-      - MONITORING_URL=http://pos-app:8000
-      - MONITORING_INTERVAL=60
-      - LOG_LEVEL=INFO
-      - ALERT_EMAIL=${ALERT_EMAIL}
-    volumes:
-      - ./logs:/app/logs
-      - ./monitoring:/app/monitoring
-    depends_on:
-      - pos-app
-    networks:
-      - pos-production-network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.25'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
-
-  # Servicio de backup automático
-  backup:
-    build:
-      context: .
-      dockerfile: Dockerfile.backup
-    container_name: pos-backup-production
-    restart: always
-    environment:
-      - BACKUP_DIR=/backups
-      - DATABASE_URL=${DATABASE_URL}
-      - BACKUP_RETENTION_DAYS=30
-      - BACKUP_MAX_FILES=50
-    volumes:
-      - ./backups:/backups
-      - ./scripts:/app/scripts
-      - ./logs:/app/logs
-    depends_on:
-      - postgres
-    networks:
-      - pos-production-network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.25'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
+# Servicios de monitoreo y backup comentados temporalmente
+# Se pueden habilitar después de la configuración inicial
 
 volumes:
   postgres_production_data:

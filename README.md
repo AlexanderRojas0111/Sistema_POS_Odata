@@ -21,14 +21,25 @@
 - 📈 **Análisis Predictivo** de ventas
 - 🎯 **Recomendaciones Inteligentes** basadas en ML
 - 📊 **Insights Automáticos** para optimización
+- 🧠 **Procesamiento de Lenguaje Natural** en español
+- 🎨 **Sugerencias Inteligentes** de productos
+
+### 🐍 **Python 3.13 - Última Tecnología**
+- ⚡ **Rendimiento mejorado** hasta 15% más rápido
+- 🔒 **Seguridad avanzada** con nuevas características
+- 🧠 **Mejor gestión de memoria** para aplicaciones IA
+- 🔧 **Herramientas de debugging** mejoradas
+- 📊 **Mejor soporte para async/await** y concurrencia
+- 🚀 **Optimizaciones del intérprete** para mejor performance
 
 ### 🏗️ **Arquitectura Enterprise**
-- 🐍 **Backend:** Python 3.13 + Flask
-- ⚛️ **Frontend:** React 18 + TypeScript + Vite
-- 🗄️ **Base de Datos:** SQLite (desarrollo) / PostgreSQL (producción)
-- 🚀 **Cache:** Redis para optimización
-- 🐳 **Containerización:** Docker optimizado
-- 📊 **Monitoreo:** Prometheus + Grafana
+- 🐍 **Backend:** Python 3.13 + Flask 3.1 + SQLAlchemy 2.0
+- ⚛️ **Frontend:** React 18 + TypeScript 5.8 + Vite 7.1
+- 🗄️ **Base de Datos:** SQLite (desarrollo) / PostgreSQL 16 (producción)
+- 🚀 **Cache:** Redis 7.2 para optimización y rate limiting
+- 🐳 **Containerización:** Docker multi-stage optimizado
+- 📊 **Monitoreo:** Prometheus + Grafana + Loki + AlertManager
+- 🤖 **IA:** TF-IDF + Scikit-learn + NLTK para búsqueda semántica
 
 ---
 
@@ -65,11 +76,12 @@
 ## 🛠️ **Instalación y Configuración**
 
 ### 📋 **Requisitos del Sistema**
-- 🐍 **Python 3.13+**
-- 🟢 **Node.js 18+**
-- 🐳 **Docker** (opcional)
-- 💾 **4GB RAM mínimo**
-- 💿 **2GB espacio libre**
+- 🐍 **Python 3.13+** (Recomendado: Python 3.13.0 o superior)
+- 🟢 **Node.js 18+** (Recomendado: Node.js 20 LTS)
+- 🐳 **Docker** (opcional, recomendado para producción)
+- 💾 **8GB RAM mínimo** (16GB recomendado para IA)
+- 💿 **5GB espacio libre** (para logs, backups y modelos IA)
+- 🖥️ **Sistema Operativo:** Windows 10/11, Linux, macOS
 
 ### ⚡ **Inicio Rápido**
 
@@ -82,18 +94,26 @@
 docker compose up -d --build
 ```
 
-#### 🔧 **Opción 2: Manual**
+#### 🔧 **Opción 2: Manual (Python 3.13)**
 ```powershell
-# 1. Clonar repositorio
-git clone https://github.com/tu-repo/sistema-pos-sabrositas.git
-cd sistema-pos-sabrositas
+# 1. Verificar Python 3.13
+python --version  # Debe ser 3.13.0 o superior
 
-# 2. Backend
+# 2. Crear entorno virtual Python 3.13
+python -m venv venv_python313
 .\venv_python313\Scripts\Activate.ps1
-pip install -r requirements.txt
+
+# 3. Actualizar pip y instalar dependencias
+python -m pip install --upgrade pip
+pip install -r requirements-python313.txt
+
+# 4. Inicializar base de datos y datos
+python initialize_complete_system.py
+
+# 5. Iniciar backend
 python main.py
 
-# 3. Frontend
+# 6. Frontend (nueva terminal)
 cd frontend
 npm install
 npm run dev

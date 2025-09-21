@@ -1,14 +1,20 @@
+# Stack de Monitoreo Enterprise - Sistema POS Sabrositas v2.0.0
+# ================================================================
+# Prometheus + Grafana + Loki + AlertManager para producción multi-tienda
+
 version: '3.8'
 
 services:
-  # Prometheus
+  # Prometheus - Métricas del sistema
   prometheus:
-    image: prom/prometheus:v2.48.1
-    container_name: odata-prometheus
+    image: prom/prometheus:v2.48.0
+    container_name: sabrositas-prometheus
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus:/etc/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -17,35 +23,129 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
-    restart: unless-stopped
+      - '--web.enable-admin-api'
     networks:
       - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
 
-  # Grafana
+  # Grafana - Visualización de métricas
   grafana:
-    image: grafana/grafana:10.2.3
-    container_name: odata-grafana
+    image: grafana/grafana:10.2.2
+    container_name: sabrositas-grafana
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-odata2024}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-Sabrositas2024Grafana!}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=${SMTP_SERVER:-smtp.gmail.com:587}
+      - GF_SMTP_USER=${SMTP_USER:-alerts@sabrositas.com}
+      - GF_SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - GF_SMTP_FROM_ADDRESS=${ALERT_EMAIL:-admin@sabrositas.com}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
-    restart: unless-stopped
-    networks:
-      - monitoring
     depends_on:
       - prometheus
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 
-  # Node Exporter
+  # AlertManager - Gestión de alertas
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: sabrositas-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # Loki - Agregación de logs
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: sabrositas-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Promtail - Recolector de logs
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: sabrositas-promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml
+      - ../logs:/var/log/sabrositas
+      - /var/log:/var/log/host:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # Node Exporter - Métricas del sistema
   node-exporter:
     image: prom/node-exporter:v1.7.0
-    container_name: odata-node-exporter
+    container_name: sabrositas-node-exporter
+    restart: unless-stopped
     ports:
       - "9100:9100"
     volumes:
@@ -57,81 +157,22 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    restart: unless-stopped
     networks:
       - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
 
-  # Redis Exporter
-  redis-exporter:
-    image: oliver006/redis_exporter:v1.55.0
-    container_name: odata-redis-exporter
-    ports:
-      - "9121:9121"
-    environment:
-      - REDIS_ADDR=redis://host.docker.internal:6379
-    restart: unless-stopped
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9121/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # PostgreSQL Exporter
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.15.0
-    container_name: odata-postgres-exporter
-    ports:
-      - "9187:9187"
-    environment:
-      - DATA_SOURCE_NAME=postgresql://odata_user:odata_password@host.docker.internal:5432/odata_pos?sslmode=disable
-    restart: unless-stopped
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # Blackbox Exporter
-  blackbox-exporter:
-    image: prom/blackbox-exporter:v0.24.0
-    container_name: odata-blackbox-exporter
-    ports:
-      - "9115:9115"
-    volumes:
-      - ./blackbox:/config
-    command:
-      - '--config.file=/config/blackbox.yml'
-    restart: unless-stopped
-    networks:
-      - monitoring
-
-  # Alertmanager
-  alertmanager:
-    image: prom/alertmanager:v0.26.0
-    container_name: odata-alertmanager
-    ports:
-      - "9093:9093"
-    volumes:
-      - ./alertmanager:/etc/alertmanager
-      - alertmanager_data:/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-      - '--web.external-url=http://localhost:9093'
-    restart: unless-stopped
-    networks:
-      - monitoring
-
-  # cAdvisor (monitoreo de contenedores)
+  # cAdvisor - Métricas de contenedores
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.48.1
-    container_name: odata-cadvisor
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: sabrositas-cadvisor
+    restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
@@ -141,33 +182,98 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     privileged: true
-    restart: unless-stopped
+    devices:
+      - /dev/kmsg
     networks:
       - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
 
-  # Nginx (opcional, para monitoreo del proxy)
-  nginx-exporter:
-    image: nginx/nginx-prometheus-exporter:1.1.0
-    container_name: odata-nginx-exporter
-    ports:
-      - "9113:9113"
-    environment:
-      - NGINX_SCRAPE_URI=http://host.docker.internal/nginx_status
+  # Redis Exporter - Métricas de Redis
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.55.0
+    container_name: sabrositas-redis-exporter
     restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://pos-redis-production:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     networks:
       - monitoring
+      - pos-production-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+        reservations:
+          memory: 64M
+          cpus: '0.05'
+
+  # PostgreSQL Exporter - Métricas de base de datos
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: sabrositas-postgres-exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER:-pos_user}:${POSTGRES_PASSWORD:-}@pos-postgres-production:5432/${POSTGRES_DB:-pos_odata}?sslmode=disable
+    networks:
+      - monitoring
+      - pos-production-network
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+        reservations:
+          memory: 64M
+          cpus: '0.05'
+
+  # Blackbox Exporter - Monitoreo de endpoints
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.24.0
+    container_name: sabrositas-blackbox-exporter
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml
+    networks:
+      - monitoring
+      - pos-production-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+        reservations:
+          memory: 64M
+          cpus: '0.05'
 
 volumes:
   prometheus_data:
-    driver: local
+    name: sabrositas-prometheus-data
   grafana_data:
-    driver: local
+    name: sabrositas-grafana-data
   alertmanager_data:
-    driver: local
+    name: sabrositas-alertmanager-data
+  loki_data:
+    name: sabrositas-loki-data
 
 networks:
   monitoring:
+    name: sabrositas-monitoring-network
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+  pos-production-network:
+    external: true

@@ -6,13 +6,13 @@ import {
   Search, 
   Filter,
   Users,
-  User
+  User,
   ShieldOff,
   CheckCircle,
   X,
   Save,
   AlertTriangle,
-  Mail
+  Mail,
   Lock} from 'lucide-react';
 
 interface User {
@@ -32,6 +32,16 @@ interface UserFormData {
   username: string;
   email: string;
   password: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  is_active: boolean;
+}
+
+interface UserSubmitData {
+  username: string;
+  email: string;
+  password?: string;
   first_name: string;
   last_name: string;
   role: string;
@@ -153,9 +163,10 @@ const UsersManagement: React.FC = () => {
       const method = editingUser ? 'PUT' : 'POST';
       
       // Preparar datos (no enviar password vacío en edición)
-      const submitData = { ...formData };
+      let submitData: UserSubmitData = { ...formData };
       if (editingUser && !submitData.password) {
-        delete submitData.password;
+        const { password, ...dataWithoutPassword } = submitData;
+        submitData = dataWithoutPassword;
       }
       
       const response = await fetch(url, {
@@ -271,7 +282,7 @@ const UsersManagement: React.FC = () => {
               onClick={handleNewUser}
               className="btn-primary flex items-center space-x-2"
             >
-              <UserclassName="w-5 h-5" />
+              <User className="w-5 h-5" />
               <span>Nuevo Usuario</span>
             </button>
           </div>
@@ -298,6 +309,8 @@ const UsersManagement: React.FC = () => {
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
                 className="input-field pl-10"
+                aria-label="Filtrar por rol"
+                title="Seleccionar rol para filtrar usuarios"
               >
                 {roleFilters.map(role => (
                   <option key={role} value={role}>
@@ -325,6 +338,8 @@ const UsersManagement: React.FC = () => {
             <button
               onClick={() => setError(null)}
               className="ml-auto text-red-600 hover:text-red-800"
+              aria-label="Cerrar mensaje de error"
+              title="Cerrar mensaje de error"
             >
               <X className="w-4 h-4" />
             </button>
@@ -390,12 +405,12 @@ const UsersManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${roleInfo.color}`}>
-                          <Shield className="w-3 h-3 mr-1" />
+                          <ShieldOff className="w-3 h-3 mr-1" />
                           {roleInfo.label}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(user.last_login)}
+                        {formatDate(user.last_login || '')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
@@ -425,6 +440,8 @@ const UsersManagement: React.FC = () => {
                           <button
                             onClick={() => handleEditUser(user)}
                             className="text-sabrositas-primary hover:text-sabrositas-accent"
+                            aria-label={`Editar usuario ${user.username}`}
+                            title={`Editar usuario ${user.username}`}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -432,6 +449,8 @@ const UsersManagement: React.FC = () => {
                             <button
                               onClick={() => handleDeleteUser(user)}
                               className="text-red-600 hover:text-red-800"
+                              aria-label={`Eliminar usuario ${user.username}`}
+                              title={`Eliminar usuario ${user.username}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -466,7 +485,7 @@ const UsersManagement: React.FC = () => {
                 <div className="bg-gradient-amber text-white p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <UserclassName="w-6 h-6" />
+                      <User className="w-6 h-6" />
                       <div>
                         <h2 className="text-2xl font-bold">
                           {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
@@ -479,6 +498,8 @@ const UsersManagement: React.FC = () => {
                     <button
                       onClick={() => setShowModal(false)}
                       className="text-white hover:text-amber-200 transition-colors"
+                      aria-label="Cerrar modal"
+                      title="Cerrar modal"
                     >
                       <X className="w-6 h-6" />
                     </button>
@@ -572,6 +593,8 @@ const UsersManagement: React.FC = () => {
                         value={formData.role}
                         onChange={(e) => setFormData({...formData, role: e.target.value})}
                         className="input-field"
+                        aria-label="Seleccionar rol del usuario"
+                        title="Seleccionar rol del usuario"
                       >
                         {roles.map(role => (
                           <option key={role.value} value={role.value}>{role.label}</option>

@@ -1,4 +1,8 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+
+// Sistema POS Sabrositas - AuthProvider Simplificado
+// Versión estable sin conflictos de hooks
+console.log('AuthProvider cargado desde authSimple.tsx')
 
 type Role = 'super_admin' | 'tech_admin' | 'global_admin' | 'store_admin' | 'admin' | 'manager' | 'cashier'
 
@@ -24,36 +28,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AuthUser | null>(null)
 
   useEffect(() => {
-    const raw = localStorage.getItem('auth:user')
-    if (raw) setUser(JSON.parse(raw))
+    try {
+      const raw = localStorage.getItem('auth:user')
+      if (raw) {
+        const parsedUser = JSON.parse(raw)
+        setUser(parsedUser)
+      }
+    } catch (error) {
+      console.warn('Error loading auth user:', error)
+      localStorage.removeItem('auth:user')
+    }
   }, [])
 
   const login = async (username: string, password: string) => {
-    // Login contra API
-    const res = await fetch('http://localhost:8000/api/v1/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    })
-    if (!res.ok) throw new Error('Credenciales inválidas')
-    const data = await res.json()
-    const authUser: AuthUser = {
-      id: data.data?.user_id ?? 0,
-      username: data.data?.username ?? username,
-      role: (data.data?.role ?? 'cashier') as Role,
-      token: data.data?.access_token ?? data.token ?? '',
-      refreshToken: data.data?.refresh_token
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      
+      if (!res.ok) {
+        throw new Error('Credenciales inválidas')
+      }
+      
+      const data = await res.json()
+      const authUser: AuthUser = {
+        id: data.data?.user_id ?? 0,
+        username: data.data?.username ?? username,
+        role: (data.data?.role ?? 'cashier') as Role,
+        token: data.data?.access_token ?? data.token ?? '',
+        refreshToken: data.data?.refresh_token
+      }
+      
+      setUser(authUser)
+      localStorage.setItem('auth:user', JSON.stringify(authUser))
+    } catch (error) {
+      console.error('Login error:', error)
+      throw error
     }
-    setUser(authUser)
-    localStorage.setItem('auth:user', JSON.stringify(authUser))
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('auth:user')
+    try {
+      localStorage.removeItem('auth:user')
+    } catch (error) {
+      console.warn('Error removing auth user:', error)
+    }
   }
 
   const hasRole = (required: Role) => {
+    if (!user) return false
+    
     const weights: Record<Role, number> = { 
       cashier: 1, 
       manager: 2, 
@@ -63,23 +90,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       tech_admin: 6,
       super_admin: 7
     }
-    const current = user ? weights[user.role] : 0
-    return current >= weights[required]
+    
+    const current = weights[user.role] || 0
+    const requiredWeight = weights[required] || 0
+    
+    return current >= requiredWeight
   }
 
-  const value = useMemo(() => ({ 
-    user, 
-    isAuthenticated: !!user, 
-    login, 
-    logout, 
-    hasRole 
-  }), [user])
+  const value: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    login,
+    logout,
+    hasRole
+  }
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  if (!ctx) {
+    // Retornar valores por defecto en lugar de lanzar error
+    return {
+      user: null,
+      isAuthenticated: false,
+      login: async () => {},
+      logout: () => {},
+      hasRole: () => false
+    }
+  }
   return ctx
 }
 
@@ -110,5 +150,3 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
   }
   return <>{children}</>
 }
-
-

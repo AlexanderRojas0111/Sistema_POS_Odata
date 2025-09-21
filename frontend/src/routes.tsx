@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
-import { ProtectedRoute, RequireRole } from './auth'
+import { ProtectedRoute, RequireRole } from './authSimple'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import AdvancedDashboard from './components/AdvancedDashboard'

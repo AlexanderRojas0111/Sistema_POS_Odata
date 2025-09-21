@@ -1,0 +1,244 @@
+# Reglas de Alertas para Sistema POS Sabrositas v2.0.0
+# ======================================================
+# Alertas críticas para monitoreo multi-tienda enterprise
+
+groups:
+  # Alertas de infraestructura crítica
+  - name: infrastructure
+    rules:
+      # Servicio POS caído
+      - alert: POSServiceDown
+        expr: up{job="pos-app"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: pos-app
+        annotations:
+          summary: "🚨 Servicio POS no responde"
+          description: "El servicio principal POS Sabrositas no responde desde hace {{ $value }} segundos"
+          runbook_url: "https://docs.sabrositas.com/runbooks/pos-service-down"
+
+      # Base de datos PostgreSQL caída
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: postgresql
+        annotations:
+          summary: "🚨 Base de datos PostgreSQL no responde"
+          description: "PostgreSQL no responde desde hace {{ $value }} segundos"
+          runbook_url: "https://docs.sabrositas.com/runbooks/postgresql-down"
+
+      # Redis caído
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "⚠️ Redis no responde"
+          description: "Redis cache no responde desde hace {{ $value }} segundos"
+
+      # Alto uso de CPU
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: cpu
+        annotations:
+          summary: "⚠️ Alto uso de CPU"
+          description: "CPU usage is above 80% on {{ $labels.instance }} for more than 5 minutes"
+
+      # Alto uso de memoria
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: memory
+        annotations:
+          summary: "⚠️ Alto uso de memoria"
+          description: "Memory usage is above 85% on {{ $labels.instance }}"
+
+      # Poco espacio en disco
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+          component: disk
+        annotations:
+          summary: "🚨 Poco espacio en disco"
+          description: "Disk space is below 15% on {{ $labels.instance }}"
+
+  # Alertas específicas de la aplicación POS
+  - name: pos-application
+    rules:
+      # Alto tiempo de respuesta
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(flask_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: response-time
+        annotations:
+          summary: "⚠️ Tiempo de respuesta alto"
+          description: "95th percentile response time is above 2 seconds"
+
+      # Alta tasa de errores HTTP
+      - alert: HighErrorRate
+        expr: rate(flask_request_exceptions_total[5m]) / rate(flask_request_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: error-rate
+        annotations:
+          summary: "⚠️ Alta tasa de errores"
+          description: "Error rate is above 5% for the last 5 minutes"
+
+      # Muchos intentos de login fallidos
+      - alert: HighFailedLogins
+        expr: increase(pos_failed_login_attempts_total[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "⚠️ Muchos intentos de login fallidos"
+          description: "More than 10 failed login attempts in the last 5 minutes"
+
+      # Transacciones de alto valor
+      - alert: HighValueTransaction
+        expr: pos_sale_amount > 100000
+        for: 0s
+        labels:
+          severity: info
+          component: sales
+        annotations:
+          summary: "💰 Transacción de alto valor"
+          description: "Transaction of {{ $value }} COP detected"
+
+  # Alertas de base de datos
+  - name: database
+    rules:
+      # Muchas conexiones activas
+      - alert: HighDatabaseConnections
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "⚠️ Muchas conexiones a la base de datos"
+          description: "PostgreSQL has {{ $value }} active connections"
+
+      # Consultas lentas
+      - alert: SlowQueries
+        expr: pg_stat_activity_max_tx_duration > 300
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "⚠️ Consultas lentas detectadas"
+          description: "Long running queries detected (> 5 minutes)"
+
+      # Espacio de base de datos
+      - alert: DatabaseSizeGrowth
+        expr: increase(pg_database_size_bytes[1h]) > 100000000
+        for: 0s
+        labels:
+          severity: info
+          component: database
+        annotations:
+          summary: "📈 Crecimiento de base de datos"
+          description: "Database grew by {{ $value | humanize1024 }}B in the last hour"
+
+  # Alertas específicas de tiendas
+  - name: stores
+    rules:
+      # Tienda sin actividad
+      - alert: StoreNoActivity
+        expr: increase(pos_sales_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          component: store
+        annotations:
+          summary: "⚠️ Tienda sin actividad"
+          description: "Store {{ $labels.store_code }} has no sales in the last 2 hours"
+
+      # Inventario bajo
+      - alert: LowInventory
+        expr: pos_product_stock < pos_product_min_stock
+        for: 30m
+        labels:
+          severity: warning
+          component: inventory
+        annotations:
+          summary: "📦 Inventario bajo"
+          description: "Product {{ $labels.product_name }} in store {{ $labels.store_code }} is below minimum stock"
+
+      # Producto agotado
+      - alert: ProductOutOfStock
+        expr: pos_product_stock == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: inventory
+        annotations:
+          summary: "🚨 Producto agotado"
+          description: "Product {{ $labels.product_name }} in store {{ $labels.store_code }} is out of stock"
+
+  # Alertas de seguridad
+  - name: security
+    rules:
+      # Intentos de acceso no autorizado
+      - alert: UnauthorizedAccess
+        expr: increase(pos_unauthorized_access_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "🚨 Intentos de acceso no autorizado"
+          description: "{{ $value }} unauthorized access attempts in the last 5 minutes"
+
+      # Usuario sospechoso
+      - alert: SuspiciousUserActivity
+        expr: increase(pos_user_failed_actions_total[10m]) > 20
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "⚠️ Actividad sospechosa de usuario"
+          description: "User {{ $labels.username }} has {{ $value }} failed actions in 10 minutes"
+
+  # Alertas de rendimiento
+  - name: performance
+    rules:
+      # Alto uso de Redis
+      - alert: HighRedisMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "⚠️ Alto uso de memoria Redis"
+          description: "Redis memory usage is above 90%"
+
+      # Muchas consultas por segundo
+      - alert: HighQueryRate
+        expr: rate(pg_stat_database_tup_fetched[5m]) > 10000
+        for: 5m
+        labels:
+          severity: info
+          component: database
+        annotations:
+          summary: "📊 Alta tasa de consultas"
+          description: "Database query rate is above 10,000 tuples/second"

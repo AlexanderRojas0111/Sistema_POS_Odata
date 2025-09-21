@@ -1,10 +1,12 @@
-# Sistema POS O'Data v2.0.0 - Dockerfile de Producción
-FROM python:3.13-alpine3.18
+# Sistema POS Sabrositas v2.0.0 - Dockerfile de Producción Python 3.13
+FROM python:3.13-alpine
 
-# Metadatos
-LABEL maintainer="Sistema POS O'Data"
+# Metadatos actualizados
+LABEL maintainer="Sistema POS Sabrositas"
 LABEL version="2.0.0"
-LABEL description="Sistema de Punto de Venta O'Data"
+LABEL description="Sistema de Punto de Venta Sabrositas - Las Arepas Cuadradas"
+LABEL python.version="3.13"
+LABEL architecture="enterprise"
 
 # Variables de entorno
 ENV PYTHONUNBUFFERED=1
@@ -30,9 +32,9 @@ RUN apk update && apk upgrade && apk add --no-cache \
 # Crear directorio de trabajo
 WORKDIR /app
 
-# Copiar requirements e instalar dependencias
-COPY requirements.txt ./
-RUN pip install --no-cache-dir --upgrade pip \
+# Copiar requirements e instalar dependencias optimizadas para Python 3.13
+COPY requirements-python313.txt ./requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
     && pip cache purge
 

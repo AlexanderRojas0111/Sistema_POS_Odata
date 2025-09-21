@@ -29,18 +29,27 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    // Obtener tema guardado o usar sistema por defecto
-    const savedTheme = localStorage.getItem('pos-theme') as Theme;
-    return savedTheme || 'system';
-  });
-
+  // Inicialización más segura del estado
+  const [theme, setThemeState] = useState<Theme>('light');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
 
   // Detectar preferencia del sistema
   const getSystemTheme = (): 'light' | 'dark' => {
+    if (typeof window === 'undefined') return 'light';
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   };
+
+  // Inicializar tema de forma segura
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('pos-theme') as Theme;
+      if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+        setThemeState(savedTheme);
+      }
+    } catch (error) {
+      console.warn('Error loading theme from localStorage:', error);
+    }
+  }, []);
 
   // Actualizar tema actual basado en configuración
   useEffect(() => {
@@ -86,8 +95,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Establecer tema
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem('pos-theme', newTheme);
+    try {
+      setThemeState(newTheme);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('pos-theme', newTheme);
+      }
+    } catch (error) {
+      console.warn('Error saving theme to localStorage:', error);
+    }
   };
 
   // Alternar entre claro y oscuro

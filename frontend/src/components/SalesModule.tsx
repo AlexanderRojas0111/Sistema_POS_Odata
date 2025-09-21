@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../auth';
+import { useAuth } from '../authSimple';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingCart, 
@@ -9,8 +9,10 @@ import {
   Search, 
   Receipt,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Smartphone
 } from 'lucide-react';
+import QRPaymentModal from './QRPaymentModal';
 
 interface Product {
   id: string;
@@ -44,6 +46,7 @@ const SalesModule: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showQRPayment, setShowQRPayment] = useState(false);
   const [customer, setCustomer] = useState<Customer>({
     name: '',
     phone: '',
@@ -56,11 +59,11 @@ const SalesModule: React.FC = () => {
   // Categorías de productos con contadores dinámicos
   const categories = useMemo(() => [
     { id: 'all', name: 'Todas', count: products.length },
-    { id: 'Sencillas', name: 'Sencillas', count: products.filter(p => p.category === 'Sencillas').length },
-    { id: 'Clásicas', name: 'Clásicas', count: products.filter(p => p.category === 'Clásicas').length },
-    { id: 'Premium', name: 'Premium', count: products.filter(p => p.category === 'Premium').length },
-    { id: 'Bebidas Frías', name: 'Bebidas Frías', count: products.filter(p => p.category === 'Bebidas Frías').length },
-    { id: 'Bebidas Calientes', name: 'Bebidas Calientes', count: products.filter(p => p.category === 'Bebidas Calientes').length }
+    { id: 'sencillas', name: 'Sencillas', count: products.filter(p => p.category === 'sencillas').length },
+    { id: 'clasicas', name: 'Clásicas', count: products.filter(p => p.category === 'clasicas').length },
+    { id: 'premium', name: 'Premium', count: products.filter(p => p.category === 'premium').length },
+    { id: 'bebidas_frias', name: 'Bebidas Frías', count: products.filter(p => p.category === 'bebidas_frias').length },
+    { id: 'bebidas_calientes', name: 'Bebidas Calientes', count: products.filter(p => p.category === 'bebidas_calientes').length }
   ], [products]);
 
   // Cargar productos desde la API
@@ -101,7 +104,7 @@ const SalesModule: React.FC = () => {
             name: 'LA PATRONA',
             description: 'Chicharrón, carne desmechada, maduro al horno y queso',
             price: 15000,
-            category: 'Premium',
+            category: 'premium',
             stock: 10
           },
           {
@@ -109,7 +112,7 @@ const SalesModule: React.FC = () => {
             name: 'LA FÁCIL',
             description: 'Queso, mucho queso!',
             price: 7000,
-            category: 'Sencillas',
+            category: 'sencillas',
             stock: 15
           },
           {
@@ -117,7 +120,7 @@ const SalesModule: React.FC = () => {
             name: 'LA COMPINCHE',
             description: 'Carne desmechada, maduro al horno y queso',
             price: 12000,
-            category: 'Clásicas',
+            category: 'clasicas',
             stock: 8
           }
         ];
@@ -562,7 +565,10 @@ const SalesModule: React.FC = () => {
                       <option value="cash">💵 Efectivo</option>
                       <option value="card">💳 Tarjeta</option>
                       <option value="nequi">📱 Nequi</option>
+                      <option value="nequi_qr">📱 Nequi QR</option>
                       <option value="daviplata">🟣 Daviplata</option>
+                      <option value="daviplata_qr">🟣 Daviplata QR</option>
+                      <option value="qr_generic">📲 QR Genérico</option>
                       <option value="tullave">🔑 tu llave</option>
                     </select>
                   </div>
@@ -608,13 +614,26 @@ const SalesModule: React.FC = () => {
                     >
                       Cancelar
                     </button>
-                    <button
-                      onClick={processSale}
-                      className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center justify-center space-x-2"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                      <span>Procesar Venta</span>
-                    </button>
+                    {paymentMethod.includes('_qr') || paymentMethod === 'qr_generic' ? (
+                      <button
+                        onClick={() => {
+                          setShowCheckout(false);
+                          setShowQRPayment(true);
+                        }}
+                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center space-x-2"
+                      >
+                        <Smartphone className="h-4 w-4" />
+                        <span>Pagar con QR</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={processSale}
+                        className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center justify-center space-x-2"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Procesar Venta</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -622,6 +641,18 @@ const SalesModule: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal de Pago QR */}
+      <QRPaymentModal
+        isOpen={showQRPayment}
+        onClose={() => setShowQRPayment(false)}
+        amount={total}
+        paymentMethod={paymentMethod}
+        onPaymentConfirmed={() => {
+          // Procesar la venta después de confirmar el pago QR
+          processSale();
+        }}
+      />
     </div>
   );
 };

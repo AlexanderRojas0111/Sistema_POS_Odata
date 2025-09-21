@@ -1,4 +1,4 @@
-import { useAuth } from './auth'
+import { useAuth } from './authSimple'
 import { api, aiApi } from './api'
 import { useState, useEffect } from 'react'
 import AISearch from './components/AISearch'

@@ -1,5 +1,5 @@
-import { useState, FormEvent } from 'react'
-import { useAuth } from './auth'
+import { useState, type FormEvent } from 'react'
+import { useAuth } from './authSimple'
 
 export default function Login() {
   const { login } = useAuth()

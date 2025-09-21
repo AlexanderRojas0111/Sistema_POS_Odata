@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   CheckCircle,
   X,
-  SaveOff,
+  Save,
   DollarSign,
   Hash} from 'lucide-react';
 
@@ -55,13 +55,22 @@ const ProductsManagement: React.FC = () => {
     description: '',
     price: 0,
     cost: 0,
-    category: 'Sencillas',
+    category: 'sencillas',
     stock: 0,
     min_stock: 5,
     is_active: true
   });
 
-  const categories = ['all', 'Sencillas', 'Clásicas', 'Premium', 'Bebidas Frías', 'Bebidas Calientes'];
+  const categories = ['all', 'sencillas', 'clasicas', 'premium', 'bebidas_frias', 'bebidas_calientes'];
+  
+  const categoryDisplayNames: Record<string, string> = {
+    'all': 'Todas',
+    'sencillas': 'Sencillas',
+    'clasicas': 'Clásicas', 
+    'premium': 'Premium',
+    'bebidas_frias': 'Bebidas Frías',
+    'bebidas_calientes': 'Bebidas Calientes'
+  };
 
   // Obtener token de autenticación
   const getAuthToken = () => {
@@ -120,7 +129,7 @@ const ProductsManagement: React.FC = () => {
       description: '',
       price: 0,
       cost: 0,
-      category: 'Sencillas',
+      category: 'sencillas',
       stock: 0,
       min_stock: 5,
       is_active: true
@@ -227,9 +236,11 @@ const ProductsManagement: React.FC = () => {
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      'Sencillas': 'bg-green-100 text-green-800',
-      'Clásicas': 'bg-yellow-100 text-yellow-800',
-      'Premium': 'bg-orange-100 text-orange-800'
+      'sencillas': 'bg-green-100 text-green-800',
+      'clasicas': 'bg-yellow-100 text-yellow-800',
+      'premium': 'bg-orange-100 text-orange-800',
+      'bebidas_frias': 'bg-blue-100 text-blue-800',
+      'bebidas_calientes': 'bg-red-100 text-red-800'
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -291,7 +302,7 @@ const ProductsManagement: React.FC = () => {
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
-                    {category === 'all' ? 'Todas las categorías' : category}
+                    {category === 'all' ? 'Todas las categorías' : categoryDisplayNames[category]}
                   </option>
                 ))}
               </select>
@@ -383,7 +394,7 @@ const ProductsManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(product.category)}`}>
-                        {product.category}
+{categoryDisplayNames[product.category] || product.category}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -581,7 +592,7 @@ const ProductsManagement: React.FC = () => {
                         required
                       >
                         {categories.filter(cat => cat !== 'all').map(category => (
-                          <option key={category} value={category}>{category}</option>
+                          <option key={category} value={category}>{categoryDisplayNames[category]}</option>
                         ))}
                       </select>
                     </div>

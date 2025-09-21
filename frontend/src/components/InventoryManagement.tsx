@@ -50,19 +50,28 @@ const InventoryManagement: React.FC = () => {
     sku: '',
     description: '',
     price: 0,
-    category: 'Sencillas',
+      category: 'sencillas',
     stock: 0,
     min_stock: 0,
     is_active: true
   });
 
   const categories = [
-    'Sencillas',
-    'Clásicas', 
-    'Premium',
-    'Bebidas Frías',
-    'Bebidas Calientes'
+    'sencillas',
+    'clasicas', 
+    'premium',
+    'bebidas_frias',
+    'bebidas_calientes'
   ];
+
+  // Mapeo para mostrar nombres bonitos
+  const categoryDisplayNames: Record<string, string> = {
+    'sencillas': 'Sencillas',
+    'clasicas': 'Clásicas',
+    'premium': 'Premium',
+    'bebidas_frias': 'Bebidas Frías',
+    'bebidas_calientes': 'Bebidas Calientes'
+  };
 
   // Cargar productos
   useEffect(() => {
@@ -72,11 +81,31 @@ const InventoryManagement: React.FC = () => {
   const loadProducts = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8000/api/v1/products?per_page=100');
+      
+      // Obtener token de autenticación
+      const authUser = localStorage.getItem('auth:user');
+      const token = authUser ? JSON.parse(authUser).token : null;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch('http://localhost:8000/api/v1/products?per_page=100', {
+        method: 'GET',
+        headers
+      });
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Productos cargados:', data.data.products.length);
+        console.log('Primeros 3 productos:', data.data.products.slice(0, 3));
         setProducts(data.data.products);
         setFilteredProducts(data.data.products);
+      } else {
+        console.error('Error response:', response.status, await response.text());
       }
     } catch (error) {
       console.error('Error cargando productos:', error);
@@ -87,6 +116,12 @@ const InventoryManagement: React.FC = () => {
 
   // Filtrar productos
   useEffect(() => {
+    console.log('Filtrando productos:', {
+      totalProducts: products.length,
+      searchQuery,
+      selectedCategory
+    });
+    
     let filtered = products;
 
     if (searchQuery) {
@@ -94,12 +129,18 @@ const InventoryManagement: React.FC = () => {
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
+      console.log('Después de búsqueda:', filtered.length);
     }
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
+      const beforeFilter = filtered.length;
+      filtered = filtered.filter(product => 
+        product.category === selectedCategory
+      );
+      console.log(`Filtro categoría "${selectedCategory}": ${beforeFilter} → ${filtered.length}`);
     }
 
+    console.log('Productos filtrados finales:', filtered.length);
     setFilteredProducts(filtered);
   }, [products, searchQuery, selectedCategory]);
 
@@ -111,7 +152,7 @@ const InventoryManagement: React.FC = () => {
       sku: '',
       description: '',
       price: 0,
-      category: 'Sencillas',
+      category: 'sencillas',
       stock: 0,
       min_stock: 0,
       is_active: true
@@ -144,11 +185,20 @@ const InventoryManagement: React.FC = () => {
       
       const method = editingProduct ? 'PUT' : 'POST';
       
+      // Obtener token de autenticación
+      const authUser = localStorage.getItem('auth:user');
+      const token = authUser ? JSON.parse(authUser).token : null;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(formData)
       });
 
@@ -171,8 +221,18 @@ const InventoryManagement: React.FC = () => {
     if (!confirm('¿Está seguro de eliminar este producto?')) return;
 
     try {
+      // Obtener token de autenticación
+      const authUser = localStorage.getItem('auth:user');
+      const token = authUser ? JSON.parse(authUser).token : null;
+      const headers: Record<string, string> = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(`http://localhost:8000/api/v1/products/${productId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers
       });
 
       if (response.ok) {
@@ -190,11 +250,20 @@ const InventoryManagement: React.FC = () => {
   // Toggle estado del producto
   const toggleProductStatus = async (product: Product) => {
     try {
+      // Obtener token de autenticación
+      const authUser = localStorage.getItem('auth:user');
+      const token = authUser ? JSON.parse(authUser).token : null;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(`http://localhost:8000/api/v1/products/${product.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           ...product,
           is_active: !product.is_active
@@ -278,7 +347,7 @@ const InventoryManagement: React.FC = () => {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {category}
+                  {categoryDisplayNames[category] || category}
                 </button>
               ))}
             </div>
@@ -327,7 +396,7 @@ const InventoryManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
-                        {product.category}
+                        {categoryDisplayNames[product.category] || product.category}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -499,7 +568,9 @@ const InventoryManagement: React.FC = () => {
                       aria-label="Seleccionar categoría"
                     >
                         {categories.map(category => (
-                          <option key={category} value={category}>{category}</option>
+                          <option key={category} value={category}>
+                            {categoryDisplayNames[category] || category}
+                          </option>
                         ))}
                       </select>
                     </div>

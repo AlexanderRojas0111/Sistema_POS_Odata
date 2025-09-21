@@ -1,172 +1,137 @@
+# Configuración de Prometheus para Sistema POS Sabrositas v2.0.0
+# ================================================================
+# Monitoreo multi-tienda enterprise con métricas avanzadas
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
-  scrape_timeout: 10s
-  
-  # Etiquetas externas para identificar el entorno
   external_labels:
-    environment: "production"
-    datacenter: "odata-dc1"
-    service: "pos-system"
+    cluster: 'sabrositas-pos'
+    environment: 'production'
 
+# Configuración de reglas de alertas
 rule_files:
-  - "rules/*.yml"
+  - "/etc/prometheus/alerts.yml"
 
+# Configuración de AlertManager
 alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          - alertmanager:9093
+          - sabrositas-alertmanager:9093
 
+# Configuración de trabajos de scraping
 scrape_configs:
-  # Prometheus se monitorea a sí mismo
+  # Métricas de Prometheus mismo
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
-
-  # O'Data POS Backend
-  - job_name: 'odata-pos-backend'
-    static_configs:
-      - targets: ['localhost:8000']
-    metrics_path: '/metrics'
-    scrape_interval: 10s
-    scrape_timeout: 5s
-    
-    # Headers de autenticación si es necesario
-    # authorization:
-    #   type: Bearer
-    #   credentials: your-token-here
-    
-    # Relabelling para agregar metadatos
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '([^:]+)(?::\d+)?'
-        replacement: '${1}'
-      - source_labels: [__address__]
-        target_label: service
-        replacement: 'odata-pos-backend'
-
-  # O'Data POS Frontend (si expone métricas)
-  - job_name: 'odata-pos-frontend'
-    static_configs:
-      - targets: ['localhost:3000']
-    metrics_path: '/metrics'
     scrape_interval: 30s
-    scrape_timeout: 10s
-    
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '([^:]+)(?::\d+)?'
-        replacement: '${1}'
-      - source_labels: [__address__]
-        target_label: service
-        replacement: 'odata-pos-frontend'
+    metrics_path: /metrics
 
-  # Redis
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['localhost:6379']
-    metrics_path: '/metrics'
-    scrape_interval: 15s
-    scrape_timeout: 5s
-    
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '([^:]+)(?::\d+)?'
-        replacement: '${1}'
-      - source_labels: [__address__]
-        target_label: service
-        replacement: 'redis'
-
-  # PostgreSQL (si expone métricas)
-  - job_name: 'postgresql'
-    static_configs:
-      - targets: ['localhost:5432']
-    metrics_path: '/metrics'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '([^:]+)(?::\d+)?'
-        replacement: '${1}'
-      - source_labels: [__address__]
-        target_label: service
-        replacement: 'postgresql'
-
-  # Node Exporter (métricas del sistema)
+  # Métricas del sistema operativo
   - job_name: 'node-exporter'
     static_configs:
-      - targets: ['localhost:9100']
-    scrape_interval: 15s
-    scrape_timeout: 5s
-    
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '([^:]+)(?::\d+)?'
-        replacement: '${1}'
-      - source_labels: [__address__]
-        target_label: service
-        replacement: 'node-exporter'
+      - targets: ['sabrositas-node-exporter:9100']
+    scrape_interval: 30s
+    metrics_path: /metrics
 
-  # Nginx (si está configurado)
+  # Métricas de contenedores Docker
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['sabrositas-cadvisor:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Métricas de la aplicación POS
+  - job_name: 'pos-app'
+    static_configs:
+      - targets: ['pos-app-production:8000']
+    scrape_interval: 15s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+
+  # Métricas de PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['sabrositas-postgres-exporter:9187']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Métricas de Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['sabrositas-redis-exporter:9121']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Métricas de Nginx
   - job_name: 'nginx'
     static_configs:
-      - targets: ['localhost:9113']
-    scrape_interval: 15s
-    scrape_timeout: 5s
-    
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '([^:]+)(?::\d+)?'
-        replacement: '${1}'
-      - source_labels: [__address__]
-        target_label: service
-        replacement: 'nginx'
+      - targets: ['pos-nginx-production:80']
+    scrape_interval: 30s
+    metrics_path: /nginx_status
+    scrape_timeout: 10s
 
-  # Docker (si está disponible)
-  - job_name: 'docker'
-    static_configs:
-      - targets: ['localhost:9323']
-    scrape_interval: 15s
-    scrape_timeout: 5s
-    
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '([^:]+)(?::\d+)?'
-        replacement: '${1}'
-      - source_labels: [__address__]
-        target_label: service
-        replacement: 'docker'
-
-  # Blackbox Exporter (monitoreo de endpoints)
-  - job_name: 'blackbox'
+  # Monitoreo de endpoints con Blackbox
+  - job_name: 'blackbox-http'
     metrics_path: /probe
     params:
       module: [http_2xx]
     static_configs:
       - targets:
-        - http://localhost:8000/health
-        - http://localhost:8000/api/v1/health
-        - http://localhost:3000
-    scrape_interval: 30s
-    scrape_timeout: 10s
+        - http://pos-app-production:8000/api/v1/health
+        - http://pos-nginx-production:80/health
+        - http://pos-app-production:8000/api/v1/stores
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: localhost:9115
+        replacement: sabrositas-blackbox-exporter:9115
+
+  # Monitoreo de servicios TCP
+  - job_name: 'blackbox-tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+        - pos-postgres-production:5432
+        - pos-redis-production:6379
+    relabel_configs:
       - source_labels: [__address__]
-        target_label: service
-        replacement: 'blackbox'
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: sabrositas-blackbox-exporter:9115
 
+  # Métricas específicas por tienda (si están disponibles)
+  - job_name: 'pos-store-metrics'
+    static_configs:
+      - targets: ['pos-app-production:8000']
+    scrape_interval: 60s
+    metrics_path: /api/v1/metrics/stores
+    scrape_timeout: 30s
 
+  # Métricas de rendimiento de la aplicación
+  - job_name: 'pos-performance'
+    static_configs:
+      - targets: ['pos-app-production:8000']
+    scrape_interval: 30s
+    metrics_path: /api/v1/metrics/performance
+    scrape_timeout: 15s
+
+# Configuración de almacenamiento remoto (opcional para backup)
+# remote_write:
+#   - url: "http://remote-prometheus:9090/api/v1/write"
+#     queue_config:
+#       max_samples_per_send: 1000
+#       max_shards: 200
+#       capacity: 2500
+
+# Configuración de lectura remota (opcional)
+# remote_read:
+#   - url: "http://remote-prometheus:9090/api/v1/read"

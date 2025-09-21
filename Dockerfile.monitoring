@@ -1,0 +1,39 @@
+# Dockerfile para Servicio de Monitoreo - Sistema POS Sabrositas v2.0.0
+FROM python:3.13-alpine
+
+# Metadatos
+LABEL maintainer="Sistema POS Sabrositas"
+LABEL version="2.0.0"
+LABEL description="Servicio de monitoreo para POS multi-tienda"
+
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Crear usuario no-root
+RUN addgroup -g 1000 monitoring && adduser -u 1000 -G monitoring -s /bin/sh -D monitoring
+
+# Instalar dependencias del sistema
+RUN apk add --no-cache curl
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Instalar dependencias Python para monitoreo
+RUN pip install --no-cache-dir requests psutil
+
+# Crear script de monitoreo
+COPY monitoring/basic_monitoring.py ./monitoring.py
+
+# Cambiar permisos
+RUN chown -R monitoring:monitoring /app
+
+# Cambiar a usuario no-root
+USER monitoring
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/api/v1/health')"
+
+# Comando de inicio
+CMD ["python", "monitoring.py"]

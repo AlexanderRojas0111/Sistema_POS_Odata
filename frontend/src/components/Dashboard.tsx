@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth';
+import { useAuth } from '../authSimple';
 import { 
   ShoppingCart, 
   Users, 
