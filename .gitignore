@@ -32,6 +32,11 @@ venv.bak/
 venv_*/
 .venv_*/
 
+# Backup virtual environments
+venv_python39_backup_*/
+venv_backup_*/
+*_backup_*/
+
 # Flask
 instance/
 .webassets-cache
