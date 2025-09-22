@@ -13,6 +13,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import QRPaymentModal from './QRPaymentModal';
+import MultiPaymentModal from './MultiPaymentModal';
 
 interface Product {
   id: string;
@@ -47,6 +48,7 @@ const SalesModule: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showQRPayment, setShowQRPayment] = useState(false);
+  const [showMultiPayment, setShowMultiPayment] = useState(false);
   const [customer, setCustomer] = useState<Customer>({
     name: '',
     phone: '',
@@ -55,6 +57,8 @@ const SalesModule: React.FC = () => {
   });
   const [paymentMethod, setPaymentMethod] = useState('nequi');
   const [saleNotes, setSaleNotes] = useState('');
+  const [multiPayments, setMultiPayments] = useState<any[]>([]);
+  const [isMultiPaymentMode, setIsMultiPaymentMode] = useState(false);
 
   // Categorías de productos con contadores dinámicos
   const categories = useMemo(() => [
@@ -213,12 +217,25 @@ const SalesModule: React.FC = () => {
   // Limpiar carrito
   const clearCart = () => {
     setCart([]);
+    setIsMultiPaymentMode(false);
+    setMultiPayments([]);
+    setPaymentMethod('nequi');
   };
 
   // Calcular totales
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
   const tax = subtotal * 0.19; // IVA 19%
   const total = subtotal + tax;
+
+  // Manejar pagos múltiples
+  const handleMultiPaymentConfirm = (payments: any[], changeAmount: number) => {
+    setMultiPayments(payments);
+    setIsMultiPaymentMode(true);
+    setShowMultiPayment(false);
+    
+    // Actualizar el método de pago principal para mostrar "Múltiples"
+    setPaymentMethod('multi_payment');
+  };
 
   // Procesar venta
   const processSale = async () => {
@@ -245,13 +262,15 @@ const SalesModule: React.FC = () => {
         customer_phone: customer.phone,
         customer_email: customer.email,
         customer_address: customer.address,
-        payment_method: paymentMethod,
+        payment_method: isMultiPaymentMode ? 'multi_payment' : paymentMethod,
         notes: saleNotes,
         items: cart.map(item => ({
           product_id: parseInt(item.product.id),
           quantity: item.quantity,
           unit_price: item.product.price
-        }))
+        })),
+        // Agregar datos de pagos múltiples si aplica
+        multi_payments: isMultiPaymentMode ? multiPayments : undefined
       };
 
       const response = await fetch('http://localhost:8000/api/v1/sales', {
@@ -478,6 +497,23 @@ const SalesModule: React.FC = () => {
                       <span>Total:</span>
                       <span>${total.toLocaleString()}</span>
                     </div>
+                    
+                    {/* Información de pagos múltiples */}
+                    {isMultiPaymentMode && multiPayments.length > 0 && (
+                      <div className="border-t pt-2 mt-2">
+                        <div className="text-xs text-blue-600 font-medium mb-1">
+                          💳 Pagos Múltiples Configurados:
+                        </div>
+                        <div className="space-y-1">
+                          {multiPayments.map((payment, index) => (
+                            <div key={index} className="flex justify-between text-xs">
+                              <span>{payment.method === 'cash' ? '💵' : payment.method === 'nequi' ? '📱' : payment.method === 'daviplata' ? '🟣' : '💳'} {payment.method}:</span>
+                              <span>${payment.amount.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -556,21 +592,41 @@ const SalesModule: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Método de Pago
                     </label>
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      aria-label="Seleccionar método de pago"
-                    >
-                      <option value="cash">💵 Efectivo</option>
-                      <option value="card">💳 Tarjeta</option>
-                      <option value="nequi">📱 Nequi</option>
-                      <option value="nequi_qr">📱 Nequi QR</option>
-                      <option value="daviplata">🟣 Daviplata</option>
-                      <option value="daviplata_qr">🟣 Daviplata QR</option>
-                      <option value="qr_generic">📲 QR Genérico</option>
-                      <option value="tullave">🔑 tu llave</option>
-                    </select>
+                    <div className="grid grid-cols-2 gap-3">
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => {
+                          if (e.target.value === 'multi_payment') {
+                            setShowMultiPayment(true);
+                          } else {
+                            setIsMultiPaymentMode(false);
+                            setMultiPayments([]);
+                            setPaymentMethod(e.target.value);
+                          }
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        aria-label="Seleccionar método de pago"
+                      >
+                        <option value="cash">💵 Efectivo</option>
+                        <option value="card">💳 Tarjeta</option>
+                        <option value="nequi">📱 Nequi</option>
+                        <option value="nequi_qr">📱 Nequi QR</option>
+                        <option value="daviplata">🟣 Daviplata</option>
+                        <option value="daviplata_qr">🟣 Daviplata QR</option>
+                        <option value="qr_generic">📲 QR Genérico</option>
+                        <option value="tullave">🔑 tu llave</option>
+                        <option value="multi_payment">💳 Pagos Múltiples</option>
+                      </select>
+                      <button
+                        onClick={() => setShowMultiPayment(true)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                      >
+                        💳 Pagos Múltiples
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selecciona un método simple o usa pagos múltiples para combinar varios métodos
+                    </p>
                   </div>
 
                   {/* Notas */}
@@ -652,6 +708,14 @@ const SalesModule: React.FC = () => {
           // Procesar la venta después de confirmar el pago QR
           processSale();
         }}
+      />
+
+      {/* Modal de Pagos Múltiples */}
+      <MultiPaymentModal
+        isOpen={showMultiPayment}
+        onClose={() => setShowMultiPayment(false)}
+        totalAmount={total}
+        onConfirm={handleMultiPaymentConfirm}
       />
     </div>
   );

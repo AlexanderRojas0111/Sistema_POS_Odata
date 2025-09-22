@@ -31,6 +31,10 @@ class Sale(db.Model):
     payment_reference = db.Column(db.String(100), nullable=True)
     change_amount = db.Column(db.Numeric(10, 2), default=0.0)
     
+    # Soporte para pagos múltiples
+    is_multi_payment = db.Column(db.Boolean, default=False, index=True)
+    multi_payment_id = db.Column(db.Integer, db.ForeignKey('multi_payments.id'), nullable=True)
+    
     # Estado
     status = db.Column(db.String(20), default='completed', index=True)
     notes = db.Column(db.Text, nullable=True)
@@ -41,6 +45,7 @@ class Sale(db.Model):
     
     # Relaciones
     items = db.relationship('SaleItem', backref='sale', lazy=True, cascade='all, delete-orphan')
+    multi_payment = db.relationship('MultiPayment', backref='sale', lazy=True, foreign_keys=[multi_payment_id])
     # customer = relationship("Customer", back_populates="sales")  # Comentado temporalmente
     
     def __init__(self, user_id: int, items: List[Dict], **kwargs):

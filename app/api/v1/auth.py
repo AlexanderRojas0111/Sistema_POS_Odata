@@ -5,8 +5,6 @@ Endpoints de autenticación JWT.
 """
 
 from flask import Blueprint, request, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from app.container import container
 from app.services.user_service import UserService
 from app.repositories.user_repository import UserRepository
@@ -19,9 +17,6 @@ logger = logging.getLogger(__name__)
 # Crear blueprint
 auth_bp = Blueprint('auth', __name__)
 
-# Configurar rate limiting
-limiter = Limiter(key_func=get_remote_address)
-
 @auth_bp.route('/auth/test', methods=['GET'])
 def auth_test():
     """Endpoint de test para verificar routing"""
@@ -29,7 +24,7 @@ def auth_test():
     return jsonify({"status": "auth_test_working", "message": "Auth blueprint routing works"})
 
 @auth_bp.route('/auth/login', methods=['POST'])
-# @limiter.limit("20 per minute")  # TEMPORALMENTE DESHABILITADO PARA DEBUG
+#   # TEMPORALMENTE DESHABILITADO PARA DEBUG
 def login():
     """Login JWT: verifica credenciales y devuelve tokens de acceso y refresh"""
     try:
@@ -103,7 +98,7 @@ def login():
         }), 500
 
 @auth_bp.route('/auth/refresh', methods=['POST'])
-@limiter.limit("30 per minute")
+
 def refresh():
     """Refresh JWT: genera nuevo token de acceso usando refresh token"""
     try:

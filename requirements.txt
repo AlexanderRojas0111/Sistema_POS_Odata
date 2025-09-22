@@ -1,9 +1,8 @@
-# Sistema POS Sabrositas v2.0.0 - Dependencias de Producción CON IA
+# Sistema POS Sabrositas v2.0.0 Enterprise - Dependencias Finales
 # =================================================================
-# Las Arepas Cuadradas - Enterprise Architecture
-# Versiones optimizadas para Python 3.13 y producción enterprise
-# Actualizado: 2025-09-21 - Librerías Actualizadas y Compatibles Python 3.13
-# NOTA: Para migración completa usar requirements-python313.txt
+# Las Arepas Cuadradas - Enterprise Architecture con Pagos Múltiples
+# Versiones optimizadas para producción enterprise
+# Actualizado: 2025-09-21 - Sistema Enterprise Completo
 
 # Framework Principal - Versiones optimizadas para Python 3.13
 Flask==3.1.0
@@ -30,12 +29,12 @@ requests==2.32.3
 # Logging - Versión más reciente
 structlog==24.4.0
 
-# IA y Machine Learning - Python 3.13 Compatible (Actualizadas)
-scikit-learn==1.5.2
-numpy==2.1.3
-scipy==1.14.1
-joblib==1.4.2
-threadpoolctl==3.5.0
+# IA y Machine Learning - Python 3.9 Compatible
+scikit-learn==1.3.2
+numpy==1.26.4
+scipy==1.11.4
+joblib==1.3.2
+threadpoolctl==3.2.0
 
 # Procesamiento de texto - Actualizado
 nltk==3.9.1
@@ -51,7 +50,7 @@ isort==5.13.2
 
 # Servidor de producción
 gunicorn==23.0.0
-Werkzeug==3.0.4
+Werkzeug==3.1.3
 
 # Cache y Queue Management
 redis==5.1.1

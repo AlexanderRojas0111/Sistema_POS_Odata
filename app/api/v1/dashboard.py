@@ -5,8 +5,8 @@ Endpoints para dashboard con métricas enterprise
 """
 
 from flask import Blueprint, request, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+
+
 from app.container import container
 # from app.services.dashboard_service import DashboardService  # Temporalmente comentado
 from app.repositories.sale_repository import SaleRepository
@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 dashboard_bp = Blueprint('dashboard', __name__)
 
 # Configurar rate limiting
-limiter = Limiter(key_func=get_remote_address)
+
 
 @dashboard_bp.route('/dashboard', methods=['GET'])
-@limiter.limit("100 per minute")
+
 def get_dashboard_summary():
     """Obtener resumen del dashboard con métricas principales"""
     try:
@@ -81,7 +81,7 @@ def get_dashboard_summary():
         }), 500
 
 @dashboard_bp.route('/dashboard/sales-summary', methods=['GET'])
-@limiter.limit("50 per minute")
+
 def get_sales_summary():
     """Obtener resumen específico de ventas"""
     try:
@@ -113,7 +113,7 @@ def get_sales_summary():
         }), 500
 
 @dashboard_bp.route('/dashboard/top-products', methods=['GET'])
-@limiter.limit("50 per minute") 
+ 
 def get_top_products():
     """Obtener productos más vendidos"""
     try:
@@ -147,7 +147,7 @@ def get_top_products():
         }), 500
 
 @dashboard_bp.route('/dashboard/real-time', methods=['GET'])
-@limiter.limit("200 per minute")
+
 def get_real_time_metrics():
     """Obtener métricas en tiempo real"""
     try:

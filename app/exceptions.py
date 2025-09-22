@@ -89,7 +89,7 @@ class NotFoundError(POSException):
             status_code=404
         )
 
-class InsufficientStockError(BusinessLogicError):
+class InsufficientStockError(POSException):
     """Error de stock insuficiente"""
     
     def __init__(self, product_id: int, requested: int, available: int):
@@ -102,8 +102,9 @@ class InsufficientStockError(BusinessLogicError):
         
         super().__init__(
             message=message,
-            operation="stock_check",
-            context=context
+            error_code="INSUFFICIENT_STOCK",
+            context=context,
+            status_code=400
         )
 
 class AuthenticationError(POSException):

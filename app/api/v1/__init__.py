@@ -9,7 +9,7 @@ from flask import Blueprint
 api_bp = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
 # Importar endpoints
-from . import sales, products, users, health, simple_users, simple_products, auth, inventory, electronic_invoice, support_document, digital_certificate, payroll, accounts_receivable, quotation, dashboard, debug, roles, analytics, simple_reports, simple_reports_test, reports_professional, reports_final, qr_payments
+from . import sales, products, users, health, simple_users, simple_products, auth, inventory, electronic_invoice, support_document, digital_certificate, payroll, accounts_receivable, quotation, dashboard, debug, roles, analytics, simple_reports, simple_reports_test, reports_professional, reports_final, qr_payments, system_stats, multi_payment
 
 # Registrar blueprints
 api_bp.register_blueprint(sales.sales_bp)
@@ -62,3 +62,5 @@ api_bp.register_blueprint(reports_final.reports_final_bp)
 
 # Registrar QR Payments endpoints
 api_bp.register_blueprint(qr_payments.qr_payments_bp)
+api_bp.register_blueprint(system_stats.system_stats_bp)
+api_bp.register_blueprint(multi_payment.multi_payment_bp)

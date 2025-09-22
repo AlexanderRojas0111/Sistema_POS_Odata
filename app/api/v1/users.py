@@ -5,8 +5,6 @@ Endpoints de usuarios con validaciones enterprise.
 """
 
 from flask import Blueprint, request, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from app.container import container
 from app.services.user_service import UserService
 from app.repositories.user_repository import UserRepository
@@ -19,11 +17,7 @@ logger = logging.getLogger(__name__)
 # Crear blueprint
 users_bp = Blueprint('users', __name__)
 
-# Configurar rate limiting
-limiter = Limiter(key_func=get_remote_address)
-
 @users_bp.route('/users', methods=['POST'])
-@limiter.limit("10 per minute")
 def create_user():
     """Crear nuevo usuario"""
     try:
@@ -67,7 +61,7 @@ def create_user():
         }), 500
 
 @users_bp.route('/users', methods=['GET'])
-@limiter.limit("100 per minute")
+
 def get_users():
     """Obtener lista de usuarios"""
     try:
@@ -108,7 +102,7 @@ def get_users():
         }), 500
 
 @users_bp.route('/users/<int:user_id>', methods=['GET'])
-@limiter.limit("200 per minute")
+
 def get_user(user_id):
     """Obtener usuario por ID"""
     try:
@@ -134,7 +128,7 @@ def get_user(user_id):
         }), 500
 
 @users_bp.route('/users/stats', methods=['GET'])
-@limiter.limit("50 per minute")
+
 def get_user_stats():
     """Obtener estadísticas de usuarios"""
     try:
@@ -161,7 +155,7 @@ def get_user_stats():
 
 # --- Simple Auth ---
 @users_bp.route('/auth/login', methods=['POST'])
-@limiter.limit("20 per minute")
+
 def login():
     """Login básico: verifica credenciales y devuelve rol y token simple"""
     try:
@@ -215,7 +209,7 @@ def login():
         }), 500
 
 @users_bp.route('/auth/refresh', methods=['POST'])
-@limiter.limit("30 per minute")
+
 def refresh():
     try:
         data = request.get_json() or {}

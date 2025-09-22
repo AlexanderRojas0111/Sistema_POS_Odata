@@ -5,8 +5,6 @@ Endpoints de productos con validaciones enterprise.
 """
 
 from flask import Blueprint, request, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from app.container import container
 from app.services.product_service import ProductService
 from app.repositories.product_repository import ProductRepository
@@ -18,11 +16,7 @@ logger = logging.getLogger(__name__)
 # Crear blueprint
 products_bp = Blueprint('products', __name__)
 
-# Configurar rate limiting
-limiter = Limiter(key_func=get_remote_address)
-
 @products_bp.route('/products', methods=['POST'])
-@limiter.limit("20 per minute")
 def create_product():
     """Crear nuevo producto"""
     try:
@@ -75,7 +69,7 @@ def create_product():
         }), 500
 
 @products_bp.route('/products', methods=['GET'])
-@limiter.limit("200 per minute")
+
 def get_products():
     """Obtener lista de productos"""
     try:
@@ -127,7 +121,7 @@ def get_products():
         }), 500
 
 @products_bp.route('/products/<int:product_id>', methods=['GET'])
-@limiter.limit("200 per minute")
+
 def get_product(product_id):
     """Obtener producto por ID"""
     try:
@@ -153,7 +147,7 @@ def get_product(product_id):
         }), 500
 
 @products_bp.route('/products/low-stock', methods=['GET'])
-@limiter.limit("50 per minute")
+
 def get_low_stock_products():
     """Obtener productos con stock bajo"""
     try:
@@ -183,7 +177,7 @@ def get_low_stock_products():
         }), 500
 
 @products_bp.route('/products/<int:product_id>', methods=['PUT'])
-@limiter.limit("20 per minute")
+
 def update_product(product_id):
     """Actualizar producto existente"""
     try:
@@ -227,7 +221,7 @@ def update_product(product_id):
         }), 500
 
 @products_bp.route('/products/<int:product_id>', methods=['DELETE'])
-@limiter.limit("20 per minute")
+
 def delete_product(product_id):
     """Eliminar producto"""
     try:
@@ -262,7 +256,7 @@ def delete_product(product_id):
         }), 500
 
 @products_bp.route('/products/stats', methods=['GET'])
-@limiter.limit("50 per minute")
+
 def get_product_stats():
     """Obtener estadísticas de productos"""
     try:

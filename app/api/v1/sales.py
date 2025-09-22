@@ -5,8 +5,6 @@ Endpoints de ventas con validaciones enterprise.
 """
 
 from flask import Blueprint, request, jsonify, current_app
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from app.container import container
 from app.services.sale_service import SaleService
 from app.repositories.sale_repository import SaleRepository
@@ -21,11 +19,7 @@ logger = logging.getLogger(__name__)
 # Crear blueprint
 sales_bp = Blueprint('sales', __name__)
 
-# Configurar rate limiting
-limiter = Limiter(key_func=get_remote_address)
-
 @sales_bp.route('/sales', methods=['POST'])
-@limiter.limit("30 per minute")
 def create_sale():
     """Crear nueva venta"""
     try:
@@ -71,8 +65,56 @@ def create_sale():
             else:
                 raise ValidationError("user_id is required or valid Authorization header must be provided", field="user_id")
         
+        # Verificar si es un pago múltiple
+        multi_payments = data.get('multi_payments')
+        is_multi_payment = data.get('payment_method') == 'multi_payment'
+        
         # Crear venta
         sale = sale_service.create_sale(user_id, data)
+        
+        # Si es pago múltiple, crear los detalles de pago
+        if is_multi_payment and multi_payments:
+            from app.services.multi_payment_service import MultiPaymentService
+            from decimal import Decimal
+            
+            multi_payment_service = MultiPaymentService()
+            
+            # Crear el pago múltiple
+            multi_payment = multi_payment_service.create_multi_payment(
+                sale_id=sale['id'],
+                user_id=user_id,
+                total_amount=Decimal(str(sale['total_amount'])),
+                notes=f"Pago múltiple para venta {sale['id']}"
+            )
+            
+            # Validar y corregir montos de pagos múltiples
+            total_payment_amount = sum(Decimal(str(p['amount'])) for p in multi_payments)
+            sale_total = Decimal(str(sale['total_amount']))
+            
+            # Si el total de pagos excede el total de la venta, ajustar proporcionalmente
+            if total_payment_amount > sale_total:
+                logger.warning(f"Total de pagos ({total_payment_amount}) excede el total de la venta ({sale_total}). Ajustando proporcionalmente.")
+                adjustment_factor = sale_total / total_payment_amount
+                for payment in multi_payments:
+                    payment['amount'] = float(Decimal(str(payment['amount'])) * adjustment_factor)
+            
+            # Agregar cada detalle de pago
+            for payment in multi_payments:
+                multi_payment_service.add_payment(
+                    multi_payment_id=multi_payment.id,
+                    payment_method=payment['method'],
+                    amount=Decimal(str(payment['amount'])),
+                    reference=payment.get('reference'),
+                    bank_name=payment.get('bank_name'),
+                    card_last_four=payment.get('card_last_four'),
+                    phone_number=payment.get('phone_number'),
+                    qr_code=payment.get('qr_code'),
+                    notes=payment.get('notes')
+                )
+            
+            # Actualizar la venta con el ID del pago múltiple
+            sale['multi_payment_id'] = multi_payment.id
+            sale['is_multi_payment'] = True
         
         logger.info(f"Sale created: {sale['id']}", extra={
             'sale_id': sale['id'],
@@ -110,7 +152,7 @@ def create_sale():
         }), 500
 
 @sales_bp.route('/sales', methods=['GET'])
-@limiter.limit("100 per minute")
+
 def get_sales():
     """Obtener lista de ventas"""
     try:
@@ -157,7 +199,7 @@ def get_sales():
         }), 500
 
 @sales_bp.route('/sales/<int:sale_id>', methods=['GET'])
-@limiter.limit("200 per minute")
+
 def get_sale(sale_id):
     """Obtener venta por ID"""
     try:
@@ -186,7 +228,7 @@ def get_sale(sale_id):
         }), 500
 
 @sales_bp.route('/sales/<int:sale_id>/cancel', methods=['POST'])
-@limiter.limit("10 per minute")
+
 def cancel_sale(sale_id):
     """Cancelar venta"""
     try:
@@ -231,7 +273,7 @@ def cancel_sale(sale_id):
         }), 500
 
 @sales_bp.route('/sales/stats', methods=['GET'])
-@limiter.limit("50 per minute")
+
 def get_sales_stats():
     """Obtener estadísticas de ventas"""
     try:

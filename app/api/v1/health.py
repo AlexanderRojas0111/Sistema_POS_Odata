@@ -5,8 +5,8 @@ Endpoints de salud del sistema enterprise.
 """
 
 from flask import Blueprint, jsonify, request
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+
+
 from app import db
 from sqlalchemy import text
 from datetime import datetime
@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 health_bp = Blueprint('health', __name__)
 
 # Configurar rate limiting
-limiter = Limiter(key_func=get_remote_address)
+
 
 @health_bp.route('/health', methods=['GET'])
-@limiter.limit("1000 per minute")
+
 def health_check():
     """Health check básico del sistema"""
     try:
@@ -40,7 +40,7 @@ def health_check():
     })
 
 @health_bp.route('/health/detailed', methods=['GET'])
-@limiter.limit("100 per minute")
+
 def detailed_health_check():
     """Health check detallado del sistema"""
     try:
@@ -121,7 +121,7 @@ def detailed_health_check():
         }), 500
 
 @health_bp.route('/health/metrics', methods=['GET'])
-@limiter.limit("50 per minute")
+
 def health_metrics():
     """Métricas de salud del sistema"""
     try:

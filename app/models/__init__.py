@@ -17,6 +17,7 @@ from .support import SupportTicket, SupportMessage, SupportChat, ChatMessage
 from .help import HelpArticle, FAQ
 from .payroll import Employee, PayrollPeriod, Payroll, PayrollItem, PayrollConfig
 from .accounts_receivable import Customer, Invoice, AccountsReceivableInvoiceItem, Payment, PaymentAllocation
+from .multi_payment import MultiPayment, PaymentDetail
 from .quotation import Quotation, QuotationItem, QuotationApproval, QuotationTemplate
 
 # Importar db al final para evitar importaciones circulares
@@ -55,6 +56,8 @@ __all__ = [
     'AccountsReceivableInvoiceItem',
     'Payment',
     'PaymentAllocation',
+    'MultiPayment',
+    'PaymentDetail',
     'Quotation',
     'QuotationItem',
     'QuotationApproval',

@@ -5,6 +5,11 @@ Endpoints para gestión de inventario enterprise
 """
 
 from flask import Blueprint, request, jsonify
+from app.exceptions import ValidationError, BusinessLogicError
+from app.container import container
+from app.repositories.inventory_repository import InventoryRepository
+from app.repositories.product_repository import ProductRepository
+from app.services.inventory_service import InventoryService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -54,7 +59,6 @@ def get_inventory():
         }), 500
 
 @inventory_bp.route('/inventory/summary', methods=['GET'])
-@limiter.limit("50 per minute")
 def get_inventory_summary():
     """Obtener resumen del inventario"""
     try:
@@ -84,7 +88,6 @@ def get_inventory_summary():
         }), 500
 
 @inventory_bp.route('/inventory/low-stock', methods=['GET'])
-@limiter.limit("50 per minute")
 def get_low_stock_items():
     """Obtener productos con stock bajo"""
     try:
@@ -118,7 +121,6 @@ def get_low_stock_items():
         }), 500
 
 @inventory_bp.route('/inventory/adjust', methods=['POST'])
-@limiter.limit("20 per minute")
 def adjust_inventory():
     """Ajustar inventario de productos"""
     try:

@@ -49,13 +49,13 @@ class Store(db.Model):
     updated_at: datetime = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_sync_at: datetime = Column(DateTime, nullable=True)
     
-    # Relaciones
-    manager = relationship("User", back_populates="managed_stores")
-    store_products = relationship("StoreProduct", back_populates="store", cascade="all, delete-orphan")
-    inventory_movements = relationship("InventoryMovement", foreign_keys="InventoryMovement.store_id")
-    sales = relationship("Sale", back_populates="store")
-    transfers_sent = relationship("InventoryTransfer", foreign_keys="InventoryTransfer.from_store_id")
-    transfers_received = relationship("InventoryTransfer", foreign_keys="InventoryTransfer.to_store_id")
+    # Relaciones (comentadas temporalmente hasta implementar FK correctas)
+    # manager = relationship("User", foreign_keys=[manager_id])
+    # store_products = relationship("StoreProduct", back_populates="store", cascade="all, delete-orphan")
+    # inventory_movements = relationship("InventoryMovement", foreign_keys="InventoryMovement.store_id")
+    # sales = relationship("Sale", back_populates="store")
+    # transfers_sent = relationship("InventoryTransfer", foreign_keys="InventoryTransfer.from_store_id")
+    # transfers_received = relationship("InventoryTransfer", foreign_keys="InventoryTransfer.to_store_id")
     
     def __repr__(self):
         return f'<Store {self.code}: {self.name}>'
@@ -69,32 +69,33 @@ class Store(db.Model):
         from datetime import timedelta
         return (datetime.utcnow() - self.last_sync_at) < timedelta(minutes=30)
     
-    @property
-    def total_products(self) -> int:
-        """Número total de productos en esta tienda"""
-        return len([sp for sp in self.store_products if sp.is_available])
+    # Métodos comentados temporalmente hasta implementar relaciones
+    # @property
+    # def total_products(self) -> int:
+    #     """Número total de productos en esta tienda"""
+    #     return len([sp for sp in self.store_products if sp.is_available])
     
-    @property
-    def low_stock_products(self) -> int:
-        """Productos con stock bajo en esta tienda"""
-        return len([sp for sp in self.store_products 
-                   if sp.current_stock <= sp.min_stock and sp.is_available])
+    # @property
+    # def low_stock_products(self) -> int:
+    #     """Productos con stock bajo en esta tienda"""
+    #     return len([sp for sp in self.store_products 
+    #                if sp.current_stock <= sp.min_stock and sp.is_available])
     
-    def get_product_price(self, product_id: int) -> Optional[float]:
-        """Obtener precio específico de un producto en esta tienda"""
-        store_product = next(
-            (sp for sp in self.store_products if sp.product_id == product_id), 
-            None
-        )
-        return store_product.local_price if store_product else None
+    # def get_product_price(self, product_id: int) -> Optional[float]:
+    #     """Obtener precio específico de un producto en esta tienda"""
+    #     store_product = next(
+    #         (sp for sp in self.store_products if sp.product_id == product_id), 
+    #         None
+    #     )
+    #     return store_product.local_price if store_product else None
     
-    def get_product_stock(self, product_id: int) -> int:
-        """Obtener stock actual de un producto en esta tienda"""
-        store_product = next(
-            (sp for sp in self.store_products if sp.product_id == product_id), 
-            None
-        )
-        return store_product.current_stock if store_product else 0
+    # def get_product_stock(self, product_id: int) -> int:
+    #     """Obtener stock actual de un producto en esta tienda"""
+    #     store_product = next(
+    #         (sp for sp in self.store_products if sp.product_id == product_id), 
+    #         None
+    #     )
+    #     return store_product.current_stock if store_product else 0
     
     def update_sync_timestamp(self):
         """Actualizar timestamp de última sincronización"""
@@ -157,9 +158,9 @@ class StoreProduct(db.Model):
     updated_at: datetime = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_sale_at: datetime = Column(DateTime, nullable=True)
     
-    # Relaciones
-    store = relationship("Store", back_populates="store_products")
-    product = relationship("Product", back_populates="store_products")
+    # Relaciones (comentadas temporalmente)
+    # store = relationship("Store", back_populates="store_products")
+    # product = relationship("Product", back_populates="store_products")
     
     def __repr__(self):
         return f'<StoreProduct Store:{self.store_id} Product:{self.product_id} Stock:{self.current_stock}>'
