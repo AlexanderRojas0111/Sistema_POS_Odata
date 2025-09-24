@@ -2,7 +2,7 @@
 
 ## 🌟 **Sistema de Punto de Venta Avanzado - Las Arepas Cuadradas**
 
-Sistema POS completo desarrollado con tecnologías modernas para la gestión integral de puntos de venta, inventario y reportes empresariales.
+Sistema POS completo desarrollado con tecnologías modernas para la gestión integral de puntos de venta, inventario y reportes empresariales. **Ahora con Inteligencia Artificial, Monitoreo Avanzado y Arquitectura Empresarial Profesional.**
 
 ---
 
@@ -36,17 +36,34 @@ Sistema POS completo desarrollado con tecnologías modernas para la gestión int
 - ✅ Encriptación de datos sensibles
 - ✅ Headers de seguridad
 
+### 🤖 **Inteligencia Artificial (NUEVO)**
+- ✅ Búsqueda semántica de productos
+- ✅ Recomendaciones inteligentes
+- ✅ Sugerencias de búsqueda automáticas
+- ✅ Análisis de patrones de venta
+- ✅ Sistema de IA con monitoreo avanzado
+
+### 📊 **Monitoreo y Observabilidad (NUEVO)**
+- ✅ Health checks detallados
+- ✅ Métricas de rendimiento en tiempo real
+- ✅ Sistema de alertas automáticas
+- ✅ Rate limiting inteligente
+- ✅ Logging estructurado y auditoría
+
 ---
 
 ## 🛠️ **Stack Tecnológico**
 
 ### **Backend**
-- **Python 3.9+** - Lenguaje principal
+- **Python 3.13** - Lenguaje principal
 - **Flask** - Framework web
 - **SQLAlchemy** - ORM para base de datos
 - **SQLite/PostgreSQL** - Base de datos
 - **JWT** - Autenticación
-- **Pydantic** - Validación de datos
+- **Marshmallow** - Validación robusta de datos
+- **Redis** - Cache y rate limiting
+- **NLTK** - Procesamiento de lenguaje natural
+- **TF-IDF** - Algoritmos de IA
 
 ### **Frontend**
 - **React 18** - Framework de interfaz
@@ -55,30 +72,39 @@ Sistema POS completo desarrollado con tecnologías modernas para la gestión int
 - **Tailwind CSS** - Framework de estilos
 - **React Router** - Navegación
 - **Axios** - Cliente HTTP
+- **Recharts** - Gráficos avanzados
+- **Framer Motion** - Animaciones
+- **React DevTools** - Debugging
 
 ### **DevOps y Despliegue**
 - **Docker** - Containerización
 - **PowerShell** - Scripts de automatización
 - **Git** - Control de versiones
 - **Nginx** - Servidor web (producción)
+- **GitHub Actions** - CI/CD automatizado
+- **Pytest** - Testing automatizado
+- **ESLint/Pylint** - Análisis de código
+- **Trivy** - Security scanning
 
 ---
 
 ## 📋 **Requisitos del Sistema**
 
 ### **Mínimos**
-- Python 3.9 o superior
-- Node.js 16 o superior
-- 4GB RAM
-- 10GB espacio en disco
+- Python 3.13 o superior
+- Node.js 18 o superior
+- 8GB RAM
+- 20GB espacio en disco
+- Redis (para rate limiting)
 - Windows 10/11, macOS, o Linux
 
 ### **Recomendados**
-- Python 3.11+
-- Node.js 18+
-- 8GB RAM
-- 20GB espacio en disco
+- Python 3.13+
+- Node.js 20+
+- 16GB RAM
+- 50GB espacio en disco
 - SSD para mejor rendimiento
+- Redis Cluster (producción)
 
 ---
 
@@ -115,6 +141,8 @@ npm run dev
 ### **4. Acceder al Sistema**
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8000
+- **API v2 (IA)**: http://localhost:8000/api/v2/ai/health
+- **Monitoreo**: http://localhost:8000/api/v1/monitoring/health
 - **Credenciales por defecto**: `admin` / `admin`
 
 ---
@@ -194,8 +222,12 @@ docker-compose -f docker-compose.production.yml up -d
 - `logs/backup.log` - Logs de respaldos
 
 ### **Monitoreo**
-- Health check: http://localhost:8000/api/v1/health
-- Métricas: http://localhost:8000/api/v1/system/stats
+- Health check: http://localhost:8000/api/v1/monitoring/health
+- Métricas: http://localhost:8000/api/v1/monitoring/metrics
+- IA Health: http://localhost:8000/api/v2/ai/health
+- IA Stats: http://localhost:8000/api/v2/ai/stats
+- Redis Info: http://localhost:8000/api/v1/monitoring/redis/info
+- Rate Limit Info: http://localhost:8000/api/v1/monitoring/rate-limit/info
 
 ---
 
@@ -217,24 +249,40 @@ docker-compose -f docker-compose.production.yml up -d
 
 ### **Backend**
 ```bash
-python -m pytest tests/
+# Tests API v1
+python -m pytest tests/test_api.py -v --cov=app
+
+# Tests API v2 (IA)
+python -m pytest tests/test_api_v2.py -v
+
+# Tests completos
+python -m pytest tests/ -v --cov=app --cov-report=html
 ```
 
 ### **Frontend**
 ```bash
 cd frontend
 npm test
+npm run test:coverage
 ```
 
 ### **Calidad de Código**
 ```bash
 # Backend
-flake8 app/
-radon cc app/ -a -nc
+pytest tests/ -v --cov=app
+pylint app/
+black app/ --check
 
 # Frontend
 cd frontend
 npm run lint
+npm run type-check
+```
+
+### **CI/CD**
+```bash
+# GitHub Actions se ejecuta automáticamente
+# Incluye: linting, testing, security scanning, Docker build
 ```
 
 ---
@@ -245,6 +293,10 @@ npm run lint
 - [Configuración de Email](EMAIL_SETUP.md)
 - [Guía de Seguridad](SECURITY_YAML_GUIDE.md)
 - [Sistema de Despliegue Automático](README_AUTO_DEPLOY.md)
+- [Resumen de Implementaciones](RESUMEN_IMPLEMENTACIONES_COMPLETAS.md)
+- [Validación API v2](VALIDACION_API_V2_COMPLETADA.md)
+- [Mejoras Implementadas](MEJORAS_IMPLEMENTADAS.md)
+- [Análisis de Salud del Sistema](ANALISIS_SALUD_SISTEMA.md)
 
 ---
 
@@ -288,15 +340,24 @@ Para soporte técnico o consultas:
 
 ### **v2.1.0** (Próxima versión)
 - [ ] Integración con sistemas contables
-- [ ] Reportes avanzados con gráficos
 - [ ] App móvil para Android/iOS
 - [ ] Integración con proveedores
+- [ ] Dashboard avanzado con métricas en tiempo real
 
 ### **v2.2.0** (Futuro)
-- [ ] Inteligencia artificial para recomendaciones
 - [ ] Sistema de fidelización
 - [ ] Integración con e-commerce
-- [ ] Análisis predictivo
+- [ ] Análisis predictivo avanzado
+- [ ] Machine Learning para optimización de inventario
+
+### **✅ v2.0.0** (ACTUAL - COMPLETADO)
+- [x] Inteligencia artificial para recomendaciones
+- [x] Búsqueda semántica avanzada
+- [x] Sistema de monitoreo y alertas
+- [x] Arquitectura empresarial robusta
+- [x] CI/CD automatizado
+- [x] Testing completo
+- [x] Seguridad avanzada
 
 ---
 

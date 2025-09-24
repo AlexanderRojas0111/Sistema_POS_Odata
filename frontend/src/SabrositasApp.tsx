@@ -8,6 +8,7 @@ import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
 import CartSidebar from './components/CartSidebar';
 import CartUpdater from './components/CartUpdater';
+import ErrorBoundary from './components/ErrorBoundary';
 import { EnhancedCartProvider } from './context/EnhancedCartContext';
 
 const SabrositasApp: React.FC = () => {
@@ -60,8 +61,9 @@ const SabrositasApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <EnhancedCartProvider>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-white">
+        <EnhancedCartProvider>
         {/* Cart Updater para sincronizar el contador */}
         <CartUpdater onCartUpdate={setCartItemCount} />
         
@@ -144,7 +146,7 @@ const SabrositasApp: React.FC = () => {
           </div>
         </motion.div>
       </EnhancedCartProvider>
-    </div>
+    </ErrorBoundary>
   );
 };
 

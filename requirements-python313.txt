@@ -118,7 +118,7 @@ colorama==0.4.6
 sentry-sdk==2.18.0
 
 # Para APIs GraphQL (opcional) - Versiones compatibles con Python 3.13
-graphene==3.4.3
+graphene==2.1.9
 graphene-sqlalchemy==2.3.0
 
 # Optimización y performance

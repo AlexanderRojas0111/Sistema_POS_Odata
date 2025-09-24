@@ -100,12 +100,11 @@ const InventoryManagement: React.FC = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Productos cargados:', data.data.products.length);
-        console.log('Primeros 3 productos:', data.data.products.slice(0, 3));
+        console.log(`✅ Productos cargados exitosamente: ${data.data.products.length} productos`);
         setProducts(data.data.products);
         setFilteredProducts(data.data.products);
       } else {
-        console.error('Error response:', response.status, await response.text());
+        console.error('❌ Error cargando productos:', response.status, await response.text());
       }
     } catch (error) {
       console.error('Error cargando productos:', error);
@@ -116,12 +115,6 @@ const InventoryManagement: React.FC = () => {
 
   // Filtrar productos
   useEffect(() => {
-    console.log('Filtrando productos:', {
-      totalProducts: products.length,
-      searchQuery,
-      selectedCategory
-    });
-    
     let filtered = products;
 
     if (searchQuery) {
@@ -129,18 +122,19 @@ const InventoryManagement: React.FC = () => {
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      console.log('Después de búsqueda:', filtered.length);
     }
 
     if (selectedCategory !== 'all') {
-      const beforeFilter = filtered.length;
       filtered = filtered.filter(product => 
         product.category === selectedCategory
       );
-      console.log(`Filtro categoría "${selectedCategory}": ${beforeFilter} → ${filtered.length}`);
     }
 
-    console.log('Productos filtrados finales:', filtered.length);
+    // Solo loggear cuando hay cambios significativos
+    if (filtered.length !== filteredProducts.length) {
+      console.log(`🔍 Filtros aplicados: ${products.length} → ${filtered.length} productos`);
+    }
+    
     setFilteredProducts(filtered);
   }, [products, searchQuery, selectedCategory]);
 

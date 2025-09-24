@@ -31,6 +31,9 @@ def create_app(config_name='production'):
     db.init_app(app)
     cors.init_app(app)
     
+    # Configurar logging después de inicializar la app
+    configure_logging(app)
+    
     # Configurar limiter con Redis si está disponible
     global limiter
     redis_url = os.environ.get('REDIS_URL', 'memory://')
@@ -50,9 +53,6 @@ def create_app(config_name='production'):
         )
         app.logger.warning("Using in-memory storage for rate limiting. Not recommended for production.")
     
-    # Configurar logging
-    configure_logging(app)
-    
     # Registrar blueprints
     register_blueprints(app)
     
@@ -61,8 +61,12 @@ def create_app(config_name='production'):
     
     # Crear tablas
     with app.app_context():
-        db.create_all()
-        app.logger.info("Database tables created successfully")
+        try:
+            db.create_all()
+            app.logger.info("Database tables created successfully")
+        except Exception as e:
+            app.logger.error(f"Failed to create database tables: {e}")
+            # Continuar sin crear tablas para evitar que falle la aplicación
         
         # Inicializar sistema de IA
         initialize_ai_system(app)
@@ -106,13 +110,22 @@ def register_blueprints(app):
 def configure_enterprise_middleware(app):
     """Configurar middleware enterprise"""
     from app.middleware.error_handler import ErrorHandler
+    from app.middleware.error_handler_enhanced import error_handler_enhanced
     from app.middleware.request_logger import RequestLogger
     from app.middleware.security_headers import SecurityHeaders
+    from app.middleware.validation_middleware import validation_middleware
+    from app.monitoring.metrics import monitoring_middleware
     from app.security.rate_limiter import AdvancedRateLimiter
     from app.security.audit_logger import AuditLogger
     
-    # Middleware de manejo de errores
-    ErrorHandler(app)
+    # Middleware de manejo de errores mejorado
+    error_handler_enhanced.init_app(app)
+    
+    # Middleware de validación
+    validation_middleware.init_app(app)
+    
+    # Middleware de monitoreo
+    monitoring_middleware.init_app(app)
     
     # Middleware de logging de requests
     RequestLogger(app)
@@ -131,32 +144,37 @@ def configure_enterprise_middleware(app):
 
 def configure_di_container(app):
     """Configurar DI Container con servicios enterprise"""
-    from app.container import container
-    from app.repositories.user_repository import UserRepository
-    from app.repositories.product_repository import ProductRepository
-    from app.repositories.sale_repository import SaleRepository
-    from app.repositories.inventory_repository import InventoryRepository
-    from app.services.user_service import UserService
-    from app.services.product_service import ProductService
-    from app.services.sale_service import SaleService
-    from app.services.inventory_service import InventoryService
-    
-    # Registrar repositories
-    container.register_singleton(UserRepository, UserRepository)
-    container.register_singleton(ProductRepository, ProductRepository)
-    container.register_singleton(SaleRepository, SaleRepository)
-    container.register_singleton(InventoryRepository, InventoryRepository)
-    
-    # Registrar services
-    container.register_singleton(UserService, UserService)
-    container.register_singleton(ProductService, ProductService)
-    container.register_singleton(SaleService, SaleService)
-    container.register_singleton(InventoryService, InventoryService)
-    
-    # Hacer container disponible en la app
-    app.container = container
-    
-    app.logger.info("DI Container configured with enterprise services")
+    try:
+        from app.container import container
+        from app.repositories.user_repository import UserRepository
+        from app.repositories.product_repository import ProductRepository
+        from app.repositories.sale_repository import SaleRepository
+        from app.repositories.inventory_repository import InventoryRepository
+        from app.services.user_service import UserService
+        from app.services.product_service import ProductService
+        from app.services.sale_service import SaleService
+        from app.services.inventory_service import InventoryService
+        
+        # Registrar repositories
+        container.register_singleton(UserRepository, UserRepository)
+        container.register_singleton(ProductRepository, ProductRepository)
+        container.register_singleton(SaleRepository, SaleRepository)
+        container.register_singleton(InventoryRepository, InventoryRepository)
+        
+        # Registrar services
+        container.register_singleton(UserService, UserService)
+        container.register_singleton(ProductService, ProductService)
+        container.register_singleton(SaleService, SaleService)
+        container.register_singleton(InventoryService, InventoryService)
+        
+        # Hacer container disponible en la app
+        app.container = container
+        
+        app.logger.info("DI Container configured with enterprise services")
+    except Exception as e:
+        app.logger.error(f"Failed to configure DI Container: {e}")
+        # Continuar sin DI Container para evitar que falle la aplicación
+        app.container = None
 
 def initialize_ai_system(app):
     """Inicializar sistema de IA al arrancar la aplicación"""

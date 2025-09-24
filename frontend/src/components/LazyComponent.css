@@ -1,0 +1,150 @@
+/* LazyComponent.css - Estilos para componentes lazy loading */
+
+/* Virtual Scroll Container */
+.virtual-scroll-container {
+  height: var(--container-height);
+}
+
+/* Virtual Scroll Content */
+.virtual-scroll-content {
+  height: var(--total-height);
+}
+
+/* Virtual Scroll Items */
+.virtual-scroll-item {
+  height: var(--item-height);
+}
+
+/* Virtual Scroll Transform */
+.virtual-scroll-transform {
+  transform: translateY(var(--offset-y));
+}
+
+/* Lazy Image Placeholder */
+.lazy-image-placeholder {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Lazy Component Loading */
+.lazy-component-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.lazy-component-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Lazy Component Placeholder */
+.lazy-component-placeholder {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Lazy Component Skeleton */
+.lazy-skeleton {
+  background-color: #e5e7eb;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.lazy-skeleton:last-child {
+  margin-bottom: 0;
+}
+
+/* Lazy Image Error */
+.lazy-image-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Performance Metrics */
+.performance-metrics {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  z-index: 1000;
+  font-family: monospace;
+}
+
+/* Intersection Observer Debug */
+.intersection-debug {
+  position: relative;
+}
+
+.intersection-debug::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed #3b82f6;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.intersection-debug.intersecting::before {
+  border-color: #10b981;
+  opacity: 0.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .performance-metrics {
+    bottom: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.625rem;
+    padding: 0.25rem;
+  }
+  
+  .lazy-component-loading {
+    padding: 1rem;
+  }
+  
+  .lazy-component-placeholder {
+    padding: 1rem;
+  }
+}

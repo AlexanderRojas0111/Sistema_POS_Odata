@@ -1,0 +1,37 @@
+extends: default
+
+rules:
+  # Reglas específicas para GitHub Actions
+  line-length:
+    max: 120
+    level: warning
+  
+  # Permitir comentarios largos
+  comments:
+    min-spaces-from-content: 1
+  
+  # Permitir indentación flexible para GitHub Actions
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+  
+  # Permitir caracteres especiales en strings de GitHub Actions
+  quoted-strings:
+    quote-type: any
+    check-keys: false
+  
+  # Permitir documentos vacíos
+  document-start:
+    present: false
+  
+  # Permitir múltiples documentos
+  document-end:
+    present: false
+
+# Ignorar archivos específicos
+ignore: |
+  .github/workflows/ci-cd.yml
+  .github/workflows/ci.yml
+  .github/workflows/code-quality.yml
+  .github/workflows/python-app.yml

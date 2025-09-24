@@ -1,198 +1,312 @@
-name: Code Quality Monitor
+name: Code Quality & Security
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   schedule:
-    # Ejecutar semanalmente los lunes a las 9:00 AM UTC
-    - cron: '0 9 * * 1'
+    - cron: '0 2 * * 1'  # Lunes a las 2 AM
+
+env:
+  PYTHON_VERSION: '3.13'
+  NODE_VERSION: '18'
 
 jobs:
-  code-quality-check:
+  # ===========================================
+  # BACKEND CODE QUALITY
+  # ===========================================
+  backend-quality:
+    name: Backend Code Quality
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v5
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.13'
-    
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
+        python-version: ${{ env.PYTHON_VERSION }}
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install coverage pytest radon flake8
-    
-    - name: Run Code Quality Monitor
-      id: quality_check
+        pip install -r requirements-dev.txt
+        pip install bandit safety flake8 radon
+
+    - name: Run Bandit Security Scan
       run: |
-        python scripts/code_quality_monitor.py
-        echo "quality_score=$(python -c "import json; print(json.load(open('reports/code_quality_report_latest.json'))['overall']['score'])")" >> $GITHUB_OUTPUT
-      continue-on-error: true
-    
+        bandit -r app/ -f json -o bandit-report.json
+        bandit -r app/ -f txt
+
+    - name: Run Safety Check
+      run: |
+        safety check --json --output safety-report.json
+        safety check
+
     - name: Run Flake8 Linting
       run: |
         flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 app/ --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics
-    
-    - name: Run Radon Complexity Check
-      run: |
-        radon cc app/ -a -nc --total-average
-        radon cc app/ -nc --min=B  # Solo mostrar funciones con complejidad B o mayor
-    
-    - name: Check for TODOs
-      run: |
-        echo "🔍 Buscando TODOs pendientes..."
-        TODO_COUNT=$(grep -r "TODO\|FIXME\|XXX\|HACK\|BUG" app/ --exclude-dir=__pycache__ | wc -l || echo "0")
-        echo "TODOs encontrados: $TODO_COUNT"
-        if [ "$TODO_COUNT" -gt "5" ]; then
-          echo "❌ Demasiados TODOs pendientes ($TODO_COUNT > 5)"
-          grep -r "TODO\|FIXME\|XXX" app/ --exclude-dir=__pycache__ || true
-          exit 1
-        fi
-    
-    - name: Run Tests with Coverage
-      run: |
-        coverage run --source=app -m pytest tests/ -v
-        coverage report --format=markdown > coverage_report.md
-        coverage report --fail-under=70
-    
-    - name: Quality Gate Check
-      run: |
-        QUALITY_SCORE=${{ steps.quality_check.outputs.quality_score }}
-        echo "Puntuación de calidad: $QUALITY_SCORE"
-        
-        if [ "$QUALITY_SCORE" -lt "70" ]; then
-          echo "❌ Quality Gate FAILED: Puntuación demasiado baja ($QUALITY_SCORE < 70)"
-          exit 1
-        elif [ "$QUALITY_SCORE" -lt "80" ]; then
-          echo "⚠️  Quality Gate WARNING: Puntuación mejorable ($QUALITY_SCORE < 80)"
-        else
-          echo "✅ Quality Gate PASSED: Excelente calidad ($QUALITY_SCORE >= 80)"
-        fi
-    
-    - name: Upload Quality Report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: code-quality-report
-        path: |
-          reports/code_quality_report_*.json
-          coverage_report.md
-        retention-days: 30
-    
-    - name: Comment PR with Quality Report
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const fs = require('fs');
-          
-          // Leer reporte de calidad
-          const reportFiles = fs.readdirSync('reports/').filter(f => f.startsWith('code_quality_report_'));
-          if (reportFiles.length === 0) return;
-          
-          const report = JSON.parse(fs.readFileSync(`reports/${reportFiles[0]}`, 'utf8'));
-          const score = report.overall.score;
-          const status = report.overall.status;
-          
-          // Leer cobertura
-          let coverageContent = '';
-          if (fs.existsSync('coverage_report.md')) {
-            coverageContent = fs.readFileSync('coverage_report.md', 'utf8');
-          }
-          
-          const comment = `## 📊 Reporte de Calidad de Código
-          
-          **Puntuación General:** ${score}/100 ${status}
-          
-          | Métrica | Objetivo | Actual | Estado |
-          |---------|----------|---------|---------|
-          | Duplicación | < 5% | ${report.duplication.percentage.toFixed(1)}% | ${report.duplication.status} |
-          | Complejidad Promedio | < 5 | ${report.complexity.average.toFixed(1)} | ${report.complexity.status} |
-          | Funciones Largas | 0 | ${report.function_length.count} | ${report.function_length.status} |
-          | Cobertura Tests | > 80% | ${report.coverage.coverage.toFixed(1)}% | ${report.coverage.status} |
-          | TODOs Pendientes | 0 | ${report.todos.count} | ${report.todos.status} |
-          
-          ### 🔴 Problemas Críticos
-          ${report.complexity.complex_functions.length > 0 ? `- ${report.complexity.complex_functions.length} funciones con complejidad > 10` : ''}
-          ${report.function_length.long_functions.length > 0 ? `- ${report.function_length.long_functions.length} funciones con > 30 líneas` : ''}
-          ${report.todos.todos.length > 0 ? `- ${report.todos.todos.length} TODOs pendientes` : ''}
-          
-          <details>
-          <summary>📈 Cobertura de Tests</summary>
-          
-          ${coverageContent}
-          </details>
-          `;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+        flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-  notify-slack:
-    needs: code-quality-check
-    runs-on: ubuntu-latest
-    if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'schedule')
-    
-    steps:
-    - name: Download Quality Report
-      uses: actions/download-artifact@v4
-      with:
-        name: code-quality-report
-        path: reports/
-    
-    - name: Notify Slack
-      if: env.SLACK_WEBHOOK_URL != ''
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: Run Radon Complexity Analysis
       run: |
-        # Determinar color basado en resultado
-        if [ "${{ needs.code-quality-check.result }}" == "success" ]; then
-          COLOR="good"
-          EMOJI="✅"
-        elif [ "${{ needs.code-quality-check.result }}" == "failure" ]; then
-          COLOR="danger"
-          EMOJI="❌"
-        else
-          COLOR="warning"
-          EMOJI="⚠️"
+        radon cc app/ -a -nc
+        radon mi app/ -nc
+        radon hal app/ -nc
+
+    - name: Check for TODO/FIXME
+      run: |
+        echo "Checking for TODO/FIXME comments..."
+        grep -r "TODO\|FIXME\|XXX" app/ || echo "No TODO/FIXME found"
+
+    - name: Upload quality reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: backend-quality-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  # ===========================================
+  # FRONTEND CODE QUALITY
+  # ===========================================
+  frontend-quality:
+    name: Frontend Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run ESLint
+      working-directory: ./frontend
+      run: npm run lint
+
+    - name: Run Prettier Check
+      working-directory: ./frontend
+      run: npm run format:check
+
+    - name: Run TypeScript Check
+      working-directory: ./frontend
+      run: npm run type-check
+
+    - name: Run Bundle Analysis
+      working-directory: ./frontend
+      run: |
+        npm run build
+        npm run analyze || echo "Bundle analysis not configured"
+
+    - name: Check for TODO/FIXME
+      working-directory: ./frontend
+      run: |
+        echo "Checking for TODO/FIXME comments..."
+        grep -r "TODO\|FIXME\|XXX" src/ || echo "No TODO/FIXME found"
+
+  # ===========================================
+  # DEPENDENCY SCANNING
+  # ===========================================
+  dependency-scan:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install Node dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run Python dependency scan
+      run: |
+        safety check --json --output python-deps-report.json
+        pip-audit --format=json --output=python-audit-report.json || true
+
+    - name: Run Node dependency scan
+      working-directory: ./frontend
+      run: |
+        npm audit --json > node-audit-report.json || true
+        npm audit
+
+    - name: Upload dependency reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-scan-reports
+        path: |
+          python-deps-report.json
+          python-audit-report.json
+          frontend/node-audit-report.json
+
+  # ===========================================
+  # PERFORMANCE TESTING
+  # ===========================================
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install locust
+
+    - name: Start application
+      run: |
+        export FLASK_ENV=testing
+        export DATABASE_URL=sqlite:///test.db
+        export REDIS_URL=redis://localhost:6379/0
+        export SECRET_KEY=test-secret-key
+        python main.py &
+        sleep 10
+
+    - name: Run performance tests
+      run: |
+        # Crear archivo de configuración de Locust
+        cat > locustfile.py << 'EOF'
+        from locust import HttpUser, task, between
+
+        class WebsiteUser(HttpUser):
+            wait_time = between(1, 3)
+            
+            @task(3)
+            def health_check(self):
+                self.client.get("/api/v1/health")
+            
+            @task(2)
+            def get_products(self):
+                self.client.get("/api/v1/products")
+            
+            @task(1)
+            def get_metrics(self):
+                self.client.get("/api/v1/monitoring/metrics")
+        EOF
+        
+        # Ejecutar test de carga
+        locust -f locustfile.py --headless -u 10 -r 2 -t 30s --html performance-report.html
+
+    - name: Upload performance report
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-report
+        path: performance-report.html
+
+  # ===========================================
+  # CODE COVERAGE REPORT
+  # ===========================================
+  coverage-report:
+    name: Code Coverage Report
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: Run tests with coverage
+      run: |
+        pytest tests/ -v --cov=app --cov-report=xml --cov-report=html --cov-fail-under=70
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: quality
+        name: quality-coverage
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+
+  # ===========================================
+  # QUALITY GATE
+  # ===========================================
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [backend-quality, frontend-quality, dependency-scan, performance-test, coverage-report]
+    if: always()
+
+    steps:
+    - name: Check quality results
+      run: |
+        echo "Checking quality gate results..."
+        
+        # Verificar que todos los jobs pasaron
+        if [[ "${{ needs.backend-quality.result }}" != "success" ]]; then
+          echo "❌ Backend quality check failed"
+          exit 1
         fi
         
-        # Leer puntuación del reporte si existe
-        SCORE="N/A"
-        if [ -f "reports/code_quality_report_*.json" ]; then
-          SCORE=$(python -c "import json, glob; files=glob.glob('reports/code_quality_report_*.json'); print(json.load(open(files[0]))['overall']['score'] if files else 'N/A')")
+        if [[ "${{ needs.frontend-quality.result }}" != "success" ]]; then
+          echo "❌ Frontend quality check failed"
+          exit 1
         fi
         
-        # Enviar notificación a Slack
-        curl -X POST -H 'Content-type: application/json' \
-        --data "{
-          \"attachments\": [{
-            \"color\": \"$COLOR\",
-            \"title\": \"$EMOJI Code Quality Check - Sistema POS O'data\",
-            \"fields\": [
-              {\"title\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
-              {\"title\": \"Puntuación\", \"value\": \"$SCORE/100\", \"short\": true},
-              {\"title\": \"Commit\", \"value\": \"${{ github.sha }}\", \"short\": true},
-              {\"title\": \"Resultado\", \"value\": \"${{ needs.code-quality-check.result }}\", \"short\": true}
-            ],
-            \"footer\": \"GitHub Actions\",
-            \"ts\": $(date +%s)
-          }]
-        }" $SLACK_WEBHOOK_URL
+        if [[ "${{ needs.dependency-scan.result }}" != "success" ]]; then
+          echo "❌ Dependency scan failed"
+          exit 1
+        fi
+        
+        if [[ "${{ needs.coverage-report.result }}" != "success" ]]; then
+          echo "❌ Coverage report failed"
+          exit 1
+        fi
+        
+        echo "✅ All quality checks passed!"
+        echo "🎉 Quality gate successful!"

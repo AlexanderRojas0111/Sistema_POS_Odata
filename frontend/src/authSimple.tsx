@@ -42,27 +42,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
+      console.log('Intentando login para:', username)
+      
       const res = await fetch('http://localhost:8000/api/v1/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ username, password })
       })
       
+      console.log('Response status:', res.status)
+      console.log('Response ok:', res.ok)
+      
       if (!res.ok) {
-        throw new Error('Credenciales inválidas')
+        const errorData = await res.json().catch(() => ({}))
+        console.error('Login failed:', errorData)
+        throw new Error(errorData.error?.message || 'Credenciales inválidas')
       }
       
       const data = await res.json()
-      const authUser: AuthUser = {
-        id: data.data?.user_id ?? 0,
-        username: data.data?.username ?? username,
-        role: (data.data?.role ?? 'cashier') as Role,
-        token: data.data?.access_token ?? data.token ?? '',
-        refreshToken: data.data?.refresh_token
-      }
+      console.log('Login response data:', data)
       
-      setUser(authUser)
-      localStorage.setItem('auth:user', JSON.stringify(authUser))
+      // Verificar que la respuesta tiene la estructura esperada
+      if (data.status === 'success' && data.data) {
+        const authUser: AuthUser = {
+          id: data.data.user_id ?? 0,
+          username: data.data.username ?? username,
+          role: (data.data.role ?? 'cashier') as Role,
+          token: data.data.access_token ?? '',
+          refreshToken: data.data.refresh_token
+        }
+        
+        console.log('Usuario autenticado:', authUser)
+        setUser(authUser)
+        localStorage.setItem('auth:user', JSON.stringify(authUser))
+      } else {
+        console.error('Estructura de respuesta inesperada:', data)
+        throw new Error('Error en la respuesta del servidor')
+      }
     } catch (error) {
       console.error('Login error:', error)
       throw error

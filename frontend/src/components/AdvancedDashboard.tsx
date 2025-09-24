@@ -6,10 +6,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area
-} from 'recharts';
-import { 
   TrendingUp, TrendingDown, DollarSign, ShoppingCart, 
   Users, Package, AlertCircle, Brain, Zap,
   RefreshCw, Eye
@@ -17,6 +13,14 @@ import {
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import {
+  SalesTrendChart,
+  TopProductsChart,
+  PaymentMethodsChart,
+  RevenueChart,
+  MetricCard,
+  PerformanceChart
+} from './ModernCharts';
 // Tipos
 interface DashboardMetrics {
   period: {
@@ -392,68 +396,12 @@ const AdvancedDashboard: React.FC = () => {
               />
             </div>
 
-            {/* Gráfico de ventas en el tiempo */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Tendencia de Ventas - Últimos {periodDays} días
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={metrics.sales_timeline}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(date) => format(parseISO(date), 'dd/MM')}
-                  />
-                  <YAxis />
-                  <Tooltip
-                    labelFormatter={(date) => format(parseISO(date), 'PPP', { locale: es })}
-                    formatter={(value: number, name: string) => [
-                      name === 'revenue' ? formatCurrency(value) : value,
-                      name === 'revenue' ? 'Ingresos' : 'Ventas'
-                    ]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#f59e0b"
-                    fillOpacity={1}
-                    fill="url(#colorRevenue)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            {/* Gráfico de ventas en el tiempo - Moderno */}
+            <SalesTrendChart data={metrics.sales_timeline} />
 
-            {/* Análisis de métodos de pago */}
+            {/* Análisis de métodos de pago - Moderno */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Métodos de Pago
-                </h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={metrics.payment_analysis}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="percentage"
-                      label={({ name, percentage }) => `${name} ${percentage}%`}
-                    >
-                      {metrics.payment_analysis.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 60%)`} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => [`${value}%`, 'Porcentaje']} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              <PaymentMethodsChart data={metrics.payment_analysis} />
 
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -496,6 +444,9 @@ const AdvancedDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Productos Más Vendidos - Moderno */}
+            <TopProductsChart data={metrics.top_products} />
           </motion.div>
         )}
 

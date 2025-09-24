@@ -1,0 +1,50 @@
+# Configuración para actionlint (linter de GitHub Actions)
+# Este archivo configura el linter para ignorar errores de resolución de acciones
+
+# Ignorar errores de resolución de acciones (normal en entorno local)
+ignore:
+  - "action-uses-version"
+  - "action-uses-version-pinned"
+
+# Configuración de validación
+validation:
+  # Permitir versiones de acciones no resueltas
+  allow-unresolved-actions: true
+  
+  # Validar sintaxis YAML
+  validate-yaml: true
+  
+  # Validar estructura de workflow
+  validate-workflow: true
+  
+  # Validar expresiones de GitHub Actions
+  validate-expressions: true
+
+# Reglas específicas
+rules:
+  # Permitir uso de secrets sin validación
+  allow-secrets: true
+  
+  # Permitir uso de contextos de GitHub
+  allow-github-context: true
+  
+  # Validar permisos
+  validate-permissions: true
+  
+  # Validar triggers
+  validate-triggers: true
+
+# Acciones conocidas (para evitar errores de resolución)
+known-actions:
+  - "actions/checkout@v4"
+  - "actions/setup-python@v5"
+  - "actions/setup-node@v4"
+  - "actions/cache@v4"
+  - "actions/upload-artifact@v4"
+  - "actions/download-artifact@v4"
+  - "actions/github-script@v7"
+  - "github/codeql-action/init@v3"
+  - "github/codeql-action/autobuild@v3"
+  - "github/codeql-action/analyze@v3"
+  - "aquasecurity/trivy-action@master"
+  - "peter-evans/create-pull-request@v5"

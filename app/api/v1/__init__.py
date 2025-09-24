@@ -9,7 +9,7 @@ from flask import Blueprint
 api_bp = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
 # Importar endpoints
-from . import sales, products, users, health, simple_users, simple_products, auth, inventory, electronic_invoice, support_document, digital_certificate, payroll, accounts_receivable, quotation, dashboard, debug, roles, analytics, simple_reports, simple_reports_test, reports_professional, reports_final, qr_payments, system_stats, multi_payment
+from . import sales, products, users, health, simple_users, simple_products, auth, inventory, electronic_invoice, support_document, digital_certificate, payroll, accounts_receivable, quotation, dashboard, debug, roles, analytics, simple_reports, simple_reports_test, reports_final, reports_enhanced, qr_payments, system_stats, multi_payment, monitoring, products_enhanced, users_enhanced
 
 # Registrar blueprints
 api_bp.register_blueprint(sales.sales_bp)
@@ -55,12 +55,26 @@ api_bp.register_blueprint(simple_reports.simple_reports_bp)
 api_bp.register_blueprint(simple_reports_test.test_reports_bp)
 
 # Registrar Reports Professional endpoints (SOLUCIÓN FINAL)
-api_bp.register_blueprint(reports_professional.reports_professional_bp)
+# Comentado temporalmente - reports_professional no está implementado
+# api_bp.register_blueprint(reports_professional.reports_professional_bp)
 
 # Registrar Reports Final endpoints (SOLUCIÓN DEFINITIVA)
 api_bp.register_blueprint(reports_final.reports_final_bp)
+
+# Registrar Reports Enhanced endpoints (MÓDULO MEJORADO CON EXCEL)
+api_bp.register_blueprint(reports_enhanced.reports_enhanced_bp)
+
+# Registrar Reports Professional endpoints (MÓDULO PROFESIONAL CON PDF)
+# Comentado temporalmente - se implementó en reports_enhanced
 
 # Registrar QR Payments endpoints
 api_bp.register_blueprint(qr_payments.qr_payments_bp)
 api_bp.register_blueprint(system_stats.system_stats_bp)
 api_bp.register_blueprint(multi_payment.multi_payment_bp)
+
+# Registrar Monitoring endpoints
+api_bp.register_blueprint(monitoring.monitoring_bp, url_prefix='/monitoring')
+
+# Registrar Enhanced endpoints (con respuestas consistentes)
+api_bp.register_blueprint(products_enhanced.products_enhanced_bp, url_prefix='/enhanced')
+api_bp.register_blueprint(users_enhanced.users_enhanced_bp, url_prefix='/enhanced')
