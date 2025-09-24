@@ -1,0 +1,4 @@
+ID_Venta,Fecha,Cliente,Total,Estado,Usuario,Método_Pago,Observaciones
+VENTA-1,2025-02-27 18:47:43.542970,Cliente1,50,Pendiente,Admin,Metodo1,Sin observaciones
+VENTA-2,2025-02-27 18:47:52.633952,Cliente2,20,Pendiente,Admin,Metodo2,Sin observaciones
+

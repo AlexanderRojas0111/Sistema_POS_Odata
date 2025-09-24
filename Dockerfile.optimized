@@ -1,0 +1,137 @@
+# ========================================================================
+# Sistema POS O'data - Dockerfile Optimizado Multi-Stage
+# ========================================================================
+# Versión: 2.0.0
+# Descripción: Imagen Docker optimizada para producción
+# ========================================================================
+
+# ========================================================================
+# STAGE 1: Base Python Image
+# ========================================================================
+FROM python:3.11-slim as base
+
+# Metadatos de la imagen
+LABEL maintainer="Sistema POS Odata Team"
+LABEL version="2.0.0"
+LABEL description="Sistema POS con IA para búsqueda semántica"
+
+# Variables de entorno para Python
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Crear usuario no-root para seguridad
+RUN groupadd -r posuser && useradd -r -g posuser posuser
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# ========================================================================
+# STAGE 2: Dependencies Builder
+# ========================================================================
+FROM base as builder
+
+WORKDIR /build
+
+# Copiar archivos de dependencias
+COPY requirements.txt .
+COPY requirements-dev.txt .
+
+# Crear entorno virtual e instalar dependencias
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Actualizar pip y instalar dependencias
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ========================================================================
+# STAGE 3: Development Image
+# ========================================================================
+FROM base as development
+
+# Copiar entorno virtual desde builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Configurar directorio de trabajo
+WORKDIR /app
+
+# Crear directorios necesarios
+RUN mkdir -p /app/logs /app/uploads /app/instance
+RUN chown -R posuser:posuser /app
+
+# Copiar código fuente
+COPY --chown=posuser:posuser . .
+
+# Cambiar a usuario no-root
+USER posuser
+
+# Exponer puerto
+EXPOSE 5000
+
+# Comando por defecto para desarrollo
+CMD ["python", "run_server.py"]
+
+# ========================================================================
+# STAGE 4: Production Image (Optimizada)
+# ========================================================================
+FROM base as production
+
+# Copiar solo el entorno virtual necesario
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Configurar directorio de trabajo
+WORKDIR /app
+
+# Crear directorios necesarios
+RUN mkdir -p /app/logs /app/uploads /app/instance
+RUN chown -R posuser:posuser /app
+
+# Copiar solo archivos necesarios para producción
+COPY --chown=posuser:posuser app/ ./app/
+COPY --chown=posuser:posuser scripts/ ./scripts/
+COPY --chown=posuser:posuser migrations/ ./migrations/
+COPY --chown=posuser:posuser run_server.py .
+COPY --chown=posuser:posuser requirements.txt .
+
+# Asegurar permisos de ejecución del entrypoint
+USER root
+RUN chmod +x /app/scripts/entrypoint.sh
+USER posuser
+
+# Cambiar a usuario no-root
+USER posuser
+
+# Variables de entorno para producción
+ENV FLASK_ENV=production
+ENV PYTHONPATH=/app
+
+# Exponer puerto
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+
+# EntryPoint que ejecuta migraciones y luego lanza gunicorn
+ENTRYPOINT ["/bin/bash", "/app/scripts/entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--worker-class", "sync", "--timeout", "30", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "50", "app:create_app()"]
+
+# ========================================================================
+# STAGE 5: Testing Image
+# ========================================================================
+FROM development as testing
+
+# Instalar dependencias de testing
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+# Comando para ejecutar tests
+CMD ["pytest", "-v", "--cov=app", "tests/"]

@@ -1,0 +1,4 @@
+ID_Producto,Nombre,Stock_Actual,Stock_Minimo,Precio_Unitario
+P001,Producto 1,60,10,100.0
+P002,Producto 2,20,5,200.0
+P003,Producto 3,0,2,150.0

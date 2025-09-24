@@ -1,0 +1,427 @@
+groups:
+  - name: Sistema POS Odata - Alertas Críticas
+    rules:
+      # ===== ALERTAS DE INFRAESTRUCTURA =====
+      - alert: ServicioBackendCaido
+        expr: up{job="flask_app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Servicio Backend Flask caído"
+          description: "El servicio backend del sistema POS no responde desde hace más de 1 minuto"
+          runbook_url: "https://wiki.odata.com/runbooks/backend-down"
+          
+      - alert: BaseDatosCaida
+        expr: up{job="postgres"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Base de datos PostgreSQL caída"
+          description: "La base de datos del sistema POS no responde"
+          runbook_url: "https://wiki.odata.com/runbooks/database-down"
+          
+      - alert: RedisCaido
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: cache
+        annotations:
+          summary: "Servicio Redis caído"
+          description: "El servicio de cache Redis no responde"
+          runbook_url: "https://wiki.odata.com/runbooks/redis-down"
+          
+      - alert: NginxCaido
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: nginx
+        annotations:
+          summary: "Servidor web Nginx caído"
+          description: "El servidor web Nginx no responde"
+          runbook_url: "https://wiki.odata.com/runbooks/nginx-down"
+
+      # ===== ALERTAS DE RENDIMIENTO =====
+      - alert: LatenciaAlta
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="flask_app"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: performance
+        annotations:
+          summary: "Latencia alta detectada"
+          description: "El 95% de las respuestas tardan más de 2 segundos"
+          runbook_url: "https://wiki.odata.com/runbooks/high-latency"
+          
+      - alert: LatenciaCritica
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="flask_app"}[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: performance
+        annotations:
+          summary: "Latencia crítica detectada"
+          description: "El 95% de las respuestas tardan más de 5 segundos"
+          runbook_url: "https://wiki.odata.com/runbooks/critical-latency"
+          
+      - alert: ErrorRateAlto
+        expr: rate(http_requests_total{job="flask_app", status=~"5.."}[5m]) / rate(http_requests_total{job="flask_app"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: errors
+        annotations:
+          summary: "Tasa de errores alta"
+          description: "Más del 5% de las solicitudes están fallando"
+          runbook_url: "https://wiki.odata.com/runbooks/high-error-rate"
+          
+      - alert: ErrorRateCritico
+        expr: rate(http_requests_total{job="flask_app", status=~"5.."}[5m]) / rate(http_requests_total{job="flask_app"}[5m]) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+          service: errors
+        annotations:
+          summary: "Tasa de errores crítica"
+          description: "Más del 10% de las solicitudes están fallando"
+          runbook_url: "https://wiki.odata.com/runbooks/critical-error-rate"
+
+      # ===== ALERTAS DE RECURSOS =====
+      - alert: CPUAlto
+        expr: 100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: resources
+        annotations:
+          summary: "Uso de CPU alto"
+          description: "El uso de CPU está por encima del 80%"
+          runbook_url: "https://wiki.odata.com/runbooks/high-cpu"
+          
+      - alert: CPUCritico
+        expr: 100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: resources
+        annotations:
+          summary: "Uso de CPU crítico"
+          description: "El uso de CPU está por encima del 95%"
+          runbook_url: "https://wiki.odata.com/runbooks/critical-cpu"
+          
+      - alert: MemoriaAlta
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: resources
+        annotations:
+          summary: "Uso de memoria alto"
+          description: "El uso de memoria está por encima del 85%"
+          runbook_url: "https://wiki.odata.com/runbooks/high-memory"
+          
+      - alert: MemoriaCritica
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: resources
+        annotations:
+          summary: "Uso de memoria crítico"
+          description: "El uso de memoria está por encima del 95%"
+          runbook_url: "https://wiki.odata.com/runbooks/critical-memory"
+          
+      - alert: DiscoLlenandose
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: resources
+        annotations:
+          summary: "Disco llenándose"
+          description: "El uso del disco está por encima del 80%"
+          runbook_url: "https://wiki.odata.com/runbooks/disk-filling"
+
+      # ===== ALERTAS DE BASE DE DATOS =====
+      - alert: ConexionesDBAltas
+        expr: pg_stat_database_numbackends > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Muchas conexiones a la base de datos"
+          description: "Hay más de 80 conexiones activas a PostgreSQL"
+          runbook_url: "https://wiki.odata.com/runbooks/high-db-connections"
+          
+      - alert: ConexionesDBCriticas
+        expr: pg_stat_database_numbackends > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Conexiones críticas a la base de datos"
+          description: "Hay más de 95 conexiones activas a PostgreSQL"
+          runbook_url: "https://wiki.odata.com/runbooks/critical-db-connections"
+          
+      - alert: TransaccionesDBLentas
+        expr: rate(pg_stat_database_xact_commit[5m]) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Transacciones de base de datos lentas"
+          description: "Las transacciones están procesándose muy lentamente"
+          runbook_url: "https://wiki.odata.com/runbooks/slow-db-transactions"
+
+      # ===== ALERTAS DE CACHE =====
+      - alert: RedisMemoriaAlta
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: cache
+        annotations:
+          summary: "Uso de memoria Redis alto"
+          description: "Redis está usando más del 85% de memoria disponible"
+          runbook_url: "https://wiki.odata.com/runbooks/high-redis-memory"
+          
+      - alert: RedisMemoriaCritica
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: cache
+        annotations:
+          summary: "Uso de memoria Redis crítico"
+          description: "Redis está usando más del 95% de memoria disponible"
+          runbook_url: "https://wiki.odata.com/runbooks/critical-redis-memory"
+          
+      - alert: RedisConectado
+        expr: redis_connected_clients == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: cache
+        annotations:
+          summary: "Redis sin clientes conectados"
+          description: "No hay clientes conectados a Redis"
+          runbook_url: "https://wiki.odata.com/runbooks/redis-no-clients"
+
+  - name: Sistema POS Odata - Alertas de Negocio
+    rules:
+      # ===== ALERTAS DE VENTAS =====
+      - alert: VentasBajas
+        expr: pos_sales_total{period="hourly"} < 100
+        for: 2h
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Ventas bajas detectadas"
+          description: "Las ventas están por debajo del umbral esperado"
+          runbook_url: "https://wiki.odata.com/runbooks/low-sales"
+          
+      - alert: SinVentas
+        expr: pos_sales_total{period="hourly"} == 0
+        for: 4h
+        labels:
+          severity: critical
+          service: business
+        annotations:
+          summary: "Sin ventas por 4 horas"
+          description: "No se han registrado ventas en las últimas 4 horas"
+          runbook_url: "https://wiki.odata.com/runbooks/no-sales"
+          
+      - alert: TransaccionesFallidas
+        expr: rate(pos_failed_transactions_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Transacciones fallando"
+          description: "Hay transacciones fallando frecuentemente"
+          runbook_url: "https://wiki.odata.com/runbooks/failed-transactions"
+
+      # ===== ALERTAS DE INVENTARIO =====
+      - alert: StockBajo
+        expr: pos_low_stock_products > 10
+        for: 1h
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Muchos productos con stock bajo"
+          description: "Hay más de 10 productos con stock bajo"
+          runbook_url: "https://wiki.odata.com/runbooks/low-stock"
+          
+      - alert: StockCritico
+        expr: pos_low_stock_products > 20
+        for: 30m
+        labels:
+          severity: critical
+          service: business
+        annotations:
+          summary: "Stock crítico detectado"
+          description: "Hay más de 20 productos con stock crítico"
+          runbook_url: "https://wiki.odata.com/runbooks/critical-stock"
+          
+      - alert: ProductosAgotados
+        expr: pos_out_of_stock_products > 5
+        for: 1h
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Productos agotados"
+          description: "Hay más de 5 productos completamente agotados"
+          runbook_url: "https://wiki.odata.com/runbooks/out-of-stock"
+
+      # ===== ALERTAS DE USUARIOS =====
+      - alert: UsuariosInactivos
+        expr: pos_active_users == 0
+        for: 2h
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Sin usuarios activos"
+          description: "No hay usuarios activos en el sistema"
+          runbook_url: "https://wiki.odata.com/runbooks/no-active-users"
+          
+      - alert: MuchosUsuarios
+        expr: pos_active_users > 10
+        for: 5m
+        labels:
+          severity: info
+          service: business
+        annotations:
+          summary: "Muchos usuarios activos"
+          description: "Hay más de 10 usuarios activos simultáneamente"
+          runbook_url: "https://wiki.odata.com/runbooks/many-active-users"
+
+  - name: Sistema POS Odata - Alertas de Seguridad
+    rules:
+      # ===== ALERTAS DE AUTENTICACIÓN =====
+      - alert: IntentosLoginFallidos
+        expr: rate(pos_failed_logins_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Muchos intentos de login fallidos"
+          description: "Hay más de 5 intentos de login fallidos por minuto"
+          runbook_url: "https://wiki.odata.com/runbooks/failed-logins"
+          
+      - alert: AtaqueBruteForce
+        expr: rate(pos_failed_logins_total[5m]) > 20
+        for: 1m
+        labels:
+          severity: critical
+          service: security
+        annotations:
+          summary: "Posible ataque de fuerza bruta"
+          description: "Hay más de 20 intentos de login fallidos por minuto"
+          runbook_url: "https://wiki.odata.com/runbooks/brute-force-attack"
+          
+      - alert: SesionesExpiradas
+        expr: pos_expired_sessions_total > 100
+        for: 1h
+        labels:
+          severity: info
+          service: security
+        annotations:
+          summary: "Muchas sesiones expiradas"
+          description: "Hay más de 100 sesiones expiradas"
+          runbook_url: "https://wiki.odata.com/runbooks/expired-sessions"
+
+      # ===== ALERTAS DE RATE LIMITING =====
+      - alert: RateLimitExcedido
+        expr: rate(pos_rate_limit_exceeded_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Rate limit excedido frecuentemente"
+          description: "Se está excediendo el rate limit más de 10 veces por minuto"
+          runbook_url: "https://wiki.odata.com/runbooks/rate-limit-exceeded"
+          
+      - alert: AtaqueDoS
+        expr: rate(pos_rate_limit_exceeded_total[5m]) > 50
+        for: 1m
+        labels:
+          severity: critical
+          service: security
+        annotations:
+          summary: "Posible ataque DoS"
+          description: "Se está excediendo el rate limit más de 50 veces por minuto"
+          runbook_url: "https://wiki.odata.com/runbooks/dos-attack"
+
+  - name: Sistema POS Odata - Alertas de Disponibilidad
+    rules:
+      # ===== ALERTAS DE HEALTH CHECKS =====
+      - alert: HealthCheckFallando
+        expr: up{job="flask_app"} == 0 or up{job="postgres"} == 0 or up{job="redis"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: availability
+        annotations:
+          summary: "Health check fallando"
+          description: "Uno o más servicios no están respondiendo a health checks"
+          runbook_url: "https://wiki.odata.com/runbooks/health-check-failing"
+          
+      - alert: EndpointNoResponde
+        expr: rate(http_requests_total{job="flask_app", endpoint="/health"}[5m]) == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: availability
+        annotations:
+          summary: "Endpoint de health no responde"
+          description: "El endpoint /health no está respondiendo"
+          runbook_url: "https://wiki.odata.com/runbooks/health-endpoint-down"
+          
+      - alert: APINoResponde
+        expr: rate(http_requests_total{job="flask_app", endpoint=~"/api/.*"}[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: availability
+        annotations:
+          summary: "API no responde"
+          description: "La API del sistema no está respondiendo"
+          runbook_url: "https://wiki.odata.com/runbooks/api-down"
+
+      # ===== ALERTAS DE BACKUP =====
+      - alert: BackupFallido
+        expr: pos_backup_status == 0
+        for: 1h
+        labels:
+          severity: warning
+          service: availability
+        annotations:
+          summary: "Backup falló"
+          description: "El último backup del sistema falló"
+          runbook_url: "https://wiki.odata.com/runbooks/backup-failed"
+          
+      - alert: BackupAntiguo
+        expr: time() - pos_last_backup_timestamp > 86400
+        for: 2h
+        labels:
+          severity: warning
+          service: availability
+        annotations:
+          summary: "Backup muy antiguo"
+          description: "No se ha realizado un backup en más de 24 horas"
+          runbook_url: "https://wiki.odata.com/runbooks/old-backup"

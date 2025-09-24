@@ -1,0 +1,53 @@
+{
+  "deployment_id": "deploy_1758575462",
+  "timestamp": "2025-09-22T16:11:02.334671",
+  "environment": "development",
+  "version": "2.0.0",
+  "status": "success",
+  "validations": {
+    "backend_health": {
+      "status": "success",
+      "health_data": {
+        "environment": "production",
+        "status": "healthy",
+        "timestamp": "2025-09-22T21:11:14.916027",
+        "version": "1.0.0"
+      },
+      "endpoints": {
+        "/health": {
+          "status_code": 200,
+          "accessible": true
+        },
+        "/api/v1/products": {
+          "status_code": 200,
+          "accessible": true
+        },
+        "/api/v1/users": {
+          "status_code": 401,
+          "accessible": true
+        },
+        "/api/v2/ai/health": {
+          "status_code": 404,
+          "accessible": false
+        }
+      }
+    },
+    "database": {
+      "status": "success",
+      "connectivity": true
+    },
+    "performance": {
+      "status": "success",
+      "avg_response_time": 0.020198965072631837,
+      "max_response_time": 0.025939226150512695,
+      "acceptable": true
+    }
+  },
+  "end_time": "2025-09-22T16:11:36.713881",
+  "duration_seconds": 34.37921,
+  "summary": {
+    "validations_total": 3,
+    "validations_passed": 3,
+    "all_passed": true
+  }
+}

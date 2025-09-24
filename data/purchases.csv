@@ -1,0 +1,2 @@
+ID_Compra,ID_Producto,Fecha,Proveedor,Total,Estado,Usuario,Observaciones
+COMPRA-1,P001,2025-02-27 18:54:02.036509,Proveedor1,100,Pendiente,Admin,Sin observaciones

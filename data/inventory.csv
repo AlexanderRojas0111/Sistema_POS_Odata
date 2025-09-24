@@ -1,0 +1,11 @@
+ID_Producto,Cantidad,Tipo_Movimiento,Usuario,Descripción,Documento_Referencia,Fecha
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:36:51.597908
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:37:03.550999
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:37:44.439008
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:38:43.040921
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:40:38.691309
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:43:28.216840
+P001,10,Entrada,Admin,Ajuste de inventario: Ajuste de prueba,Ajuste manual,2025-03-04 14:55:12.042660
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:55:12.078323
+P001,10,Salida,Admin,Ajuste de inventario: Ajuste de prueba,Ajuste manual,2025-03-04 14:56:28.732270
+P001,10,Entrada,Admin,Stock inicial,DOC123,2025-03-04 14:56:28.763413
