@@ -1,3 +1,23 @@
+## v2.0.2-enterprise-r1 (2025-09-24)
+
+### Resumen
+- Alineación completa de versiones internas y documentación a `v2.0.2-enterprise`.
+- Creación de rama `release/v2.0.2-enterprise` y tag anotado `v2.0.2-enterprise-r1`.
+
+### Cambios
+- app/__init__.py: APP_VERSION y versiones de endpoints `health`, `ai-test` e `index`.
+- app/core/__init__.py: __version__ actualizado.
+- app/api/__init__.py: __version__ actualizado.
+- VERSION.md: versión actual a `2.0.2-enterprise` y registro de cambios.
+- README.md: título actualizado a `v2.0.2-enterprise`.
+
+### Artefactos
+- Tag: v2.0.2-enterprise-r1
+- Rama de release: release/v2.0.2-enterprise
+
+### Commit base
+- ce60f15 chore(version): alinear a v2.0.2-enterprise en código y docs
+
 # 📋 Changelog
 
 Todos los cambios notables en este proyecto serán documentados en este archivo.
