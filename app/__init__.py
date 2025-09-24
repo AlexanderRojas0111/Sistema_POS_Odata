@@ -32,6 +32,9 @@ except ImportError:
 
 from app.core.database import db, init_db
 from app.core.config import config
+from app.core.exceptions import register_error_handlers
+from app.core.logging_config import setup_logging, setup_request_logging
+from app.core.metrics import setup_metrics, register_metrics_endpoints
 
 # Constantes de la aplicación
 APP_VERSION = "2.0.0"
@@ -54,18 +57,9 @@ def create_app(config_name=None):
         config_name = os.getenv('FLASK_ENV', 'development')
     app.config.from_object(config[config_name])
     
-    # Configurar logging
-    if not app.debug:
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('Aplicación iniciada')
+    # Configurar logging empresarial
+    setup_logging(app)
+    setup_request_logging(app)
     
     # Inicializar extensiones
     CORS(app, 
@@ -184,11 +178,17 @@ def create_app(config_name=None):
     except Exception as e:
         app.logger.warning(f'No se pudieron eximir endpoints de health del rate limiting: {e}')
     
-    # Registrar manejadores de errores
+    # Registrar manejadores de errores empresariales
     register_error_handlers(app)
+    
+    # Configurar sistema de métricas y monitoreo
+    setup_metrics(app)
+    register_metrics_endpoints(app)
     
     # Configurar headers de seguridad
     setup_security_headers(app)
+    
+    app.logger.info(f"Aplicación POS O'Data v{APP_VERSION} iniciada exitosamente")
     
     return app
 
