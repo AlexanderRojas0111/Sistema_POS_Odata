@@ -1,4 +1,4 @@
-# 🛍️ Sistema POS O'data v2.0.0
+# 🛍️ Sistema POS O'data v2.0.2-enterprise
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.1.1-green.svg)](https://flask.palletsprojects.com/)

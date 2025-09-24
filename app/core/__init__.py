@@ -11,5 +11,5 @@ Módulos:
 - cache: Sistema de cache
 """
 
-__version__ = "2.0.0"
+__version__ = "2.0.2-enterprise"
 __author__ = "Sistema POS Odata Team"

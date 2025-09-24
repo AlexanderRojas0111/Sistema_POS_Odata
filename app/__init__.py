@@ -6,7 +6,7 @@ Sistema de Punto de Venta con funcionalidades avanzadas de IA
 para búsqueda semántica y recomendaciones inteligentes.
 
 Autor: Sistema POS Odata
-Versión: 2.0.0
+Versión: 2.0.2-enterprise
 """
 
 from flask import Flask
@@ -37,7 +37,7 @@ from app.core.logging_config import setup_logging, setup_request_logging
 from app.core.metrics import setup_metrics, register_metrics_endpoints
 
 # Constantes de la aplicación
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.0.2-enterprise"
 API_TITLE = "POS O'data API"
 
 def create_app(config_name=None):
@@ -200,7 +200,7 @@ def register_basic_routes(app):
         """Endpoint de health check para monitoreo"""
         return {
             'status': 'healthy',
-            'version': '1.0.0',
+            'version': '2.0.2-enterprise',
             'environment': app.config.get('ENV', 'development'),
             'timestamp': datetime.datetime.utcnow().isoformat()
         }
@@ -210,7 +210,7 @@ def register_basic_routes(app):
         """Endpoint de prueba para IA"""
         return {
             'status': 'AI endpoints working',
-            'version': '2.0.0',
+            'version': '2.0.2-enterprise',
             'message': 'Los endpoints de IA están funcionando correctamente',
             'features': [
                 'Búsqueda semántica',
@@ -224,7 +224,7 @@ def register_basic_routes(app):
         """Endpoint raíz de la aplicación"""
         return {
             'message': 'POS O\'data API',
-            'version': '1.0.0',
+            'version': '2.0.2-enterprise',
             'docs': '/api/v1/docs' if app.config.get('ENV') == 'development' else None
         }
 
