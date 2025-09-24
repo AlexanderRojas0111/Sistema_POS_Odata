@@ -1,8 +1,8 @@
 # 📋 Versión del Sistema POS O'data
 
-## 🏷️ Versión Actual: 2.0.0
+## 🏷️ Versión Actual: 2.0.1
 
-**Fecha de Lanzamiento**: 23 de septiembre de 2025
+**Fecha de Lanzamiento**: 24 de septiembre de 2025
 **Estado**: Producción
 **Tipo**: Release Mayor
 
@@ -54,13 +54,26 @@
 
 ## 🔄 Historial de Versiones
 
-### v2.0.0 (2025-09-23) - ACTUAL
+### v2.0.1 (2025-09-24) - ACTUAL
 **Cambios Mayores:**
-- Migración a PostgreSQL para producción
-- Implementación de Docker Compose
-- Sistema de backup automático
-- Optimizaciones de base de datos
-- Documentación completa
+- Validación y despliegue profesional completado
+- Health checks funcionando correctamente
+- Rate limiting configurable (temporalmente deshabilitado para health)
+- Endpoints de IA implementados y funcionando
+- Sistema de backups automáticos validado
+- Corrección de credenciales de base de datos
+- Documentación actualizada y sincronizada
+
+**Estado Validado:**
+- PostgreSQL: HEALTHY ✅
+- Redis: HEALTHY ✅
+- Flask App: RUNNING ✅
+- Health Endpoint: WORKING (200 OK) ✅
+- AI Test Endpoint: WORKING (200 OK) ✅
+- Database: CONNECTED ✅
+- Backups: CONFIGURED ✅
+
+### v2.0.0 (2025-09-23) - ANTERIOR
 
 **Cambios Técnicos:**
 - Python 3.13
