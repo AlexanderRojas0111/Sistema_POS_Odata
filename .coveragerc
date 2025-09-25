@@ -156,6 +156,8 @@ skip_covered = False
 # Configuración de skip empty
 skip_empty = True
 
+fail_under = 0
+
 [html]
 # Configuración de reporte HTML
 directory = reports/coverage
