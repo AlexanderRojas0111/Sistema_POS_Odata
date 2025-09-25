@@ -350,7 +350,7 @@ Para soporte técnico o consultas:
 - [ ] Análisis predictivo avanzado
 - [ ] Machine Learning para optimización de inventario
 
-### **✅ v2.0.0** (ACTUAL - COMPLETADO)
+### **✅ 2.0.2-enterprise** (ACTUAL - COMPLETADO)
 - [x] Inteligencia artificial para recomendaciones
 - [x] Búsqueda semántica avanzada
 - [x] Sistema de monitoreo y alertas
