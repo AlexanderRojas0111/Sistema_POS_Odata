@@ -1,6 +1,6 @@
 """
-Sistema POS O'Data v2.0.0 - Enterprise Architecture
-==================================================
+Sistema POS O'Data v2.0.2-enterprise - Enterprise Architecture
+==============================================================
 Arquitectura enterprise con DI Container, Repository Pattern, 
 Strategy Pattern y Exception Hierarchy profesional.
 """
@@ -8,8 +8,8 @@ Strategy Pattern y Exception Hierarchy profesional.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
 import os
 import logging
 from datetime import datetime
@@ -19,6 +19,9 @@ db = SQLAlchemy()
 cors = CORS()
 # Limiter se inicializará con Redis en configure_app
 limiter = None
+
+# Versión de la aplicación
+APP_VERSION = "2.0.2-enterprise"
 
 def create_app(config_name='production'):
     """Factory pattern para crear aplicación Flask con arquitectura enterprise"""
@@ -39,16 +42,16 @@ def create_app(config_name='production'):
     redis_url = os.environ.get('REDIS_URL', 'memory://')
     if redis_url.startswith('redis://'):
         from flask_limiter import Limiter
-        limiter = Limiter(
-            app=app,
-            key_func=get_remote_address,
+                limiter = Limiter(
+                    app=app,
+                    key_func=get_remote_address,
             storage_uri=redis_url
-        )
-    else:
+                )
+            else:
         from flask_limiter import Limiter
-        limiter = Limiter(
-            app=app,
-            key_func=get_remote_address,
+                limiter = Limiter(
+                    app=app,
+                    key_func=get_remote_address,
             storage_uri='memory://'
         )
         app.logger.warning("Using in-memory storage for rate limiting. Not recommended for production.")
@@ -64,7 +67,7 @@ def create_app(config_name='production'):
         try:
             db.create_all()
             app.logger.info("Database tables created successfully")
-        except Exception as e:
+    except Exception as e:
             app.logger.error(f"Failed to create database tables: {e}")
             # Continuar sin crear tablas para evitar que falle la aplicación
         
