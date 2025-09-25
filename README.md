@@ -1,4 +1,4 @@
-# Sistema POS O'Data Enterprise v2.0.0
+# Sistema POS O'Data Enterprise v2.0.2-enterprise
 
 ## 🌟 **Sistema de Punto de Venta Avanzado - Las Arepas Cuadradas**
 
