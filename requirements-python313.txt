@@ -62,7 +62,7 @@ redis==5.2.0
 celery==5.4.0
 
 # Serialización y Validación
-marshmallow==3.23.1
+marshmallow==4.0.1
 pydantic==2.10.3
 
 # CLI y Utilidades
