@@ -4,11 +4,9 @@ Health API v1 - Sistema POS O'Data
 Endpoints de salud del sistema enterprise.
 """
 
-from flask import Blueprint, jsonify, request
-
-
+from flask import Blueprint, jsonify  # type: ignore
 from app import db
-from sqlalchemy import text
+from sqlalchemy import text  # type: ignore
 from datetime import datetime
 import logging
 
@@ -21,7 +19,6 @@ health_bp = Blueprint('health', __name__)
 
 
 @health_bp.route('/health', methods=['GET'])
-
 def health_check():
     """Health check básico del sistema"""
     try:
@@ -36,18 +33,17 @@ def health_check():
         "message": "Sistema POS O'Data Enterprise funcionando correctamente",
         "database": db_status,
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "2.0.0-enterprise"
+        "version": "2.0.2-enterprise"
     })
 
 @health_bp.route('/health/detailed', methods=['GET'])
-
 def detailed_health_check():
     """Health check detallado del sistema"""
     try:
         health_data = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
-            "version": "2.0.0-enterprise",
+            "version": "2.0.2-enterprise",
             "components": {}
         }
         
@@ -121,7 +117,6 @@ def detailed_health_check():
         }), 500
 
 @health_bp.route('/health/metrics', methods=['GET'])
-
 def health_metrics():
     """Métricas de salud del sistema"""
     try:

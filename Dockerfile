@@ -33,7 +33,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
 WORKDIR /app
 
 # Copiar requirements e instalar dependencias optimizadas para Python 3.13
-COPY requirements-python313.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
     && pip cache purge
@@ -41,11 +41,13 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 # Copiar código de la aplicación
 COPY . ./
 
-# Crear directorios necesarios
-RUN mkdir -p logs instance data
+# Crear directorios necesarios con permisos correctos
+RUN mkdir -p logs instance data backups && \
+    chmod -R 755 logs instance data backups
 
 # Cambiar permisos
-RUN chown -R posuser:posuser /app
+RUN chown -R posuser:posuser /app && \
+    chmod -R 755 /app/logs
 
 # Cambiar a usuario no-root
 USER posuser
@@ -57,5 +59,14 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
-# Comando de inicio
-CMD ["python", "main.py"]
+# Comando de inicio - Usar gunicorn en producción optimizado
+# Configuración optimizada para producción:
+# - worker-class: gthread (mejor para I/O bound)
+# - workers: 4 (CPU cores * 2 + 1)
+# - threads: 4 (por worker)
+# - timeout: 120s
+# - keepalive: 5s
+# - max-requests: 1000 (prevenir memory leaks)
+# - max-requests-jitter: 50
+# Para desarrollo: CMD ["python", "main.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "gthread", "--threads", "4", "--timeout", "120", "--keep-alive", "5", "--max-requests", "1000", "--max-requests-jitter", "50", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info", "main:app"]

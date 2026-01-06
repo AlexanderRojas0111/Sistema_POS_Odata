@@ -8,8 +8,6 @@ Strategy Pattern y Exception Hierarchy profesional.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-    from flask_limiter import Limiter
-    from flask_limiter.util import get_remote_address
 import os
 import logging
 from datetime import datetime
@@ -39,19 +37,20 @@ def create_app(config_name='production'):
     
     # Configurar limiter con Redis si está disponible
     global limiter
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    
     redis_url = os.environ.get('REDIS_URL', 'memory://')
     if redis_url.startswith('redis://'):
-        from flask_limiter import Limiter
-                limiter = Limiter(
-                    app=app,
-                    key_func=get_remote_address,
+        limiter = Limiter(
+            app=app,
+            key_func=get_remote_address,
             storage_uri=redis_url
-                )
-            else:
-        from flask_limiter import Limiter
-                limiter = Limiter(
-                    app=app,
-                    key_func=get_remote_address,
+        )
+    else:
+        limiter = Limiter(
+            app=app,
+            key_func=get_remote_address,
             storage_uri='memory://'
         )
         app.logger.warning("Using in-memory storage for rate limiting. Not recommended for production.")
@@ -67,7 +66,7 @@ def create_app(config_name='production'):
         try:
             db.create_all()
             app.logger.info("Database tables created successfully")
-    except Exception as e:
+        except Exception as e:
             app.logger.error(f"Failed to create database tables: {e}")
             # Continuar sin crear tablas para evitar que falle la aplicación
         
@@ -91,13 +90,21 @@ def configure_app(app, config_name):
 def configure_logging(app):
     """Configuración de logging enterprise"""
     if not app.debug:
+        handlers = [logging.StreamHandler()]
+        
+        # Intentar agregar FileHandler, pero no fallar si no hay permisos
+        try:
+            # Asegurar que el directorio existe
+            import os
+            os.makedirs('logs', exist_ok=True)
+            handlers.append(logging.FileHandler('logs/app.log'))
+        except (PermissionError, OSError) as e:
+            app.logger.warning(f"No se pudo crear archivo de log: {e}. Usando solo consola.")
+        
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('logs/app.log'),
-                logging.StreamHandler()
-            ]
+            handlers=handlers
         )
 
 def register_blueprints(app):

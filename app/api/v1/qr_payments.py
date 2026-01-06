@@ -12,7 +12,12 @@ from app import db
 from app.middleware.rbac_middleware import require_permission
 from app.exceptions import ValidationError, PaymentError
 import uuid
-import qrcode
+try:
+    import qrcode
+    QRCODE_AVAILABLE = True
+except ImportError:
+    QRCODE_AVAILABLE = False
+    qrcode = None  # Para evitar errores de referencia
 import io
 import base64
 from datetime import datetime, timedelta

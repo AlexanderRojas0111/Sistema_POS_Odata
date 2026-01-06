@@ -24,7 +24,13 @@ class ProductionConfig:
         'pool_pre_ping': True,
         'pool_recycle': 300,
         'pool_timeout': 20,
-        'max_overflow': 0
+        'pool_size': 20,  # Optimizado para 4 workers × 4 threads
+        'max_overflow': 10,  # Conexiones adicionales bajo carga
+        'echo': False,
+        'connect_args': {
+            'connect_timeout': 10,
+            'application_name': 'pos_odata_production'
+        }
     }
     
     # Redis
@@ -112,11 +118,15 @@ class ProductionConfig:
     DATABASE_CONFIG = {
         'postgresql': {
             'pool_size': 20,
-            'max_overflow': 0,
+            'max_overflow': 10,  # Aumentado para mejor manejo de picos
             'pool_pre_ping': True,
             'pool_recycle': 300,
             'pool_timeout': 20,
-            'echo': False
+            'echo': False,
+            'connect_args': {
+                'connect_timeout': 10,
+                'application_name': 'pos_odata_production'
+            }
         },
         'sqlite': {
             'pool_size': 1,
@@ -254,7 +264,7 @@ class DevelopmentConfig(ProductionConfig):
     TESTING = False
     LOG_LEVEL = 'DEBUG'
     RATELIMIT_DEFAULT = "10000 per hour"  # Muy permisivo para desarrollo
-SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-dev-key')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-dev-key')
     DATABASE_URL = 'sqlite:///pos_development.db'
 
 # Función para obtener configuración según el ambiente

@@ -52,7 +52,8 @@ api_bp.register_blueprint(analytics.analytics_bp)
 api_bp.register_blueprint(simple_reports.simple_reports_bp)
 
 # Registrar Test Reports endpoints (temporal)
-api_bp.register_blueprint(simple_reports_test.test_reports_bp)
+# Comentado: simple_reports_test no existe
+# api_bp.register_blueprint(simple_reports_test.test_reports_bp)
 
 # Registrar Reports Professional endpoints (SOLUCIÓN FINAL)
 # Comentado temporalmente - reports_professional no está implementado
