@@ -285,6 +285,7 @@ class MonitoringMiddleware:
     
     def after_request(self, response):
         """Ejecutar después de cada request"""
+        duration = 0.0
         if hasattr(g, 'start_time'):
             duration = time.time() - g.start_time
             metrics_collector.record_response_time(duration)

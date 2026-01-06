@@ -9,7 +9,7 @@ from flask import Blueprint
 api_bp = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
 # Importar endpoints
-from . import sales, products, users, health, simple_users, simple_products, auth, inventory, electronic_invoice, support_document, digital_certificate, payroll, accounts_receivable, quotation, dashboard, debug, roles, analytics, simple_reports, simple_reports_test, reports_final, reports_enhanced, qr_payments, system_stats, multi_payment, monitoring, products_enhanced, users_enhanced
+from . import sales, products, users, health, simple_users, simple_products, auth, inventory, electronic_invoice, support_document, digital_certificate, payroll, accounts_receivable, quotation, dashboard, debug, roles, analytics, simple_reports, reports_final, reports_enhanced, qr_payments, system_stats, multi_payment, monitoring, products_enhanced, users_enhanced
 
 # Registrar blueprints
 api_bp.register_blueprint(sales.sales_bp)
@@ -52,7 +52,8 @@ api_bp.register_blueprint(analytics.analytics_bp)
 api_bp.register_blueprint(simple_reports.simple_reports_bp)
 
 # Registrar Test Reports endpoints (temporal)
-api_bp.register_blueprint(simple_reports_test.test_reports_bp)
+# Comentado: simple_reports_test no existe
+# api_bp.register_blueprint(simple_reports_test.test_reports_bp)
 
 # Registrar Reports Professional endpoints (SOLUCIÓN FINAL)
 # Comentado temporalmente - reports_professional no está implementado

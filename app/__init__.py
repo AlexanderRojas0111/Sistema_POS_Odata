@@ -1,6 +1,6 @@
 """
-Sistema POS O'Data v2.0.0 - Enterprise Architecture
-==================================================
+Sistema POS O'Data v2.0.2-enterprise - Enterprise Architecture
+==============================================================
 Arquitectura enterprise con DI Container, Repository Pattern, 
 Strategy Pattern y Exception Hierarchy profesional.
 """
@@ -8,8 +8,6 @@ Strategy Pattern y Exception Hierarchy profesional.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 import os
 import logging
 from datetime import datetime
@@ -19,6 +17,9 @@ db = SQLAlchemy()
 cors = CORS()
 # Limiter se inicializará con Redis en configure_app
 limiter = None
+
+# Versión de la aplicación
+APP_VERSION = "2.0.2-enterprise"
 
 def create_app(config_name='production'):
     """Factory pattern para crear aplicación Flask con arquitectura enterprise"""
@@ -36,16 +37,17 @@ def create_app(config_name='production'):
     
     # Configurar limiter con Redis si está disponible
     global limiter
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    
     redis_url = os.environ.get('REDIS_URL', 'memory://')
     if redis_url.startswith('redis://'):
-        from flask_limiter import Limiter
         limiter = Limiter(
             app=app,
             key_func=get_remote_address,
             storage_uri=redis_url
         )
     else:
-        from flask_limiter import Limiter
         limiter = Limiter(
             app=app,
             key_func=get_remote_address,
@@ -88,13 +90,21 @@ def configure_app(app, config_name):
 def configure_logging(app):
     """Configuración de logging enterprise"""
     if not app.debug:
+        handlers = [logging.StreamHandler()]
+        
+        # Intentar agregar FileHandler, pero no fallar si no hay permisos
+        try:
+            # Asegurar que el directorio existe
+            import os
+            os.makedirs('logs', exist_ok=True)
+            handlers.append(logging.FileHandler('logs/app.log'))
+        except (PermissionError, OSError) as e:
+            app.logger.warning(f"No se pudo crear archivo de log: {e}. Usando solo consola.")
+        
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('logs/app.log'),
-                logging.StreamHandler()
-            ]
+            handlers=handlers
         )
 
 def register_blueprints(app):

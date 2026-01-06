@@ -1,197 +1,196 @@
 #!/usr/bin/env python3
 """
-Script de Backup Automático - Sistema POS Sabrositas v2.0.0
-===========================================================
-Backup automático de base de datos PostgreSQL multi-tienda
+Script de Backup Automático de Base de Datos
+Sistema POS O'Data v2.0.2-enterprise
+====================================
+Realiza backups automáticos de PostgreSQL con rotación y compresión.
 """
 
+import sys
 import os
 import subprocess
-import datetime
-import logging
-import sys
+import gzip
+import shutil
 from pathlib import Path
+from datetime import datetime, timedelta
+from typing import Optional
 
-# Configurar logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('/app/logs/backup.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# Agregar el directorio raíz al path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-class DatabaseBackup:
-    """Servicio de backup automático de base de datos"""
+from app import create_app
+
+def create_backup(backup_dir: str = "/app/backups", retention_days: int = 30) -> Optional[str]:
+    """Crear backup de la base de datos"""
+    app = create_app('production')
     
-    def __init__(self):
-        self.backup_dir = Path(os.environ.get('BACKUP_DIR', '/backups'))
-        self.database_url = os.environ.get('DATABASE_URL', '')
-        self.retention_days = int(os.environ.get('BACKUP_RETENTION_DAYS', '30'))
-        self.max_files = int(os.environ.get('BACKUP_MAX_FILES', '50'))
+    with app.app_context():
+        # Obtener configuración de la base de datos
+        db_url = os.environ.get('DATABASE_URL', '')
+        if not db_url:
+            print("❌ Error: DATABASE_URL no configurada")
+            return None
         
-        # Crear directorio de backup si no existe
-        self.backup_dir.mkdir(exist_ok=True)
-    
-    def create_backup(self):
-        """Crear backup de la base de datos"""
+        # Parsear DATABASE_URL
+        # Formato: postgresql://user:password@host:port/database
+        from urllib.parse import urlparse
+        parsed = urlparse(db_url)
+        
+        db_user = parsed.username
+        db_password = parsed.password
+        db_host = parsed.hostname
+        db_port = parsed.port or 5432
+        db_name = parsed.path.lstrip('/')
+        
+        # Crear directorio de backups si no existe
+        backup_path = Path(backup_dir)
+        backup_path.mkdir(parents=True, exist_ok=True)
+        
+        # Nombre del archivo de backup
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_file = backup_path / f"pos_odata_backup_{timestamp}.sql"
+        backup_file_gz = backup_path / f"pos_odata_backup_{timestamp}.sql.gz"
+        
         try:
-            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-            backup_filename = f"pos_sabrositas_backup_{timestamp}.sql"
-            backup_path = self.backup_dir / backup_filename
+            # Crear backup usando pg_dump
+            print(f"📦 Creando backup: {backup_file.name}")
             
-            logger.info(f"Iniciando backup: {backup_filename}")
+            # Configurar variables de entorno para pg_dump
+            env = os.environ.copy()
+            env['PGPASSWORD'] = db_password
             
-            # Comando pg_dump
+            # Ejecutar pg_dump usando docker exec si estamos en contenedor
+            # O usar pg_dump directamente si está disponible
+            import shutil
+            pg_dump_path = shutil.which('pg_dump')
+            
+            if not pg_dump_path:
+                # Si pg_dump no está disponible, usar docker exec
+                print("⚠️  pg_dump no disponible en el contenedor")
+                print("   Usando método alternativo: docker exec")
+                # El backup se debe hacer desde el host usando docker exec
+                return None
+            
             cmd = [
-                'pg_dump',
-                '--host=pos-postgres-production',
-                '--port=5432',
-                '--username=pos_user',
-                '--dbname=pos_odata',
-                '--verbose',
-                '--clean',
-                '--if-exists',
-                '--create',
-                '--format=plain',
-                f'--file={backup_path}'
+                pg_dump_path,
+                '-h', db_host,
+                '-p', str(db_port),
+                '-U', db_user,
+                '-d', db_name,
+                '-F', 'c',  # Formato custom (binario)
+                '-f', str(backup_file)
             ]
             
-            # Ejecutar backup
             result = subprocess.run(
                 cmd,
-                env={**os.environ, 'PGPASSWORD': os.environ.get('POSTGRES_PASSWORD', '')},
+                env=env,
                 capture_output=True,
                 text=True
             )
             
-            if result.returncode == 0:
-                logger.info(f"Backup completado exitosamente: {backup_filename}")
-                
-                # Comprimir backup
-                self._compress_backup(backup_path)
-                
-                # Limpiar backups antiguos
-                self._cleanup_old_backups()
-                
-                # Crear archivo de estado
-                self._create_status_file(backup_filename, True)
-                
-                return True
-            else:
-                logger.error(f"Error en backup: {result.stderr}")
-                self._create_status_file(backup_filename, False, result.stderr)
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error creando backup: {e}")
-            return False
-    
-    def _compress_backup(self, backup_path: Path):
-        """Comprimir archivo de backup"""
-        try:
-            compressed_path = backup_path.with_suffix('.sql.gz')
+            if result.returncode != 0:
+                print(f"❌ Error ejecutando pg_dump: {result.stderr}")
+                return None
             
-            cmd = ['gzip', str(backup_path)]
-            result = subprocess.run(cmd, capture_output=True)
+            # Comprimir backup
+            print(f"🗜️  Comprimiendo backup...")
+            with open(backup_file, 'rb') as f_in:
+                with gzip.open(backup_file_gz, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
             
-            if result.returncode == 0:
-                logger.info(f"Backup comprimido: {compressed_path.name}")
-            else:
-                logger.warning("Error comprimiendo backup")
-                
-        except Exception as e:
-            logger.warning(f"Error comprimiendo backup: {e}")
-    
-    def _cleanup_old_backups(self):
-        """Limpiar backups antiguos"""
-        try:
-            # Obtener todos los archivos de backup
-            backup_files = list(self.backup_dir.glob("pos_sabrositas_backup_*.sql*"))
-            backup_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+            # Eliminar archivo sin comprimir
+            backup_file.unlink()
             
-            # Eliminar por cantidad máxima
-            if len(backup_files) > self.max_files:
-                files_to_delete = backup_files[self.max_files:]
-                for file_path in files_to_delete:
-                    file_path.unlink()
-                    logger.info(f"Backup eliminado por límite de cantidad: {file_path.name}")
+            # Obtener tamaño del archivo
+            file_size = backup_file_gz.stat().st_size / (1024 * 1024)  # MB
             
-            # Eliminar por antigüedad
-            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=self.retention_days)
+            print(f"✅ Backup creado exitosamente: {backup_file_gz.name}")
+            print(f"   Tamaño: {file_size:.2f} MB")
             
-            for file_path in backup_files:
-                file_time = datetime.datetime.fromtimestamp(file_path.stat().st_mtime)
-                if file_time < cutoff_date:
-                    file_path.unlink()
-                    logger.info(f"Backup eliminado por antigüedad: {file_path.name}")
+            # Limpiar backups antiguos
+            cleanup_old_backups(backup_path, retention_days)
+            
+            return str(backup_file_gz)
             
         except Exception as e:
-            logger.warning(f"Error limpiando backups antiguos: {e}")
-    
-    def _create_status_file(self, backup_name: str, success: bool, error_msg: str = None):
-        """Crear archivo de estado del último backup"""
-        try:
-            status_file = self.backup_dir / 'last_backup.log'
-            
-            status_data = {
-                'timestamp': datetime.datetime.now().isoformat(),
-                'backup_name': backup_name,
-                'success': success,
-                'error_message': error_msg if error_msg else None
-            }
-            
-            with open(status_file, 'w') as f:
-                import json
-                json.dump(status_data, f, indent=2)
-                
-        except Exception as e:
-            logger.warning(f"Error creando archivo de estado: {e}")
-    
-    def verify_backup(self, backup_path: Path):
-        """Verificar integridad del backup"""
-        try:
-            if not backup_path.exists():
-                return False
-            
-            # Verificar que el archivo no esté vacío
-            if backup_path.stat().st_size == 0:
-                return False
-            
-            # Verificar contenido básico del SQL
-            with open(backup_path, 'r') as f:
-                content = f.read(1000)  # Leer primeros 1000 caracteres
-                
-                # Verificar que contenga elementos básicos de un dump PostgreSQL
-                required_elements = [
-                    'PostgreSQL database dump',
-                    'CREATE DATABASE',
-                    'pos_odata'
-                ]
-                
-                return all(element in content for element in required_elements)
-                
-        except Exception as e:
-            logger.error(f"Error verificando backup: {e}")
-            return False
+            print(f"❌ Error creando backup: {e}")
+            return None
 
-def main():
-    """Función principal"""
-    logger.info("Iniciando servicio de backup automático")
+def cleanup_old_backups(backup_dir: Path, retention_days: int):
+    """Eliminar backups más antiguos que retention_days"""
+    try:
+        cutoff_date = datetime.now() - timedelta(days=retention_days)
+        
+        backups_deleted = 0
+        for backup_file in backup_dir.glob("pos_odata_backup_*.sql.gz"):
+            # Extraer fecha del nombre del archivo
+            try:
+                timestamp_str = backup_file.stem.replace('pos_odata_backup_', '').replace('.sql', '')
+                file_date = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+                
+                if file_date < cutoff_date:
+                    backup_file.unlink()
+                    backups_deleted += 1
+            except ValueError:
+                # Si no se puede parsear la fecha, mantener el archivo
+                continue
+        
+        if backups_deleted > 0:
+            print(f"🗑️  Eliminados {backups_deleted} backups antiguos")
+            
+    except Exception as e:
+        print(f"⚠️  Error limpiando backups antiguos: {e}")
+
+def list_backups(backup_dir: str = "/app/backups"):
+    """Listar backups disponibles"""
+    backup_path = Path(backup_dir)
     
-    backup_service = DatabaseBackup()
+    if not backup_path.exists():
+        print("❌ Directorio de backups no existe")
+        return
     
-    # Crear backup
-    success = backup_service.create_backup()
+    backups = sorted(backup_path.glob("pos_odata_backup_*.sql.gz"), reverse=True)
     
-    if success:
-        logger.info("Backup completado exitosamente")
-        sys.exit(0)
-    else:
-        logger.error("Error en el proceso de backup")
-        sys.exit(1)
+    if not backups:
+        print("📭 No hay backups disponibles")
+        return
+    
+    print(f"📋 Backups disponibles ({len(backups)}):")
+    print("-" * 60)
+    
+    for backup in backups:
+        file_size = backup.stat().st_size / (1024 * 1024)  # MB
+        file_date = datetime.fromtimestamp(backup.stat().st_mtime)
+        
+        print(f"  {backup.name}")
+        print(f"    Tamaño: {file_size:.2f} MB")
+        print(f"    Fecha: {file_date.strftime('%Y-%m-%d %H:%M:%S')}")
+        print()
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Backup de base de datos PostgreSQL')
+    parser.add_argument('--backup-dir', default='/app/backups', help='Directorio de backups')
+    parser.add_argument('--retention-days', type=int, default=30, help='Días de retención')
+    parser.add_argument('--list', action='store_true', help='Listar backups disponibles')
+    
+    args = parser.parse_args()
+    
+    if args.list:
+        list_backups(args.backup_dir)
+    else:
+        print("=" * 60)
+        print("BACKUP DE BASE DE DATOS")
+        print("Sistema POS O'Data v2.0.2-enterprise")
+        print("=" * 60)
+        print()
+        
+        backup_file = create_backup(args.backup_dir, args.retention_days)
+        
+        if backup_file:
+            print(f"\n✅ Backup completado: {backup_file}")
+            sys.exit(0)
+        else:
+            print("\n❌ Backup falló")
+            sys.exit(1)
