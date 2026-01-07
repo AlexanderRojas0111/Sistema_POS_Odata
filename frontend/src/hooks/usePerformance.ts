@@ -6,6 +6,8 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 
+const isDev = import.meta.env.MODE === 'development';
+
 interface PerformanceMetrics {
   renderTime: number;
   memoryUsage?: number;
@@ -21,8 +23,8 @@ interface PerformanceConfig {
 }
 
 const defaultConfig: PerformanceConfig = {
-  enableMetrics: process.env.NODE_ENV === 'development',
-  logToConsole: process.env.NODE_ENV === 'development',
+  enableMetrics: isDev,
+  logToConsole: isDev,
   sendToBackend: true,
   threshold: 16 // 60fps threshold
 };
@@ -175,7 +177,9 @@ export const useSmartMemo = <T>(
     // Limpiar cache si es muy grande
     if (cache.current.size >= maxSize) {
       const oldestKey = cache.current.keys().next().value;
-      cache.current.delete(oldestKey);
+      if (oldestKey !== undefined) {
+        cache.current.delete(oldestKey);
+      }
     }
 
     // Crear nuevo valor
@@ -198,8 +202,8 @@ export const useSmartDebounce = <T>(
 ) => {
   const { leading = false, trailing = true, maxWait } = options;
   const [debouncedValue, setDebouncedValue] = useState(value);
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  const maxTimeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const maxTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCallTime = useRef<number>(0);
 
   useEffect(() => {
@@ -215,9 +219,11 @@ export const useSmartDebounce = <T>(
     // Clear existing timeouts
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     if (maxTimeoutRef.current) {
       clearTimeout(maxTimeoutRef.current);
+      maxTimeoutRef.current = null;
     }
 
     // Trailing edge
@@ -276,12 +282,12 @@ export const useThrottle = <T>(
 };
 
 // Hook para intersection observer (lazy loading de imágenes)
-export const useIntersectionObserver = (
+export const useIntersectionObserver = <T extends HTMLElement = HTMLElement>(
   options: IntersectionObserverInit = {}
 ) => {
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [hasIntersected, setHasIntersected] = useState(false);
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<T | null>(null);
 
   useEffect(() => {
     const element = ref.current;

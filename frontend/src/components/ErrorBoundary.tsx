@@ -4,7 +4,8 @@
  * Componente para capturar y manejar errores de React
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 
 interface Props {
@@ -138,7 +139,7 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* Detalles del error (solo en desarrollo) */}
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.MODE === 'development' && this.state.error && (
                 <div className="mt-6 bg-red-50 border border-red-200 rounded-md p-4">
                   <div className="flex">
                     <Bug className="h-5 w-5 text-red-400" />

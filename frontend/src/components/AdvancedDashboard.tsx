@@ -292,6 +292,14 @@ const AdvancedDashboard: React.FC = () => {
     );
   }
 
+  const paymentMethodsData = metrics.payment_analysis.map(method => ({
+    method: method.method || method.name,
+    name: method.name || method.method,
+    count: method.total_sales,
+    total: method.total_revenue,
+    percentage: method.percentage
+  }));
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -401,7 +409,7 @@ const AdvancedDashboard: React.FC = () => {
 
             {/* Análisis de métodos de pago - Moderno */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PaymentMethodsChart data={metrics.payment_analysis} />
+              <PaymentMethodsChart data={paymentMethodsData} />
 
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">

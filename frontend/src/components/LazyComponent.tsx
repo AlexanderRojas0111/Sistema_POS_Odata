@@ -4,7 +4,8 @@
  * Componente para lazy loading con optimizaciones de rendimiento
  */
 
-import React, { Suspense, lazy, ComponentType, ReactNode } from 'react';
+import React, { Suspense, lazy } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { useIntersectionObserver } from '../hooks/usePerformance';
 import './LazyComponent.css';
 
@@ -40,7 +41,7 @@ export const LazyComponent: React.FC<LazyComponentProps> = ({
   rootMargin = '50px',
   ...props
 }) => {
-  const { ref, hasIntersected } = useIntersectionObserver({
+  const { ref, hasIntersected } = useIntersectionObserver<HTMLDivElement>({
     threshold,
     rootMargin
   });
@@ -78,7 +79,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   onLoad,
   onError
 }) => {
-  const { ref, hasIntersected } = useIntersectionObserver({
+  const { ref, hasIntersected } = useIntersectionObserver<HTMLDivElement>({
     threshold: 0.1,
     rootMargin: '50px'
   });
