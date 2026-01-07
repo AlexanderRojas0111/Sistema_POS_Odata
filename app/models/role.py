@@ -6,8 +6,8 @@ Modelo de roles con jerarquía y permisos granulares
 
 from datetime import datetime
 from app import db
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Table
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Table  # type: ignore[import]
+from sqlalchemy.orm import relationship  # type: ignore[import]
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import enum
@@ -33,6 +33,7 @@ class PermissionCategory(enum.Enum):
     """Categorías de permisos"""
     SYSTEM = "system"           # Configuración del sistema
     USERS = "users"             # Gestión de usuarios
+    ROLES = "roles"             # Gestión de roles y permisos
     PRODUCTS = "products"       # Gestión de productos
     INVENTORY = "inventory"     # Gestión de inventario
     SALES = "sales"             # Gestión de ventas

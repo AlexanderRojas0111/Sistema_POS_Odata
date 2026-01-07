@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   pos-app:
     build:
@@ -20,7 +18,7 @@ services:
       - PORT=8000
       - LOG_LEVEL=${LOG_LEVEL:-WARNING}
     env_file:
-      - env.production.template
+      - .env.production
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -83,7 +81,9 @@ services:
     image: redis:7.2-alpine
     container_name: pos-redis-production
     restart: always
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - .env.production
     volumes:
       - redis_production_data:/data
     ports:
@@ -120,7 +120,7 @@ services:
     depends_on:
       - pos-app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health" ]
+      test: ["CMD", "curl", "-f", "http://pos-app-production:8000/api/v1/health" ]
       interval: 30s
       timeout: 10s
       retries: 5

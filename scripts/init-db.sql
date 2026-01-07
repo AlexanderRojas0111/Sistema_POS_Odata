@@ -9,7 +9,9 @@ CREATE EXTENSION IF NOT EXISTS "btree_gin";
 
 -- Configurar parámetros de la base de datos
 ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
-ALTER SYSTEM SET pg_stat_statements.track = 'all';
+-- Nota: pg_stat_statements.track requiere que la librería esté precargada y un reinicio.
+-- Se omite para evitar fallos durante la inicialización en contenedores base.
+-- ALTER SYSTEM SET pg_stat_statements.track = 'all';
 ALTER SYSTEM SET log_statement = 'all';
 ALTER SYSTEM SET log_min_duration_statement = 1000;
 

@@ -106,17 +106,12 @@ test_*.py
 debug_*.py
 quick_fix_*.py
 
-# Deployment scripts (keep only essential ones)
+# Deployment scripts (legacy excluidos, no versionar)
 deploy_*.ps1
-!deploy_production_professional.ps1
-!deploy_enterprise_professional.ps1
 auto_deploy_*.ps1
-!final_auto_deploy.ps1
 monitor_*.ps1
-!monitor_changes.ps1
 fix_*.ps1
 start_sabrositas_*.ps1
-!start_sabrositas.ps1
 
 # Documentation temp files
 *.md.bak

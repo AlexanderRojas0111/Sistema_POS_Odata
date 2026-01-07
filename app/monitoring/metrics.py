@@ -7,11 +7,15 @@ Métricas básicas para monitoreo del sistema
 import time
 import logging
 from functools import wraps
-from flask import request, g, current_app
 from datetime import datetime, timedelta
 from collections import defaultdict, deque
 import threading
-from app.monitoring.alerts import check_and_send_alerts
+from flask import request, g, current_app  # type: ignore[import]
+from app.monitoring.alerts import check_and_send_alerts  # type: ignore[import]
+try:  # Resolver import para chequeo de base de datos
+    from sqlalchemy import text  # type: ignore[import]
+except ImportError:
+    text = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -217,10 +221,11 @@ health_checker = HealthChecker()
 
 def check_database_health():
     """Verificar salud de la base de datos"""
+    if text is None:
+        logger.warning("sqlalchemy no disponible; health check de DB omitido")
+        return False
     try:
         from app import db
-        from sqlalchemy import text
-        # Ejecutar query simple con text() explícito
         db.session.execute(text("SELECT 1"))
         return True
     except Exception as e:
@@ -250,7 +255,7 @@ def check_disk_space():
 def check_memory_usage():
     """Verificar uso de memoria"""
     try:
-        import psutil
+        import psutil  # type: ignore[import]
         memory = psutil.virtual_memory()
         return memory.percent < 90  # Menos del 90% de uso
     except ImportError:
@@ -285,6 +290,7 @@ class MonitoringMiddleware:
     
     def after_request(self, response):
         """Ejecutar después de cada request"""
+        duration = None
         if hasattr(g, 'start_time'):
             duration = time.time() - g.start_time
             metrics_collector.record_response_time(duration)
@@ -292,7 +298,8 @@ class MonitoringMiddleware:
         metrics_collector.end_request()
         
         # Agregar headers de métricas
-        response.headers['X-Response-Time'] = f"{duration:.3f}s"
+        if duration is not None:
+            response.headers['X-Response-Time'] = f"{duration:.3f}s"
         response.headers['X-Request-ID'] = request.headers.get('X-Request-ID', 'unknown')
         
         return response

@@ -2,8 +2,6 @@
 # ==============================================
 # Configuración optimizada para Las Arepas Cuadradas
 
-version: '3.8'
-
 services:
   # ===== APLICACIÓN PRINCIPAL =====
   sabrositas-app:

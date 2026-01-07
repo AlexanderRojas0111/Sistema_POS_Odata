@@ -7,37 +7,38 @@ param(
     [switch]$SkipFrontend,
     [switch]$SkipBackend,
     [switch]$SkipMonitoring,
+    [switch]$SkipTests,
     [string]$Environment = "production"
 )
 
-Write-Host "🚀 DESPLEGANDO SISTEMA MULTI-TIENDA POS SABROSITAS v2.0.0" -ForegroundColor Green
+Write-Host "DESPLEGANDO SISTEMA MULTI-TIENDA POS SABROSITAS v2.0.0" -ForegroundColor Green
 Write-Host "=================================================================" -ForegroundColor Green
-Write-Host "🏪 Enterprise Multi-Store Production Environment" -ForegroundColor Yellow
+Write-Host "Enterprise Multi-Store Production Environment" -ForegroundColor Yellow
 Write-Host "=================================================================" -ForegroundColor Green
 
 # Función para mostrar errores
 function Show-Error {
     param([string]$Message)
-    Write-Host "❌ ERROR: $Message" -ForegroundColor Red
+    Write-Host "ERROR: $Message" -ForegroundColor Red
     exit 1
 }
 
 # Función para mostrar éxito
 function Show-Success {
     param([string]$Message)
-    Write-Host "✅ $Message" -ForegroundColor Green
+    Write-Host "OK: $Message" -ForegroundColor Green
 }
 
 # Función para mostrar información
 function Show-Info {
     param([string]$Message)
-    Write-Host "ℹ️  $Message" -ForegroundColor Cyan
+    Write-Host "INFO: $Message" -ForegroundColor Cyan
 }
 
 # Función para mostrar advertencia
 function Show-Warning {
     param([string]$Message)
-    Write-Host "⚠️  $Message" -ForegroundColor Yellow
+    Write-Host "WARN: $Message" -ForegroundColor Yellow
 }
 
 Write-Host ""
@@ -107,6 +108,17 @@ if (-not (Test-Path ".env.production")) {
     Show-Success "Variables de seguridad generadas automáticamente"
 } else {
     Show-Info "Archivo .env.production ya existe"
+    $placeholders = @(
+        "pos-sabrositas-2024-production-key-ultra-secure-32chars",
+        "jwt-sabrositas-2024-ultra-secure-production-key-32chars",
+        "Sabrositas2024Redis!",
+        "Sabrositas2024SecureDB!"
+    )
+    foreach ($p in $placeholders) {
+        if (Select-String -Path ".env.production" -Pattern [regex]::Escape($p) -SimpleMatch) {
+            Show-Error "El archivo .env.production aún contiene valores de ejemplo ($p). Actualícelo antes de desplegar."
+        }
+    }
 }
 
 # Crear directorios necesarios para producción
@@ -126,6 +138,19 @@ foreach ($dir in $directories) {
 Write-Host ""
 Show-Info "FASE 3: CONSTRUCCIÓN DE IMÁGENES ENTERPRISE"
 Write-Host ""
+
+# Ejecutar tests rápidos antes de construir (opcional)
+if (-not $SkipTests -and (Test-Path "tests")) {
+    Show-Info "Ejecutando tests rápidos (pytest -q)..."
+    try {
+        python -m pytest tests -q
+        if ($LASTEXITCODE -ne 0) {
+            Show-Error "Tests fallaron, usa -SkipTests para omitir o corrige antes de desplegar."
+        }
+    } catch {
+        Show-Warning "No se pudieron ejecutar tests: $($_.Exception.Message)"
+    }
+}
 
 if (-not $SkipBackend) {
     Show-Info "Construyendo imagen del backend para producción..."
@@ -320,43 +345,43 @@ try {
 }
 
 Write-Host ""
-Write-Host "🎉 DESPLIEGUE MULTI-TIENDA COMPLETADO EXITOSAMENTE" -ForegroundColor Green
+Write-Host "DESPLIEGUE MULTI-TIENDA COMPLETADO EXITOSAMENTE" -ForegroundColor Green
 Write-Host "=================================================================" -ForegroundColor Green
 
 Write-Host ""
 Show-Info "URLS DEL SISTEMA MULTI-TIENDA:"
-Write-Host "   🌐 Frontend:          http://localhost:80" -ForegroundColor White
-Write-Host "   🔧 Backend API:       http://localhost:8000" -ForegroundColor White
-Write-Host "   💚 Health Check:      http://localhost:8000/api/v1/health" -ForegroundColor White
-Write-Host "   🏪 Stores API:        http://localhost:8000/api/v1/stores" -ForegroundColor White
-Write-Host "   📊 API Docs:          http://localhost:8000/docs" -ForegroundColor White
+Write-Host "   Frontend:          http://localhost:80" -ForegroundColor White
+Write-Host "   Backend API:       http://localhost:8000" -ForegroundColor White
+Write-Host "   Health Check:      http://localhost:8000/api/v1/health" -ForegroundColor White
+Write-Host "   Stores API:        http://localhost:8000/api/v1/stores" -ForegroundColor White
+Write-Host "   API Docs:          http://localhost:8000/docs" -ForegroundColor White
 
 Write-Host ""
 Show-Info "CREDENCIALES ENTERPRISE MULTI-TIENDA:"
-Write-Host "   🛡️  SuperAdmin:       superadmin / SuperAdmin123!" -ForegroundColor White
-Write-Host "   ⚙️  Tech Admin:       techadmin / TechAdmin123!" -ForegroundColor White
-Write-Host "   👑 Business Owner:    businessowner / BusinessOwner123!" -ForegroundColor White
-Write-Host "   🌐 Global Admin:      globaladmin / Global123!" -ForegroundColor White
-Write-Host "   🏪 Store Admin:       storeadmin1 / Store123!" -ForegroundColor White
+Write-Host "   SuperAdmin:       superadmin / SuperAdmin123!" -ForegroundColor White
+Write-Host "   Tech Admin:       techadmin / TechAdmin123!" -ForegroundColor White
+Write-Host "   Business Owner:   businessowner / BusinessOwner123!" -ForegroundColor White
+Write-Host "   Global Admin:     globaladmin / Global123!" -ForegroundColor White
+Write-Host "   Store Admin:      storeadmin1 / Store123!" -ForegroundColor White
 
 Write-Host ""
 Show-Info "TIENDAS CONFIGURADAS:"
-Write-Host "   🏪 SAB001 - Sabrositas Centro (Sede Principal)" -ForegroundColor White
-Write-Host "   🏪 SAB002 - Sabrositas Zona Rosa" -ForegroundColor White
-Write-Host "   🏪 SAB003 - Sabrositas Unicentro" -ForegroundColor White
-Write-Host "   🏪 SAB004 - Sabrositas Suba" -ForegroundColor White
-Write-Host "   📦 SABW01 - Warehouse Centro Logístico" -ForegroundColor White
+Write-Host "   SAB001 - Sabrositas Centro (Sede Principal)" -ForegroundColor White
+Write-Host "   SAB002 - Sabrositas Zona Rosa" -ForegroundColor White
+Write-Host "   SAB003 - Sabrositas Unicentro" -ForegroundColor White
+Write-Host "   SAB004 - Sabrositas Suba" -ForegroundColor White
+Write-Host "   SABW01 - Warehouse Centro Logistico" -ForegroundColor White
 
 Write-Host ""
-Show-Info "MONITOREO Y ADMINISTRACIÓN:"
-Write-Host "   📊 Grafana:           http://localhost:3000" -ForegroundColor White
-Write-Host "   🔍 Prometheus:        http://localhost:9090" -ForegroundColor White
-Write-Host "   📝 Logs:              docker-compose -f docker-compose.production.yml logs -f" -ForegroundColor White
-Write-Host "   🗄️  PostgreSQL:       localhost:5432 (pos_odata)" -ForegroundColor White
-Write-Host "   🚀 Redis:             localhost:6379" -ForegroundColor White
+Show-Info "MONITOREO Y ADMINISTRACION:"
+Write-Host "   Grafana:           http://localhost:3000" -ForegroundColor White
+Write-Host "   Prometheus:        http://localhost:9090" -ForegroundColor White
+Write-Host "   Logs:              docker-compose -f docker-compose.production.yml logs -f" -ForegroundColor White
+Write-Host "   PostgreSQL:        localhost:5432 (pos_odata)" -ForegroundColor White
+Write-Host "   Redis:             localhost:6379" -ForegroundColor White
 
 Write-Host ""
-Show-Info "COMANDOS ÚTILES DE PRODUCCIÓN:"
+Show-Info "COMANDOS UTILES DE PRODUCCION:"
 Write-Host "   Ver logs:             docker-compose -f docker-compose.production.yml logs -f" -ForegroundColor White
 Write-Host "   Reiniciar:            docker-compose -f docker-compose.production.yml restart" -ForegroundColor White
 Write-Host "   Detener:              docker-compose -f docker-compose.production.yml down" -ForegroundColor White
@@ -364,17 +389,17 @@ Write-Host "   Estado:               docker-compose -f docker-compose.production
 Write-Host "   Backup DB:            docker exec pos-postgres-production pg_dump -U pos_user pos_odata > backup.sql" -ForegroundColor White
 
 Write-Host ""
-Show-Info "CARACTERÍSTICAS ENTERPRISE IMPLEMENTADAS:"
-Write-Host "   ✅ Control de acceso multi-tienda por roles" -ForegroundColor Green
-Write-Host "   ✅ Base de datos PostgreSQL con auditoría" -ForegroundColor Green
-Write-Host "   ✅ Cache Redis para optimización" -ForegroundColor Green
-Write-Host "   ✅ Nginx como proxy reverso con SSL" -ForegroundColor Green
-Write-Host "   ✅ Monitoreo con Prometheus + Grafana" -ForegroundColor Green
-Write-Host "   ✅ Backup automático de base de datos" -ForegroundColor Green
-Write-Host "   ✅ Logging estructurado y auditoría" -ForegroundColor Green
-Write-Host "   ✅ Rate limiting y seguridad avanzada" -ForegroundColor Green
+Show-Info "CARACTERISTICAS ENTERPRISE IMPLEMENTADAS:"
+Write-Host "   Control de acceso multi-tienda por roles" -ForegroundColor Green
+Write-Host "   Base de datos PostgreSQL con auditoria" -ForegroundColor Green
+Write-Host "   Cache Redis para optimizacion" -ForegroundColor Green
+Write-Host "   Nginx como proxy reverso con SSL" -ForegroundColor Green
+Write-Host "   Monitoreo con Prometheus + Grafana" -ForegroundColor Green
+Write-Host "   Backup automatico de base de datos" -ForegroundColor Green
+Write-Host "   Logging estructurado y auditoria" -ForegroundColor Green
+Write-Host "   Rate limiting y seguridad avanzada" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "🏪 SISTEMA MULTI-TIENDA LISTO PARA PRODUCCIÓN!" -ForegroundColor Green
-Write-Host "🥟 ¡Listo para vender Las Arepas Cuadradas en múltiples ubicaciones!" -ForegroundColor Yellow
+Write-Host "SISTEMA MULTI-TIENDA LISTO PARA PRODUCCION!" -ForegroundColor Green
+Write-Host "Listo para vender Las Arepas Cuadradas en multiples ubicaciones!" -ForegroundColor Yellow
 Write-Host "=================================================================" -ForegroundColor Green

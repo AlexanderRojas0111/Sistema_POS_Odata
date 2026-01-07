@@ -4,7 +4,7 @@ Authentication API v1 - Sistema POS O'Data
 Endpoints de autenticación JWT.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify  # type: ignore[import]
 from app.container import container
 from app.services.user_service import UserService
 from app.repositories.user_repository import UserRepository
@@ -64,8 +64,12 @@ def login():
         # Actualizar last_login
         user.update_last_login()
 
+        # Rol efectivo: usa primary_role si existe, si no, el campo básico
+        primary_role = getattr(user, "primary_role", None)
+        effective_role = primary_role.name if primary_role else user.role
+
         # Emitir JWT access y refresh
-        access = create_access_token(identity=user.username, role=user.role)
+        access = create_access_token(identity=user.username, role=effective_role)
         refresh = create_refresh_token(identity=user.username)
 
         logger.info(f"Successful login for user: {user.username}")
@@ -75,7 +79,7 @@ def login():
             'data': {
                 'user_id': user.id,  # Agregar ID numérico del usuario
                 'username': user.username,
-                'role': user.role,
+                'role': effective_role,
                 'access_token': access,
                 'refresh_token': refresh
             },

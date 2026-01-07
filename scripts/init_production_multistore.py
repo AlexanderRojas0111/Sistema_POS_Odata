@@ -75,10 +75,23 @@ class ProductionMultiStoreInitializer:
     def _create_database_tables(self):
         """Crear todas las tablas de la base de datos"""
         logger.info("📊 Creando estructura de base de datos...")
-        
-        # Eliminar tablas existentes si existen
-        db.drop_all()
-        
+
+        # Resetear esquema en Postgres para evitar ciclos de FK al hacer drop_all
+        from sqlalchemy import text  # type: ignore[import]
+        engine = db.get_engine()
+        url = engine.url
+
+        if url.get_backend_name() == "postgresql":
+            logger.info("🧹 Reseteando esquema public en Postgres (DROP SCHEMA CASCADE)")
+            with engine.connect() as conn:
+                conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE;"))
+                conn.execute(text("CREATE SCHEMA public;"))
+                conn.execute(text("GRANT ALL ON SCHEMA public TO public;"))
+                conn.commit()
+        else:
+            # Para SQLite u otros backends simples
+            db.drop_all()
+
         # Crear todas las tablas
         db.create_all()
         
@@ -441,7 +454,8 @@ class ProductionMultiStoreInitializer:
                 if not existing:
                     # Calcular precios locales (variación por tipo de tienda)
                     price_multiplier = self._get_price_multiplier(store)
-                    local_price = product.price * price_multiplier
+                    from decimal import Decimal
+                    local_price = product.price * Decimal(str(price_multiplier))
                     
                     # Configurar stock inicial
                     initial_stock = self._get_initial_stock(store, product)
@@ -450,7 +464,7 @@ class ProductionMultiStoreInitializer:
                         store_id=store.id,
                         product_id=product.id,
                         local_price=local_price,
-                        cost_price=product.price * 0.6,  # 40% margen
+                        cost_price=product.price * Decimal("0.6"),  # 40% margen
                         current_stock=initial_stock,
                         min_stock=5 if store.store_type == 'retail' else 50,
                         max_stock=100 if store.store_type == 'retail' else 500,
@@ -498,10 +512,12 @@ class ProductionMultiStoreInitializer:
             {'name': 'LA TÓXICA', 'description': 'Costilla BBQ, carne, chorizo, maíz tierno y queso', 'price': 18000, 'category': 'premium'},
         ]
         
-        for product_data in products_data:
+        for idx, product_data in enumerate(products_data, start=1):
+            sku = product_data.get('sku') or f"SAB-{idx:03d}"
             product = Product(
                 name=product_data['name'],
                 description=product_data['description'],
+                sku=sku,
                 price=product_data['price'],
                 category=product_data['category'],
                 is_active=True
