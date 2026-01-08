@@ -159,7 +159,8 @@ def get_user_stats():
 def login():
     """Login básico: verifica credenciales y devuelve rol y token simple"""
     try:
-        data = request.get_json() or {}
+        # Evitar BadRequest si el JSON viene malformado; fallback a form-data
+        data = request.get_json(silent=True) or request.form or {}
         username = data.get('username')
         password = data.get('password')
         if not username or not password:
@@ -204,7 +205,7 @@ def login():
     except AuthenticationError as e:
         return jsonify({'error': {'code': 'AUTH_FAILED', 'message': e.message}}), 401
     except Exception as e:
-        logger.error(f"Unexpected error in login: {str(e)}")
+        logger.exception(f"Unexpected error in login: {str(e)}")
         return jsonify({
             'error': {
                 'code': 'INTERNAL_SERVER_ERROR',

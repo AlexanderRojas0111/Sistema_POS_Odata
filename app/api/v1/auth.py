@@ -28,7 +28,9 @@ def auth_test():
 def login():
     """Login JWT: verifica credenciales y devuelve tokens de acceso y refresh"""
     try:
-        data = request.get_json() or {}
+        # Usar silent=True para evitar BadRequest si el JSON viene malformado/HTTP/1.0
+        # y caer a form-data como fallback.
+        data = request.get_json(silent=True) or request.form or {}
         username = data.get('username')
         password = data.get('password')
         
@@ -93,7 +95,8 @@ def login():
         logger.warning(f"Authentication failed for username: {username}")
         return jsonify({'error': {'code': 'AUTH_FAILED', 'message': e.message}}), 401
     except Exception as e:
-        logger.error(f"Unexpected error in login: {str(e)}")
+        # Log con stacktrace para facilitar diagnóstico en prod
+        logger.exception(f"Unexpected error in login: {str(e)}")
         return jsonify({
             'error': {
                 'code': 'INTERNAL_SERVER_ERROR',
