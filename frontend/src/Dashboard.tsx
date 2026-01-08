@@ -6,10 +6,10 @@ import ProductRecommendations from './components/ProductRecommendations'
 import ErrorBoundary from './components/ErrorBoundary'
 
 interface DashboardData {
-  health: any
-  products: any[]
-  users: any[]
-  aiStats: any
+  health: Record<string, unknown>
+  products: unknown[]
+  users: unknown[]
+  aiStats: Record<string, unknown>
 }
 
 export default function Dashboard() {

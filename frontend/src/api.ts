@@ -1,4 +1,4 @@
-import { decodeJwt } from 'jose'
+import { decodeJwt, type JWTPayload } from 'jose'
 
 export class ApiClient {
   private base: string
@@ -12,7 +12,7 @@ export class ApiClient {
   private isExpired(token?: string) {
     if (!token) return true
     try {
-      const payload: any = decodeJwt(token)
+      const payload: JWTPayload = decodeJwt(token)
       if (!payload?.exp) return true
       const now = Math.floor(Date.now() / 1000)
       return payload.exp <= now + 10 // margen 10s
@@ -43,7 +43,10 @@ export class ApiClient {
   async request(path: string, init: RequestInit = {}) {
     await this.refreshIfNeeded()
     const a = this.auth
-    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(init.headers as any || {}) }
+    const extraHeaders = init.headers && typeof init.headers === 'object'
+      ? (init.headers as Record<string, string>)
+      : {}
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...extraHeaders }
     if (a?.token) headers.Authorization = `Bearer ${a.token}`
     const res = await fetch(`${this.base}${path}`, { ...init, headers })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -67,7 +70,7 @@ export class AIApiClient {
   private isExpired(token?: string) {
     if (!token) return true
     try {
-      const payload: any = decodeJwt(token)
+      const payload: JWTPayload = decodeJwt(token)
       if (!payload?.exp) return true
       const now = Math.floor(Date.now() / 1000)
       return payload.exp <= now + 10 // margen 10s
@@ -97,7 +100,10 @@ export class AIApiClient {
   async request(path: string, init: RequestInit = {}) {
     await this.refreshIfNeeded()
     const a = this.auth
-    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(init.headers as any || {}) }
+    const extraHeaders = init.headers && typeof init.headers === 'object'
+      ? (init.headers as Record<string, string>)
+      : {}
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...extraHeaders }
     if (a?.token) headers.Authorization = `Bearer ${a.token}`
     const res = await fetch(`${this.base}${path}`, { ...init, headers })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)

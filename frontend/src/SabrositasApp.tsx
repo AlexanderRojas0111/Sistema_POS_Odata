@@ -13,7 +13,7 @@ import { EnhancedCartProvider } from './context/EnhancedCartContext';
 
 const SabrositasApp: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [_searchQuery, setSearchQuery] = useState('');
+  // (search query se maneja sólo para scroll; no se guarda)
   const [cartItemCount, setCartItemCount] = useState(0);
 
   // Manejar scroll suave
@@ -35,7 +35,6 @@ const SabrositasApp: React.FC = () => {
 
   // Manejar búsqueda
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
     // Scroll a la sección del menú
     const menuSection = document.getElementById('menu');
     if (menuSection) {

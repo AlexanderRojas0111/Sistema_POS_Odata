@@ -15,8 +15,9 @@ export default function Login() {
       setError(null)
       await login(username, password)
       window.location.href = '/'
-    } catch (err: any) {
-      setError(err?.message ?? 'Error de autenticación')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error de autenticación'
+      setError(message)
     } finally {
       setLoading(false)
     }
