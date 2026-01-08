@@ -63,7 +63,7 @@ jobs:
         grep -r "TODO\|FIXME\|XXX" app/ || echo "No TODO/FIXME found"
 
     - name: Upload quality reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: backend-quality-reports
         path: |
@@ -158,7 +158,7 @@ jobs:
         npm audit
 
     - name: Upload dependency reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dependency-scan-reports
         path: |
@@ -229,7 +229,7 @@ jobs:
         locust -f locustfile.py --headless -u 10 -r 2 -t 30s --html performance-report.html
 
     - name: Upload performance report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-report
         path: performance-report.html
@@ -268,7 +268,7 @@ jobs:
         name: quality-coverage
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: htmlcov/
