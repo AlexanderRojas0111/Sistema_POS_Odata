@@ -5,6 +5,7 @@ APIs para gestión de roles, permisos y asignaciones
 """
 
 from flask import Blueprint, request, jsonify, g
+from app import db
 from app.services.iam_service import IAMService
 from app.services.auth_service import AuthService
 from app.middleware.rbac_middleware import (

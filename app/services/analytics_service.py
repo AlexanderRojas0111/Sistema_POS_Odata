@@ -6,7 +6,7 @@ Integración con IA existente para análisis predictivo y recomendaciones
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-from sqlalchemy import func, and_, desc
+from sqlalchemy import func, and_, desc, or_
 from collections import defaultdict
 import json
 

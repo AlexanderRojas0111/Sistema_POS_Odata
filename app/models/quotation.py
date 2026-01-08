@@ -5,7 +5,7 @@ Modelos para gestión de cotizaciones y presupuestos.
 """
 
 from app import db
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Dict, Any, Optional, List
 from decimal import Decimal
 import uuid

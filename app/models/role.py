@@ -259,7 +259,8 @@ class UserRole(db.Model):
     revocation_reason: str = Column(Text, nullable=True)
     
     # Relaciones
-    user = relationship("User", foreign_keys=[user_id])
+    # overlaps silencia warning de SQLAlchemy por compartir columna con User.role_assignments
+    user = relationship("User", foreign_keys=[user_id], overlaps="role_assignments,roles_relationship")
     role = relationship("Role")
     assigner = relationship("User", foreign_keys=[assigned_by])
     revoker = relationship("User", foreign_keys=[revoked_by])

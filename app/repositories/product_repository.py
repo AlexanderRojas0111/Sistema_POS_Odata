@@ -5,6 +5,7 @@ Repository específico para productos con operaciones especializadas.
 """
 
 from typing import Optional, List, Dict, Any
+from app import db
 from app.repositories.base_repository import BaseRepository
 from app.models.product import Product
 from app.exceptions import ValidationError, NotFoundError

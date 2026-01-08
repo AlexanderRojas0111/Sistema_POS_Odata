@@ -13,6 +13,7 @@ from app.repositories.base_repository import BaseRepository
 from datetime import datetime
 from typing import Dict, Any, List
 import logging
+import json
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)

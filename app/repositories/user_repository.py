@@ -7,7 +7,7 @@ Repository específico para usuarios con operaciones especializadas.
 from typing import Optional, List, Dict, Any
 from app.repositories.base_repository import BaseRepository
 from app.models.user import User
-from app.exceptions import ValidationError
+from app.exceptions import ValidationError, NotFoundError
 
 class UserRepository(BaseRepository[User]):
     """Repository para usuarios con operaciones especializadas"""

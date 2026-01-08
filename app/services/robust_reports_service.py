@@ -5,7 +5,7 @@ Implementación robusta que funciona con la infraestructura existente
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from sqlalchemy import func, and_, desc
 import csv
 import io
@@ -13,13 +13,13 @@ import io
 from app import db
 from app.models.sale import Sale, SaleItem
 from app.models.product import Product
-from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
+
 class RobustReportsService:
     """Servicio robusto de reportes que funciona con la estructura existente"""
-    
+
     def generate_sales_report(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """
         Generar reporte de ventas robusto
@@ -29,12 +29,12 @@ class RobustReportsService:
             sales = Sale.query.filter(
                 and_(Sale.created_at >= start_date, Sale.created_at <= end_date)
             ).order_by(desc(Sale.created_at)).all()
-            
+
             # Estadísticas básicas
             total_sales = len(sales)
             total_revenue = sum(float(sale.total_amount) for sale in sales)
             average_sale = total_revenue / total_sales if total_sales > 0 else 0
-            
+
             # Ventas por método de pago
             payment_methods = {}
             for sale in sales:
@@ -43,7 +43,7 @@ class RobustReportsService:
                     payment_methods[method] = {'count': 0, 'total': 0}
                 payment_methods[method]['count'] += 1
                 payment_methods[method]['total'] += float(sale.total_amount)
-            
+
             # Ventas por día
             daily_sales = {}
             for sale in sales:
@@ -53,7 +53,7 @@ class RobustReportsService:
                         daily_sales[date_key] = {'sales': 0, 'revenue': 0}
                     daily_sales[date_key]['sales'] += 1
                     daily_sales[date_key]['revenue'] += float(sale.total_amount)
-            
+
             # Productos más vendidos
             product_sales = {}
             for sale in sales:
@@ -65,25 +65,26 @@ class RobustReportsService:
                             'quantity': 0,
                             'revenue': 0
                         }
-                    
+
                     # Obtener nombre del producto
                     try:
                         product = Product.query.get(product_id)
                         if product:
                             product_sales[product_id]['name'] = product.name
-                    except:
+                    except Exception:
+                        # Si falla la obtención del producto, continuar sin interrumpir el reporte
                         pass
-                    
+
                     product_sales[product_id]['quantity'] += item.quantity
                     product_sales[product_id]['revenue'] += float(item.quantity * item.unit_price)
-            
+
             # Ordenar productos por cantidad vendida
             top_products = sorted(
                 [{'id': pid, **data} for pid, data in product_sales.items()],
                 key=lambda x: x['quantity'],
                 reverse=True
             )[:10]
-            
+
             return {
                 'report_info': {
                     'type': 'sales',
@@ -128,32 +129,32 @@ class RobustReportsService:
                 ],
                 'top_products': top_products
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating sales report: {str(e)}")
             raise
-    
+
     def generate_inventory_report(self) -> Dict[str, Any]:
         """
         Generar reporte de inventario robusto
         """
         try:
             # Obtener productos activos
-            products = Product.query.filter(Product.is_active == True).all()
-            
+            products = Product.query.filter(Product.is_active.is_(True)).all()
+
             total_products = len(products)
             low_stock_count = 0
             out_of_stock_count = 0
             total_inventory_value = 0
-            
+
             products_data = []
-            
+
             for product in products:
                 # Obtener stock de forma segura
                 current_stock = getattr(product, 'stock', 0)
                 min_stock = getattr(product, 'min_stock', 0)
                 price = float(product.price)
-                
+
                 # Calcular estado del stock
                 if current_stock == 0:
                     status = 'out_of_stock'
@@ -163,10 +164,10 @@ class RobustReportsService:
                     low_stock_count += 1
                 else:
                     status = 'good_stock'
-                
+
                 inventory_value = current_stock * price
                 total_inventory_value += inventory_value
-                
+
                 products_data.append({
                     'id': product.id,
                     'name': product.name,
@@ -179,7 +180,7 @@ class RobustReportsService:
                     'status': status,
                     'needs_reorder': current_stock <= min_stock
                 })
-            
+
             return {
                 'report_info': {
                     'type': 'inventory',
@@ -196,11 +197,11 @@ class RobustReportsService:
                     p for p in products_data if p['status'] in ['low_stock', 'out_of_stock']
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating inventory report: {str(e)}")
             raise
-    
+
     def generate_cash_flow_report(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """
         Generar reporte de flujo de caja robusto
@@ -210,9 +211,9 @@ class RobustReportsService:
             sales = Sale.query.filter(
                 and_(Sale.created_at >= start_date, Sale.created_at <= end_date)
             ).all()
-            
+
             total_income = sum(float(sale.total_amount) for sale in sales)
-            
+
             # Agrupar por día
             daily_income = {}
             for sale in sales:
@@ -221,7 +222,7 @@ class RobustReportsService:
                     if date_key not in daily_income:
                         daily_income[date_key] = 0
                     daily_income[date_key] += float(sale.total_amount)
-            
+
             # Ingresos por método de pago
             income_by_method = {}
             for sale in sales:
@@ -229,7 +230,7 @@ class RobustReportsService:
                 if method not in income_by_method:
                     income_by_method[method] = 0
                 income_by_method[method] += float(sale.total_amount)
-            
+
             return {
                 'report_info': {
                     'type': 'cash_flow',
@@ -258,11 +259,11 @@ class RobustReportsService:
                     for date, amount in sorted(daily_income.items())
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating cash flow report: {str(e)}")
             raise
-    
+
     def get_product_performance(self, days: int = 30, limit: int = 20) -> Dict[str, Any]:
         """
         Obtener rendimiento de productos robusto
@@ -270,7 +271,7 @@ class RobustReportsService:
         try:
             end_date = datetime.utcnow()
             start_date = end_date - timedelta(days=days)
-            
+
             # Productos más vendidos usando consulta SQL optimizada
             top_products_query = db.session.query(
                 Product.id,
@@ -286,9 +287,9 @@ class RobustReportsService:
              .group_by(Product.id, Product.name, Product.category, Product.price)\
              .order_by(desc(func.sum(SaleItem.quantity)))\
              .limit(limit)
-            
+
             top_products = top_products_query.all()
-            
+
             return {
                 'period': {
                     'start_date': start_date.isoformat(),
@@ -308,11 +309,11 @@ class RobustReportsService:
                     for tp in top_products
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Error getting product performance: {str(e)}")
             raise
-    
+
     def get_dashboard_summary(self) -> Dict[str, Any]:
         """
         Resumen robusto para dashboard
@@ -320,32 +321,32 @@ class RobustReportsService:
         try:
             today = datetime.now().date()
             yesterday = today - timedelta(days=1)
-            
+
             # Ventas de hoy
             today_start = datetime.combine(today, datetime.min.time())
             today_end = datetime.combine(today, datetime.max.time())
-            
+
             today_sales = Sale.query.filter(
                 and_(Sale.created_at >= today_start, Sale.created_at <= today_end)
             ).all()
-            
+
             # Ventas de ayer
             yesterday_start = datetime.combine(yesterday, datetime.min.time())
             yesterday_end = datetime.combine(yesterday, datetime.max.time())
-            
+
             yesterday_sales = Sale.query.filter(
                 and_(Sale.created_at >= yesterday_start, Sale.created_at <= yesterday_end)
             ).all()
-            
+
             # Calcular totales
             today_revenue = sum(float(s.total_amount) for s in today_sales)
             yesterday_revenue = sum(float(s.total_amount) for s in yesterday_sales)
-            
+
             # Productos con stock bajo (si el campo existe)
             low_stock_count = 0
             total_products = 0
             try:
-                products = Product.query.filter(Product.is_active == True).all()
+                products = Product.query.filter(Product.is_active.is_(True)).all()
                 total_products = len(products)
                 for p in products:
                     if hasattr(p, 'stock') and hasattr(p, 'min_stock'):
@@ -353,7 +354,7 @@ class RobustReportsService:
                             low_stock_count += 1
             except Exception as e:
                 logger.warning(f"Error calculating stock alerts: {str(e)}")
-            
+
             return {
                 'today': {
                     'total_sales': len(today_sales),
@@ -369,27 +370,27 @@ class RobustReportsService:
                 },
                 'generated_at': datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating dashboard summary: {str(e)}")
             raise
-    
+
     def export_to_csv(self, data: List[Dict[str, Any]], filename: str) -> str:
         """
         Exportar datos a CSV de forma robusta
         """
         try:
             output = io.StringIO()
-            
+
             if not data:
                 return ""
-            
+
             # Obtener headers de la primera fila
             headers = list(data[0].keys())
-            
+
             writer = csv.DictWriter(output, fieldnames=headers)
             writer.writeheader()
-            
+
             for row in data:
                 # Limpiar datos para CSV
                 clean_row = {}
@@ -400,15 +401,15 @@ class RobustReportsService:
                         clean_row[key] = value
                     else:
                         clean_row[key] = str(value)
-                
+
                 writer.writerow(clean_row)
-            
+
             return output.getvalue()
-            
+
         except Exception as e:
             logger.error(f"Error exporting to CSV: {str(e)}")
             return ""
-    
+
     def _calculate_growth_rate(self, start_date: datetime, end_date: datetime) -> float:
         """
         Calcular tasa de crecimiento de forma robusta
@@ -417,27 +418,28 @@ class RobustReportsService:
             period_days = (end_date - start_date).days + 1
             prev_start = start_date - timedelta(days=period_days)
             prev_end = start_date - timedelta(days=1)
-            
+
             # Ventas del período actual
             current_sales = Sale.query.filter(
                 and_(Sale.created_at >= start_date, Sale.created_at <= end_date)
             ).all()
             current_revenue = sum(float(s.total_amount) for s in current_sales)
-            
+
             # Ventas del período anterior
             previous_sales = Sale.query.filter(
                 and_(Sale.created_at >= prev_start, Sale.created_at <= prev_end)
             ).all()
             previous_revenue = sum(float(s.total_amount) for s in previous_sales)
-            
+
             if previous_revenue == 0:
                 return 100.0 if current_revenue > 0 else 0.0
-            
+
             return ((current_revenue - previous_revenue) / previous_revenue) * 100
-            
+
         except Exception as e:
             logger.warning(f"Error calculating growth rate: {str(e)}")
             return 0.0
+
 
 # Instancia global del servicio
 robust_reports_service = RobustReportsService()
