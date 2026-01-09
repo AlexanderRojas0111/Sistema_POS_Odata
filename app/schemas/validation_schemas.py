@@ -284,13 +284,13 @@ class PaginationSchema(BaseSchema):
     
     page = fields.Int(
         required=False,
-        missing=1,
+        load_default=1,
         validate=validate.Range(min=1, max=1000, error="La página debe estar entre 1 y 1000")
     )
     
     per_page = fields.Int(
         required=False,
-        missing=20,
+        load_default=20,
         validate=validate.OneOf([10, 20, 50, 100], error="Elementos por página no válido")
     )
     
@@ -301,7 +301,7 @@ class PaginationSchema(BaseSchema):
     
     sort_order = fields.Str(
         required=False,
-        missing='asc',
+        load_default='asc',
         validate=validate.OneOf(['asc', 'desc'], error="Orden de clasificación no válido")
     )
 
@@ -315,10 +315,10 @@ class AISearchSchema(Schema):
         ]
     )
     limit = fields.Int(
-        missing=10,
+        load_default=10,
         validate=validate.Range(min=1, max=50, error="Limit must be between 1 and 50")
     )
-    filters = fields.Dict(missing={})
+    filters = fields.Dict(load_default={})
 
 class AIRecommendationSchema(Schema):
     """Esquema para recomendaciones de IA"""
@@ -327,11 +327,11 @@ class AIRecommendationSchema(Schema):
         validate=validate.Range(min=1, error="Product ID must be positive")
     )
     limit = fields.Int(
-        missing=5,
+        load_default=5,
         validate=validate.Range(min=1, max=20, error="Limit must be between 1 and 20")
     )
     algorithm = fields.Str(
-        missing='collaborative',
+        load_default='collaborative',
         validate=validate.OneOf(['collaborative', 'content_based', 'hybrid'])
     )
 
@@ -342,7 +342,7 @@ class AISuggestionSchema(Schema):
         validate=validate.Length(min=1, max=100, error="Query must be between 1 and 100 characters")
     )
     limit = fields.Int(
-        missing=10,
+        load_default=10,
         validate=validate.Range(min=1, max=20, error="Limit must be between 1 and 20")
     )
 

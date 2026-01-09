@@ -39,10 +39,13 @@ export const usePWA = (): PWAState & PWAActions => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
-  // Registrar Service Worker
+  // Registrar Service Worker solo en producción y entorno seguro
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    if (import.meta.env.PROD && isSecure && 'serviceWorker' in navigator) {
       registerServiceWorker();
+    } else {
+      console.info('Service Worker deshabilitado en modo desarrollo o sin HTTPS');
     }
   }, []);
 

@@ -10,6 +10,7 @@ from app.container import container
 from app.repositories.inventory_repository import InventoryRepository
 from app.repositories.product_repository import ProductRepository
 from app.services.inventory_service import InventoryService
+from app.middleware.rbac_middleware import require_permission
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 inventory_bp = Blueprint('inventory', __name__)
 
 @inventory_bp.route('/inventory', methods=['GET'])
+@require_permission('inventory:read')
 def get_inventory():
     """Obtener inventario completo"""
     try:
@@ -26,23 +28,18 @@ def get_inventory():
         per_page = min(request.args.get('per_page', 20, type=int), 100)
         store_id = request.args.get('store_id', type=int)
         low_stock_only = request.args.get('low_stock_only', False, type=bool)
-        
-        # Respuesta simplificada para evitar errores de dependencias
+
+        inventory_service = InventoryService()
+        result = inventory_service.get_inventory(
+            page=page,
+            per_page=per_page,
+            store_id=store_id,
+            low_stock_only=low_stock_only
+        )
+
         return jsonify({
             'status': 'success',
-            'data': {
-                'inventory': [],
-                'pagination': {
-                    'page': page,
-                    'per_page': per_page,
-                    'total': 0,
-                    'pages': 0
-                },
-                'filters_applied': {
-                    'store_id': store_id,
-                    'low_stock_only': low_stock_only
-                }
-            }
+            'data': result
         })
         
     except ValidationError as e:
@@ -59,6 +56,7 @@ def get_inventory():
         }), 500
 
 @inventory_bp.route('/inventory/summary', methods=['GET'])
+@require_permission('inventory:read')
 def get_inventory_summary():
     """Obtener resumen del inventario"""
     try:
@@ -88,26 +86,35 @@ def get_inventory_summary():
         }), 500
 
 @inventory_bp.route('/inventory/low-stock', methods=['GET'])
+@require_permission('inventory:read')
 def get_low_stock_items():
     """Obtener productos con stock bajo"""
     try:
         store_id = request.args.get('store_id', type=int)
         
-        # Obtener servicios
-        inventory_repository = container.get(InventoryRepository)
-        product_repository = container.get(ProductRepository)
-        
-        inventory_service = InventoryService(inventory_repository)
-        
+        inventory_service = InventoryService()
+
         # Obtener productos con stock bajo
         low_stock_items = inventory_service.get_low_stock_products(store_id=store_id)
-        
+
+        # Integrar IA con sugerencias de sustitutos (mejor esfuerzo)
+        ai_suggestions = []
+        try:
+            if low_stock_items:
+                from app.services.ai_service import AIService
+                ai_service = AIService()
+                first_product = low_stock_items[0]
+                ai_suggestions = ai_service.get_recommendations(first_product['id'], limit=3) or []
+        except Exception as e:  # pragma: no cover - IA opcional
+            logger.warning(f"AI suggestions not available: {e}")
+
         return jsonify({
             'status': 'success',
             'data': {
                 'low_stock_items': low_stock_items,
                 'count': len(low_stock_items),
-                'store_id': store_id
+                'store_id': store_id,
+                'ai_suggestions': ai_suggestions
             }
         })
         
@@ -121,6 +128,7 @@ def get_low_stock_items():
         }), 500
 
 @inventory_bp.route('/inventory/adjust', methods=['POST'])
+@require_permission('inventory:write')
 def adjust_inventory():
     """Ajustar inventario de productos"""
     try:

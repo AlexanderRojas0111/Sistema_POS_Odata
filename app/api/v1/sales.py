@@ -12,6 +12,7 @@ from app.repositories.product_repository import ProductRepository
 from app.repositories.user_repository import UserRepository
 from app.exceptions import ValidationError, BusinessLogicError
 from app.security.jwt_utils import decode_token
+from app.middleware.rbac_middleware import require_permission
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 sales_bp = Blueprint('sales', __name__)
 
 @sales_bp.route('/sales', methods=['POST'])
+@require_permission('sales:write')
 def create_sale():
     """Crear nueva venta"""
     try:
@@ -152,7 +154,7 @@ def create_sale():
         }), 500
 
 @sales_bp.route('/sales', methods=['GET'])
-
+@require_permission('sales:read')
 def get_sales():
     """Obtener lista de ventas"""
     try:
@@ -199,7 +201,7 @@ def get_sales():
         }), 500
 
 @sales_bp.route('/sales/<int:sale_id>', methods=['GET'])
-
+@require_permission('sales:read')
 def get_sale(sale_id):
     """Obtener venta por ID"""
     try:
@@ -228,7 +230,7 @@ def get_sale(sale_id):
         }), 500
 
 @sales_bp.route('/sales/<int:sale_id>/cancel', methods=['POST'])
-
+@require_permission('sales:write')
 def cancel_sale(sale_id):
     """Cancelar venta"""
     try:
@@ -273,7 +275,7 @@ def cancel_sale(sale_id):
         }), 500
 
 @sales_bp.route('/sales/stats', methods=['GET'])
-
+@require_permission('sales:read')
 def get_sales_stats():
     """Obtener estadísticas de ventas"""
     try:
@@ -296,6 +298,73 @@ def get_sales_stats():
         
     except Exception as e:
         logger.error(f"Error in get_sales_stats: {str(e)}")
+        return jsonify({
+            'error': {
+                'code': 'INTERNAL_SERVER_ERROR',
+                'message': 'An internal error occurred'
+            }
+        }), 500
+
+
+@sales_bp.route('/sales/<int:sale_id>', methods=['PATCH', 'PUT'])
+@require_permission('sales:write')
+def update_sale(sale_id):
+    """Actualizar metadatos de una venta (estado, notas, método de pago)"""
+    try:
+        data = request.get_json() or {}
+        sale_repository = container.get(SaleRepository)
+        product_repository = container.get(ProductRepository)
+        user_repository = container.get(UserRepository)
+
+        sale_service = SaleService(sale_repository, product_repository, user_repository)
+        updated_sale = sale_service.update_sale(sale_id, data)
+
+        return jsonify({
+            'status': 'success',
+            'data': updated_sale,
+            'message': 'Sale updated successfully'
+        })
+    except ValidationError as e:
+        logger.warning(f"Validation error in update_sale: {e.message}")
+        return jsonify(e.to_dict()), e.status_code
+    except BusinessLogicError as e:
+        logger.warning(f"Business logic error in update_sale: {e.message}")
+        return jsonify(e.to_dict()), e.status_code
+    except Exception as e:
+        logger.error(f"Error in update_sale: {str(e)}")
+        return jsonify({
+            'error': {
+                'code': 'INTERNAL_SERVER_ERROR',
+                'message': 'An internal error occurred'
+            }
+        }), 500
+
+
+@sales_bp.route('/sales/<int:sale_id>', methods=['DELETE'])
+@require_permission('sales:write')
+def delete_sale(sale_id):
+    """Cancelar venta vía DELETE como operación de borrado lógico"""
+    try:
+        data = request.get_json() or {}
+        reason = data.get('reason', 'Cancelled via DELETE')
+
+        sale_repository = container.get(SaleRepository)
+        product_repository = container.get(ProductRepository)
+        user_repository = container.get(UserRepository)
+
+        sale_service = SaleService(sale_repository, product_repository, user_repository)
+        sale = sale_service.cancel_sale(sale_id, reason)
+
+        return jsonify({
+            'status': 'success',
+            'data': sale,
+            'message': 'Sale cancelled successfully'
+        })
+    except BusinessLogicError as e:
+        logger.warning(f"Business logic error in delete_sale: {e.message}")
+        return jsonify(e.to_dict()), e.status_code
+    except Exception as e:
+        logger.error(f"Error in delete_sale: {str(e)}")
         return jsonify({
             'error': {
                 'code': 'INTERNAL_SERVER_ERROR',

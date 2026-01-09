@@ -72,6 +72,10 @@ class SaleService:
         
         db.session.commit()
         
+        # IA: sugerencias de productos relacionados (best-effort)
+        sale_dict = sale.to_dict()
+        sale_dict['ai_recommendations'] = self._get_ai_recommendations(validated_items)
+
         # Enviar factura por email si se proporciona email del cliente
         try:
             from app.services.email_service import email_service
@@ -105,7 +109,7 @@ class SaleService:
             logger.error(f"Error enviando factura por email: {str(e)}")
             # No fallar la venta si el email falla
         
-        return sale.to_dict()
+        return sale_dict
     
     def _validate_and_process_items(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Validar y procesar items de venta"""
@@ -224,6 +228,39 @@ class SaleService:
         db.session.commit()
         
         return sale.to_dict()
+
+    def update_sale(self, sale_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """Actualizar metadatos de la venta (estado, notas, método de pago, impuestos/discount)"""
+        sale = self.sale_repository.get_by_id_or_404(sale_id)
+
+        # Estado con control de transición
+        new_status = updates.get('status')
+        if new_status:
+            allowed_status = {'completed', 'pending', 'refunded', 'cancelled'}
+            if new_status not in allowed_status:
+                raise ValidationError(f"Invalid status '{new_status}'", field="status")
+            if new_status == 'cancelled' and sale.status != 'cancelled':
+                # Reusar lógica de cancelación para stock
+                return self.cancel_sale(sale_id, reason=updates.get('reason', 'Updated via API'))
+            sale.status = new_status
+
+        if 'notes' in updates:
+            sale.notes = updates.get('notes')
+
+        if 'payment_method' in updates:
+            sale.payment_method = updates.get('payment_method') or sale.payment_method
+
+        if 'payment_reference' in updates:
+            sale.payment_reference = updates.get('payment_reference')
+
+        if 'discount_amount' in updates:
+            sale.apply_discount(updates.get('discount_amount', 0))
+
+        if 'tax_rate' in updates:
+            sale.apply_tax(updates.get('tax_rate', 0))
+
+        db.session.commit()
+        return sale.to_dict()
     
     def get_sales_stats(self, user_id: Optional[int] = None) -> Dict[str, Any]:
         """Obtener estadísticas de ventas"""
@@ -260,3 +297,20 @@ class SaleService:
             'today_amount': float(today_amount),
             'average_sale_amount': avg_sale_amount
         }
+
+    def _get_ai_recommendations(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Obtener recomendaciones de productos basadas en el primer item (mejor esfuerzo)"""
+        try:
+            if not items:
+                return []
+            from app.services.ai_service import AIService
+
+            first_product_id = items[0].get('product_id')
+            if not first_product_id:
+                return []
+
+            ai_service = AIService()
+            return ai_service.get_recommendations(first_product_id, limit=5) or []
+        except Exception as e:  # pragma: no cover - IA opcional
+            logger.warning(f"AI recommendations unavailable: {e}")
+            return []

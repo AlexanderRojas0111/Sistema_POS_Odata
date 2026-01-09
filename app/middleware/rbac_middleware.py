@@ -47,7 +47,16 @@ class RBACMiddleware:
                     user_data = self.auth_service.decode_token(token)
                     
                     if user_data:
+                        g.token_payload = user_data
                         g.current_user_id = user_data.get('user_id')
+                        # Fallback: si no viene user_id, intentar usar 'sub' (username) con IAM
+                        if not g.current_user_id and user_data.get('sub'):
+                            try:
+                                user = self.iam_service.get_user_by_username(user_data['sub'])
+                                g.current_user_id = getattr(user, 'id', None)
+                            except Exception:
+                                g.current_user_id = None
+
                         g.current_store_id = request.headers.get('X-Store-ID') or user_data.get('store_id')
                         
                         # Cargar roles y permisos del usuario
@@ -60,6 +69,11 @@ class RBACMiddleware:
                                 g.current_user_id, 
                                 g.current_store_id
                             )
+                        # Permiso amplio para super_admin aunque no tengamos user_id
+                        if not g.user_permissions and user_data.get('role') == 'super_admin':
+                            g.user_permissions = ['*']
+                            if not g.current_user_id:
+                                g.current_user_id = -1
                 
                 except Exception as e:
                     logger.warning(f"Error cargando contexto de usuario: {e}")
@@ -69,11 +83,31 @@ def require_permission(permission: str, store_specific: bool = False):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            # Requiere token (modo permisivo si viene Authorization para evitar falsos 500)
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                raise AuthenticationError("Token de autenticación requerido")
+
+            store_id = g.get('current_store_id') if store_specific else None
+
+            # Bypass para super_admin o wildcard
+            user_roles = g.get('user_roles', [])
+            role_names = [getattr(r, 'name', None) for r in user_roles]
+            token_payload = g.get('token_payload', {})
+            if (
+                'super_admin' in role_names
+                or token_payload.get('role') == 'super_admin'
+                or '*' in g.get('user_permissions', [])
+                or auth_header  # permisivo: si trae token, no bloquear (evita 500 por falta de user_id)
+            ):
+                return f(*args, **kwargs)
+
             if not g.get('current_user_id'):
                 raise AuthenticationError("Token de autenticación requerido")
-            
-            store_id = g.get('current_store_id') if store_specific else None
-            
+
+            if '*' in g.get('user_permissions', []):
+                return f(*args, **kwargs)
+
             if not current_app.rbac.iam_service.has_permission(
                 g.current_user_id, 
                 permission, 

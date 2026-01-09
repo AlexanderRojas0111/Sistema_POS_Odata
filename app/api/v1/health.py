@@ -9,7 +9,7 @@ from flask import Blueprint, jsonify, request
 
 from app import db
 from sqlalchemy import text
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def health_check():
         "status": "healthy",
         "message": "Sistema POS O'Data Enterprise funcionando correctamente",
         "database": db_status,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "2.0.0-enterprise"
     })
 
@@ -46,7 +46,7 @@ def detailed_health_check():
     try:
         health_data = {
             "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "version": "2.0.0-enterprise",
             "components": {}
         }

@@ -12,7 +12,7 @@ from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from marshmallow.exceptions import ValidationError
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ def create_error_response(message, status_code, error_code, details=None):
         "error": {
             "code": error_code,
             "message": message,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "path": request.path if request else None,
             "method": request.method if request else None
         }
@@ -164,7 +164,7 @@ def log_error(error):
     """Log estructurado de errores"""
     
     error_data = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "error_type": type(error).__name__,
         "error_message": str(error),
         "path": request.path if request else None,

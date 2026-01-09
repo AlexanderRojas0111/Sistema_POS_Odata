@@ -7,7 +7,7 @@ Métricas básicas para monitoreo del sistema
 import time
 import logging
 from functools import wraps
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict, deque
 import threading
 from flask import request, g, current_app  # type: ignore[import]
@@ -28,7 +28,7 @@ class MetricsCollector:
         self._response_times = deque(maxlen=1000)  # Últimos 1000 requests
         self._error_counts = defaultdict(int)
         self._active_requests = 0
-        self._start_time = datetime.utcnow()
+        self._start_time = datetime.now(timezone.utc)
     
     def increment(self, metric_name, value=1):
         """Incrementar contador de métrica"""
@@ -48,7 +48,7 @@ class MetricsCollector:
     def get_metrics(self):
         """Obtener métricas actuales"""
         with self._lock:
-            uptime = (datetime.utcnow() - self._start_time).total_seconds()
+            uptime = (datetime.now(timezone.utc) - self._start_time).total_seconds()
             
             # Calcular tiempo de respuesta promedio
             avg_response_time = 0
@@ -75,7 +75,7 @@ class MetricsCollector:
                 "error_counts": dict(self._error_counts),
                 "error_rate": round(error_rate, 2),
                 "metrics": dict(self._metrics),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
             
             # Verificar alertas

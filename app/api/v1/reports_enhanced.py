@@ -5,6 +5,7 @@ Módulo robusto con exportación a Excel y visualización clara de datos
 """
 
 from flask import Blueprint, request, jsonify, send_file
+from app.middleware.rbac_middleware import require_permission
 from datetime import datetime, timedelta
 from sqlalchemy import func, and_, desc, text
 import logging
@@ -285,6 +286,7 @@ def health_check():
 
 
 @reports_enhanced_bp.route('/sales/analytics', methods=['GET'])
+@require_permission('reports:read')
 def sales_analytics():
     """Análisis avanzado de ventas con visualización clara"""
     try:
@@ -442,6 +444,7 @@ def sales_analytics():
 
 
 @reports_enhanced_bp.route('/inventory/analytics', methods=['GET'])
+@require_permission('reports:read')
 def inventory_analytics():
     """Análisis avanzado de inventario con alertas inteligentes"""
     try:

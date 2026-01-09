@@ -6,6 +6,7 @@ SIN dependencias problemáticas de JWT o autenticación compleja
 """
 
 from flask import Blueprint, request, jsonify
+from app.middleware.rbac_middleware import require_permission
 from datetime import datetime, timedelta
 from sqlalchemy import func, and_, desc, text
 import logging
@@ -89,6 +90,7 @@ def health_check():
 
 
 @reports_final_bp.route('/sales', methods=['GET'])
+@require_permission('reports:read')
 def sales_report():
     """Reporte completo de ventas"""
     try:
@@ -204,6 +206,7 @@ def sales_report():
 
 
 @reports_final_bp.route('/inventory', methods=['GET'])
+@require_permission('reports:read')
 def inventory_report():
     """Reporte completo de inventario"""
     try:

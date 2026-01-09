@@ -9,14 +9,26 @@ import json
 import logging
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.decomposition import TruncatedSVD
 import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import SnowballStemmer
+
+# sklearn es opcional en entornos locales (ej. Python 3.13 sin wheel)
+SKLEARN_AVAILABLE = True
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore[import]
+    from sklearn.metrics.pairwise import cosine_similarity  # type: ignore[import]
+    from sklearn.decomposition import TruncatedSVD  # type: ignore[import]
+except Exception as e:  # pragma: no cover - compatibilidad local
+    SKLEARN_AVAILABLE = False
+    TfidfVectorizer = None  # type: ignore
+    cosine_similarity = None  # type: ignore
+    TruncatedSVD = None  # type: ignore
+    logging.getLogger(__name__).warning(
+        "sklearn no disponible; IA de texto deshabilitada (%s)", e
+    )
 
 from app import db
 from app.models.ai_models import (
@@ -45,6 +57,7 @@ class AIService:
             # Descargar recursos necesarios
             nltk.download('punkt', quiet=True)
             nltk.download('stopwords', quiet=True)
+            nltk.download('punkt_tab', quiet=True)
             
             # Configurar stop words en español
             self.stop_words_es = set(stopwords.words('spanish'))
@@ -84,6 +97,9 @@ class AIService:
     
     def train_tfidf_model(self, products: List[Product]) -> bool:
         """Entrenar modelo TF-IDF con productos"""
+        if not SKLEARN_AVAILABLE:
+            logger.warning("TF-IDF no entrenado: sklearn no está disponible en este entorno")
+            return False
         try:
             # Preparar textos de productos
             product_texts = []
@@ -194,7 +210,7 @@ class AIService:
         start_time = datetime.utcnow()
         
         try:
-            if not self.tfidf_vectorizer or self.tfidf_matrix is None:
+            if not SKLEARN_AVAILABLE or not self.tfidf_vectorizer or self.tfidf_matrix is None:
                 logger.warning("TF-IDF model not trained")
                 return []
             
@@ -252,7 +268,7 @@ class AIService:
     def get_recommendations(self, product_id: int, limit: int = 5) -> List[Dict[str, Any]]:
         """Obtener recomendaciones para un producto"""
         try:
-            if not self.tfidf_vectorizer or self.tfidf_matrix is None:
+            if not SKLEARN_AVAILABLE or not self.tfidf_vectorizer or self.tfidf_matrix is None:
                 return []
             
             # Obtener producto
@@ -383,6 +399,9 @@ class AIService:
     def initialize_ai_system(self) -> bool:
         """Inicializar sistema de IA con datos existentes"""
         try:
+            if not SKLEARN_AVAILABLE:
+                logger.warning("AI system initialization skipped: sklearn no disponible")
+                return False
             # Obtener productos activos
             products = Product.query.filter(Product.is_active == True).all()
             

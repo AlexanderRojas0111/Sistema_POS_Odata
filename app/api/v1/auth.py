@@ -70,8 +70,12 @@ def login():
         primary_role = getattr(user, "primary_role", None)
         effective_role = primary_role.name if primary_role else user.role
 
-        # Emitir JWT access y refresh
-        access = create_access_token(identity=user.username, role=effective_role)
+        # Emitir JWT access y refresh (incluimos user_id para RBAC)
+        access = create_access_token(
+            identity=user.username,
+            role=effective_role,
+            extra={'user_id': user.id}
+        )
         refresh = create_refresh_token(identity=user.username)
 
         logger.info(f"Successful login for user: {user.username}")

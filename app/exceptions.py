@@ -5,7 +5,7 @@ Jerarquía de excepciones profesional con contexto rico y manejo centralizado.
 """
 
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 class POSException(Exception):
@@ -23,7 +23,7 @@ class POSException(Exception):
         self.error_code = error_code
         self.context = context or {}
         self.status_code = status_code
-        self.timestamp = datetime.utcnow()
+        self.timestamp = datetime.now(timezone.utc)
         self.error_id = str(uuid.uuid4())
     
     def to_dict(self) -> Dict[str, Any]:

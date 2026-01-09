@@ -38,6 +38,8 @@ threadpoolctl==3.2.0
 
 # Procesamiento de texto - Actualizado
 nltk==3.9.1
+reportlab==4.4.7
+openpyxl==3.1.5
 
 # Testing - Versiones más recientes
 pytest==8.3.4
