@@ -127,7 +127,7 @@ cerberus==1.3.5
 
 # Para manejo de archivos
 openpyxl==3.1.5
-pandas==2.2.3  # Para análisis de datos avanzado
+pandas==2.3.3  # Para análisis de datos avanzado
 
 # Para notificaciones
 plyer==2.1.0
