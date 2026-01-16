@@ -79,7 +79,7 @@ psutil==6.0.0
 
 # HTTP y APIs
 httpx==0.28.1  # Cliente HTTP moderno
-fastapi==0.115.6  # Para APIs adicionales si es necesario
+fastapi==0.120.0  # Para APIs adicionales si es necesario
 
 # Validación de datos
 email-validator==2.2.0
