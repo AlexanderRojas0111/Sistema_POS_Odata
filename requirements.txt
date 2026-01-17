@@ -48,7 +48,7 @@ pytest-html==4.1.1
 
 # Desarrollo - Herramientas actualizadas
 black==24.10.0
-flake8==7.1.1
+flake8==7.3.0
 isort==5.13.2
 pylint==3.3.1
 
